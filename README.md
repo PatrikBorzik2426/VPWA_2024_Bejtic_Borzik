@@ -24,7 +24,7 @@
       - [ ] správca kanálu - ten kto kanál vytvoril
       - [ ] 30 dní bez aktivity - kanál prestane existovať
     - [ ] Príkazový riadok v rámci chatu, kde má user pístup
-      - [ ] **/list** vypíše zoznam používateľov v kanáli
+      - [ ] **/list** vypíše zoznam používateľov v kanáli (už prvá fáza)
       - [ ] Vytvorenie kanálu cez príkazový riadok, cez ktorý sa posielajú správy
       - [ ] Vytvorenie súkromného kanálu cez **/join channelName [private]**
       - [ ] Súkromný kanál - pozývať, pridávať/odoberať iba správca cez **/invite nick** a **/revoke nick**
@@ -35,8 +35,8 @@
       - [ ] Správca môže kanál zatvoriť/zrušiť cez **/quit**
     - [ ] User sa môže odpojiť pomocou **/cancel** správca zruší kanál týmto príkazom
     - [ ] Mention pomocou **@nick**, kde sa potom danému používateľovi zvýrazní
-    - [ ] User si vie pozrieť históriu správ - **efektívny infinite scroll**
-    - [ ] Notifikácie - nové správy
+    - [ ] User si vie pozrieť históriu správ - **efektívny infinite scroll** (už prvá správa)
+    - [ ] Notifikácie - nové správy (už prvá fáza)
       - [ ] Zobrazujú sa ak aplikácia nie je viditeľná (Quasar doc App Visibility)
       - [ ] Notifikácia obsahuje odosielateľa a kus správy
       - [ ] Vieme nastaviť, aby chodili notifikácie iba o správa **adresovaných konkrétnemu používateľovi**
