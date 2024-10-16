@@ -8,20 +8,11 @@
     --q-info: #31CCEC;
     --q-warning: #F2C037;
     --q-dark: #1d1d1d;
-    --q-dark-page: #121212;
+    --q-dark-page: #181A1B;
 }
 
 body{
     font-family: 'Manrope', sans-serif;
-}
-
-.login-register-button{
-    border-radius: 20rem;
-    -webkit-border-radius: 20rem;
-    -moz-border-radius: 20rem;
-    -ms-border-radius: 20rem;
-    -o-border-radius: 20rem;
-    width: 45%;
 }
 
 .button-div{
@@ -41,4 +32,9 @@ body{
     -moz-border-radius: 1.5rem;
     -ms-border-radius: 1.5rem;
     -o-border-radius: 1.5rem;
+}
+
+.q-page{
+    background-color: var(--q-dark-page);
+    color: white;
 }

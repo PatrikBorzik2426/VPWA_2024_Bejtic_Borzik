@@ -1,8 +1,8 @@
 <template>
-<q-page :style-fn="myTweak" padding class="fullscreen flex flex-center">
+<q-page padding class="fullscreen flex flex-center">
   <div class=" q-mr-xl" style="max-width: 35%;">
     <h2 class="text-center" style="width: fit-content; margin: 0 auto;">
-      Welcome in 
+      Welcome to 
     </h2>
     <h2 class="text-bold text-primary text-center" style="width: fit-content; margin: 0 auto;">Comb-bot</h2>
     <p class=" text-h5 q-mt-xl" style="text-align: center; width: fit-content;">
@@ -19,17 +19,15 @@
     <h1 class="text-h4 q-ml-none q-mt-none q-mb-lg">Register Form</h1>
 
 
-    <q-input v-model="firstName" :rules="[requiredRule]" :error="!!loginError" :error-message="firstNameError" type="text" label="First Name" placeholder="example: Joe" class="no-margin"/>
-    <q-input v-model="lastName" :rules="[requiredRule]" :error="!!loginError" :error-message="lastNameError" type="text" label="Last Name" placeholder="example: Doe" class="no-margin"/>
-    <q-input v-model="email" :rules="[requiredRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
-    <q-input v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
-    <q-input v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
+    <q-input dark v-model="firstName" :rules="[requiredRule]" :error="!!loginError" :error-message="firstNameError" type="text" label="First Name" placeholder="example: Joe" class="no-margin"/>
+    <q-input dark v-model="lastName" :rules="[requiredRule]" :error="!!loginError" :error-message="lastNameError" type="text" label="Last Name" placeholder="example: Doe" class="no-margin"/>
+    <q-input dark v-model="email" :rules="[requiredRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
+    <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
+    <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
     <div class="login-register-button">
-    <div class="button-div flex flex-center">
-        <q-btn label="Submit" type="submit" color="primary"/>
-        <q-btn label="Reset" type="cancel" color="primary" flat/>
-      </div>
+      <q-btn label="Submit" type="submit" color="primary" class="button"/>
+      <q-btn label="Reset" type="cancel" color="primary" class="button" flat/>
     </div>
     
     <router-link to="/login" class="q-ml-none text-primary">I am already logged-in</router-link>
@@ -72,11 +70,22 @@ function handleSubmit(){
   }
 }
 
-
-function myTweak() { return { backgroundColor: 'transparent' } }
-
 defineOptions({
 name: 'MainLogin'
 });
 
 </script>
+
+<style>
+
+  .button {
+    border-radius: 20rem;
+    -webkit-border-radius: 20rem;
+    -moz-border-radius: 20rem;
+    -ms-border-radius: 20rem;
+    -o-border-radius: 20rem;
+    width: 45%;
+  }
+
+</style>
+
