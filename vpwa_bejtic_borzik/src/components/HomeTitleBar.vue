@@ -1,5 +1,5 @@
 <template>
-    <q-header elevated class="bg-primary text-white">
+    <q-header reveal elevated class="bg-primary text-white">
       <div class="titlebar">
         <q-toolbar>
           <q-avatar>
@@ -7,7 +7,7 @@
           </q-avatar>
           <q-toolbar-title>Comb-Bot</q-toolbar-title>
           <q-space/>
-            <q-btn unelevated rounded label="Login" @click="goToLogin" />
+            <q-btn  rounded label="Login" @click="goToLogin" />
         </q-toolbar>
       </div>
     </q-header>
