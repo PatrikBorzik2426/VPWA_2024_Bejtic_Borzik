@@ -14,8 +14,10 @@
     
         
       <div class=" button-div flex flex-center">
-        <q-btn label="Submit" type="submit" color="primary" class=""/>
-        <q-btn label="Reset" type="cancel" color="primary" flat class="" />
+        <div class="login-register-button">
+          <q-btn label="Submit" type="submit" color="primary" class=""/>
+          <q-btn label="Reset" type="cancel" color="primary" flat class="" />
+        </div>
       </div>
       
       <router-link to="/register" class=" q-ml-none text-primary">Go to Registration Page</router-link>

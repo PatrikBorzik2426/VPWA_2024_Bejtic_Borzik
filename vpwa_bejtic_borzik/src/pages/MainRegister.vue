@@ -25,12 +25,14 @@
     <q-input v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
     <q-input v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
+    <div class="login-register-button">
     <div class="button-div flex flex-center">
-      <q-btn label="Submit" type="submit" color="primary"/>
-      <q-btn label="Reset" type="cancel" color="primary" flat/>
+        <q-btn label="Submit" type="submit" color="primary"/>
+        <q-btn label="Reset" type="cancel" color="primary" flat/>
+      </div>
     </div>
     
-    <router-link to="/" class="q-ml-none text-primary">I am already logged-in</router-link>
+    <router-link to="/login" class="q-ml-none text-primary">I am already logged-in</router-link>
   </q-form>
 </q-page>
 
