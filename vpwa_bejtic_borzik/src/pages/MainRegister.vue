@@ -14,6 +14,7 @@
   <q-form
     @submit.prevent="handleSubmit"
     @reset="handleSubmit"
+    greedy
     class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl"
   >
     <h1 class="text-h4 q-ml-none q-mt-none q-mb-lg">Register Form</h1>

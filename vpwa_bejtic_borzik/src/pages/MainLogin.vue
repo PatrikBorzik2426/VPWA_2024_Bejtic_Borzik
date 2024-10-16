@@ -4,6 +4,7 @@
       <q-form
         @submit.prevent="handleSubmit"
         @reset="handleSubmit"
+        greedy
         class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white"
       >
       
