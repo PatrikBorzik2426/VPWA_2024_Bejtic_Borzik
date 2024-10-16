@@ -24,12 +24,11 @@
     <q-input dark v-model="email" :rules="[requiredRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
     <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
     <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
-    
-    <div class="login-register-button">
-      <q-btn label="Submit" type="submit" color="primary" class="button"/>
-      <q-btn label="Reset" type="cancel" color="primary" class="button" flat/>
+
+    <div class=" button-div flex flex-center">
+      <q-btn label="Submit" type="submit" color="primary"/>
+      <q-btn label="Reset" type="cancel" color="primary" flat/>
     </div>
-    
     <router-link to="/login" class="q-ml-none text-primary">I am already logged-in</router-link>
   </q-form>
 </q-page>
@@ -77,8 +76,7 @@ name: 'MainLogin'
 </script>
 
 <style>
-
-  .button {
+  .q-btn {
     border-radius: 20rem;
     -webkit-border-radius: 20rem;
     -moz-border-radius: 20rem;
@@ -86,6 +84,5 @@ name: 'MainLogin'
     -o-border-radius: 20rem;
     width: 45%;
   }
-
 </style>
 

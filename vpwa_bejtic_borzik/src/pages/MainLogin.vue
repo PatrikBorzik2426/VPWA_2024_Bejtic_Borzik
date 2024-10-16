@@ -14,8 +14,8 @@
     
         
       <div class=" button-div flex flex-center">
-        <q-btn label="Submit" type="submit" color="primary" class="button"/>
-        <q-btn label="Reset" type="cancel" color="primary" flat class="button" />
+        <q-btn label="Submit" type="submit" color="primary" />
+        <q-btn label="Reset" type="cancel" color="primary" flat />
       </div>
       
       <router-link to="/register" class=" q-ml-none text-primary">Go to Registration Page</router-link>
@@ -50,7 +50,7 @@ defineOptions({
 </script>
 
 <style>
-  .button {
+  .q-btn {
     border-radius: 20rem;
     -webkit-border-radius: 20rem;
     -moz-border-radius: 20rem;
