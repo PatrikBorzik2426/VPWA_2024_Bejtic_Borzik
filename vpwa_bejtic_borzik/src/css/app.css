@@ -9,6 +9,8 @@
     --q-warning: #F2C037;
     --q-dark: #1d1d1d;
     --q-dark-page: #181A1B;
+    --q-bcg: #181A1B;
+    --q-butn: #313233;
 }
 
 body{
@@ -16,12 +18,12 @@ body{
 }
 
 .q-page{
-    background-color: var(--q-dark-page);
+    background-color: var(--q-bcg);
     color: white;
 }
 
 .q-page-container{
-    padding-top: 0px !important;
+    padding: 0px !important;
 }
 
 .full-window{
