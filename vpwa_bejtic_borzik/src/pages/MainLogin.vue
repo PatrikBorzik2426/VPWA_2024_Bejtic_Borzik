@@ -12,7 +12,7 @@
       <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
       <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
-      <q-btn class="button q-mx-auto" label="Submit" type="submit" color="primary" />
+      <q-btn class="button q-mx-auto" label="Login" type="submit" color="primary" />
       
       <router-link to="/register" class=" q-ml-none text-primary">Go to Registration Page</router-link>
 
