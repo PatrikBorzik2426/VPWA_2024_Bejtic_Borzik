@@ -15,26 +15,11 @@ body{
     font-family: 'Manrope', sans-serif;
 }
 
-.button-div{
-    margin-left: 0;
-    width: 100%;
-}
-
-.q-input{
-    width: 100%;
-}
-
-.q-form{
-    width: 32rem;
-    border: var(--q-primary) 3px solid;
-    border-radius: 1.5rem;
-    -webkit-border-radius: 1.5rem;
-    -moz-border-radius: 1.5rem;
-    -ms-border-radius: 1.5rem;
-    -o-border-radius: 1.5rem;
-}
-
 .q-page{
     background-color: var(--q-dark-page);
     color: white;
+}
+
+.q-page-container{
+    padding-top: 0px !important;
 }

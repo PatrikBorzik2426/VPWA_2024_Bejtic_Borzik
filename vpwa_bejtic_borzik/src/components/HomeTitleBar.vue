@@ -1,5 +1,5 @@
 <template>
-    <q-header reveal elevated class="bg-primary text-white">
+    <q-header id="toolBar" reveal class="bg-primary text-white">
       <div class="titlebar">
         <q-toolbar>
           <q-avatar>
@@ -35,6 +35,10 @@ function goToHomepage() {
 
 .q-btn {
   background-color: #1e2021;
+}
+
+#toolBar{
+  position: absolute;
 }
 
 </style>

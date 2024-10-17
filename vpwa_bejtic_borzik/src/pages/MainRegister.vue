@@ -13,7 +13,6 @@
 
   <q-form
     @submit.prevent="handleSubmit"
-    @reset="handleSubmit"
     greedy
     class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl"
   >
@@ -26,10 +25,8 @@
     <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
     <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
 
-    <div class=" button-div flex flex-center">
-      <q-btn label="Submit" type="submit" color="primary"/>
-      <q-btn label="Reset" type="cancel" color="primary" flat/>
-    </div>
+    <q-btn class="button q-mx-auto" label="Submit" type="submit" color="primary"/>
+
     <router-link to="/login" class="q-ml-none text-primary">I am already logged-in</router-link>
   </q-form>
 </q-page>
@@ -77,13 +74,41 @@ name: 'MainLogin'
 </script>
 
 <style>
-  .q-btn {
+  .button {
     border-radius: 20rem;
     -webkit-border-radius: 20rem;
     -moz-border-radius: 20rem;
     -ms-border-radius: 20rem;
     -o-border-radius: 20rem;
     width: 45%;
+  }
+
+  body{
+    font-family: 'Manrope', sans-serif;
+  }
+
+  .button-div{
+      margin-left: 0;
+      width: 100%;
+  }
+
+  .q-input{
+      width: 100%;
+  }
+
+  .q-form{
+      width: 32rem;
+      border: var(--q-primary) 3px solid;
+      border-radius: 1.5rem;
+      -webkit-border-radius: 1.5rem;
+      -moz-border-radius: 1.5rem;
+      -ms-border-radius: 1.5rem;
+      -o-border-radius: 1.5rem;
+  }
+
+  .q-page{
+      background-color: var(--q-dark-page);
+      color: white;
   }
 </style>
 

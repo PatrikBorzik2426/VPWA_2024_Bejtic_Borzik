@@ -2,7 +2,7 @@
   <q-page>
     <HomeTitleBar />
     <div class="page">
-      <div class="container">
+      <div class="container column" >
         <div class="content">
           <HomeWelcome />
           <HomeNews />
@@ -25,26 +25,6 @@ import HomeWelcome from '../components/HomeWelcome.vue';
 .page {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.container {
-  display: flex;
-  flex-direction: column; 
-  justify-content: center;
-  align-items: center;
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  width: 100%; 
-}
-
-.content > * {
-  min-height: 100vh; 
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 

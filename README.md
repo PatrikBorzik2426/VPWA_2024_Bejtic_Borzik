@@ -9,6 +9,11 @@
 - [ ] Webpack
 - [ ] Options
 
+### Treba
+- Is typing (simulácia)
+- Pop-up notifikácia
+- V UML modeli musí byť aj kick a iné funkcie
+
 ## 1. Fáza - 16.10.2024 (5. týždeň)
 - [ ] Dátový logický model v UML notácií @Patrik @Viktor
 - [ ] Responzívna klientská časť (prototyp) vo form Single Page Aplication - pomocou Quasar 

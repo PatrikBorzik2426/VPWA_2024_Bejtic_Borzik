@@ -1,5 +1,5 @@
 <template>
-    <div class="q-pa-md text-center welcome-section">
+    <div class="text-center welcome-section window-height row flex-center flex-md-column">
       <div class="flex-container">
         <div class="left-column">
           <h4 class="welcome-title">Welcome to <span class="text-bold text-primary">Comb-bot</span></h4>
