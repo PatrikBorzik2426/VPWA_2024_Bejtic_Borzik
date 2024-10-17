@@ -1,5 +1,5 @@
 <template>
-    <div class="window-height row flex-center text-left">
+    <div class="full-window row flex-center text-left">
     <q-timeline dark color="primary">
       <q-timeline-entry heading>
           News and Updates

@@ -1,15 +1,19 @@
 <template>
-    <div class="text-center welcome-section window-height row flex-center flex-md-column">
-      <div class="flex-container">
-        <div class="left-column">
-          <h4 class="welcome-title">Welcome to <span class="text-bold text-primary">Comb-bot</span></h4>
-          <p class="welcome-subtitle text-subtitle1">Your all-in-one platform for connecting, sharing, and discovering!</p>
-          <p class="q-mt-md welcome-description">Join our community and stay updated with the latest features and enhancements. Explore, interact, and make the most out of your experience!</p>
-          <q-btn label="Register Now" color="primary" class="register-button" @click="goToRegister"/>
+    <div class="text-center welcome-section column flex-center full-window">
+      <div class="row flex-center fit q-gutter-x-lg">
+        <div class="col-xs-12 col-sm-5 col-md-5 ">
+          <div class="q-py-md row flex-center text-center left-column col-div">
+            <h4 class="q-ma-none">Welcome to <span class="text-bold text-primary">Comb-bot</span></h4>
+            <div class=" q-mx-auto column items-center">
+              <p class="welcome-subtitle text-subtitle1">Your all-in-one platform for connecting, sharing, and discovering!</p>
+              <p class="q-mt-md welcome-description">Join our community and stay updated with the latest features and enhancements. Explore, interact, and make the most out of your experience!</p>
+              <q-btn label="Register Now" color="primary" class="register-button" @click="goToRegister"/>
+            </div>
+          </div>
         </div>
         
-        <div class="right-column">
-          <div class="q-gutter-md">
+        <div class="col-xs-12 col-sm-5 col-md-5 ">
+          <div class="col-div column justify-between">
             <q-card class="feature-card">
               <q-card-section>
                 <h4 class="text-h6">🔒 Safe and Private Chatting</h4>
@@ -47,44 +51,17 @@
   
   
 <style scoped>
-  
-  .flex-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: stretch; /* Ensures both columns have equal height */
+.col-div{
+  min-height: 60vh;
 }
-
-.welcome-title {
-  margin-top: 65px;
-}
-
-.welcome-subtitle {
-  margin-top: 50px;
-  width: 80%;
-}
-
-.welcome-description {
-  margin-top: 20px;
-  margin-bottom: 20px;
-  width: 80%;
-}
-
 .left-column {
-  flex: 1;
-  margin-right: 20px;
-  display: flex;
-  flex-direction: column; /* Stacks content vertically */
-  justify-content: flex-start; /* Centers content vertically */
-  align-items: center; /* Centers content horizontally */
+  margin: 0 auto;
   border: var(--q-primary) 3px solid;
   border-radius: 1.5rem;
 }
 
-.right-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between; /* Ensures equal distribution of cards */
+.left-column p {
+  width: 80%;
 }
 
 .feature-card {

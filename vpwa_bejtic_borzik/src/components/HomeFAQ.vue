@@ -1,5 +1,5 @@
 <template>
-    <div class="q-pa-md text-body1 container window-height column  justify-center" style="max-width: 1200px">
+    <div class="q-pa-md text-body1 container full-window column  justify-center" style="max-width: 1200px">
       <h3 class="text-regular text-center q-ma-none q-mb-xl">FAQ</h3>
       <q-list bordered class="rounded-borders">
         <q-expansion-item

@@ -23,3 +23,7 @@ body{
 .q-page-container{
     padding-top: 0px !important;
 }
+
+.full-window{
+    min-height: 100vh;
+}
