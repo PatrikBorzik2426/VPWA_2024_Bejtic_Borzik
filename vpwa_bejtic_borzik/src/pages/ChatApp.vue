@@ -1,6 +1,5 @@
 <template>
   <q-page padding>
-
     <ChatWindow />
   </q-page>
 </template>
