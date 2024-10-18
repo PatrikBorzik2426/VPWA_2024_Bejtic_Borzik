@@ -4,7 +4,14 @@
   </q-page>
 </template>
 
-<script setup>
-import ChatWindow from '../components/ChatWindow.vue';
+<script setup lang="ts">
+import SidePanel from '../components/SidePanel.vue'
+import jebo from '../components/JeboPes.vue'
 
 </script>
+
+<style scoped>
+  .q-page {
+    background-color: var(--q-dark);
+  }
+</style>

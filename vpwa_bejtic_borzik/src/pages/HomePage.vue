@@ -15,9 +15,9 @@
 
 <script setup lang="ts">
 import HomeTitleBar from '../components/HomeTitleBar.vue';
+import HomeWelcome from '../components/HomeWelcome.vue';
 import HomeNews from '../components/HomeNews.vue';
 import HomeFAQ from '../components/HomeFAQ.vue';
-import HomeWelcome from '../components/HomeWelcome.vue';
 </script>
 
 <style scoped>

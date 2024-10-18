@@ -17,12 +17,12 @@ body{
 }
 
 .q-page{
-    background-color: var(--q-dark-page);
+    background-color: var(--q-bcg);
     color: white;
 }
 
 .q-page-container{
-    padding-top: 0px !important;
+    padding: 0px !important;
 }
 
 .full-window{
