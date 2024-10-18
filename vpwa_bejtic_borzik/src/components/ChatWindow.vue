@@ -15,7 +15,7 @@
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
-          <SingleMessage :message="userMessage" :username="users"/>
+          <SingleMessage :message1="userMessage1" :message2="userMessage2"/>
         </div>
       </div>
 
@@ -31,8 +31,12 @@
           </q-list>
         </q-form>
 
+        <div class="someone-typing absolute z-top cursor-pointer" v-if="someIsTypingBool" @click="showWhatIsTyping" >
+          <p class=" q-ma-none q-pb-md">{{messageBeingTyped}}</p>
+        </div>
+
         <div class="cli bg-grey rounded-borders q-px-sm">
-          <q-form class="full-height full-width row justify-between items-center">
+          <q-form class="full-height full-width row justify-between items-center" @submit.prevent="sendMessage">
             <q-input
               ref="inputCli"
               v-model="inputValue"
@@ -44,6 +48,8 @@
               dense
               placeholder="Type your message here"
               @update:model-value="checkCommand"
+              @keyup.enter="sendMessage"
+              autocomplete="off"
             />
             <q-btn icon="send" type="submit" flat unelevated color="black" />
           </q-form>
@@ -64,12 +70,13 @@ const inputValue = ref<string>('');
 const inputCli = ref<null|any>(null);
 const showComponent = ref<boolean>(false);
 const currentChannel = ref<string>('Current Channel');
-
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
 
+let messageBeingTyped = ref<string>('Someone is typing ...')
+let someIsTypingBool = ref<boolean>(false);
 let filteredCommands = ref({});
-let userMessage = ref< { [key: number]: Message }>({});
-const users = ref<User[]>([]);
+let userMessage1 = ref< { [key: number]: Message }>({});
+let userMessage2 = ref< { [key: number]: Message }>({});
 
 const commands = {
   '/create': 'Create a new channel',
@@ -87,10 +94,10 @@ for (let i = 0; i < 100; i++) {
   };
 
   const user2: User = {
-    id: i+1,
-    login: 'User ' + i+10,
+    id: i+100,
+    login: 'User ' + i+100,
     password: 'password',
-    email: 'user' + i+10 + '@gmail.com',
+    email: 'user' + i+100 + '@gmail.com',
   };
 
   const message1: Message = {
@@ -99,20 +106,51 @@ for (let i = 0; i < 100; i++) {
     user: user1,
     timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
   };
-
+  
   const message2: Message = {
-    id: i+1,
-    text: 'Message ' + i+10,
+    id: i+100,
+    text: 'Message ' + i+100,
     user: user2,
     timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
   };  
+  
 
-  userMessage.value[i] = message1;
-  userMessage.value[i+1] = message2;
-  users.value.push(user1);
-  users.value.push(user2);
+  userMessage1.value[i] = message1;
+  userMessage2.value[i+100] = message2;
+
 }
 
+const sendMessage = () => {
+  if (inputValue.value.length > 0) {
+    const message: Message = {
+      id: Object.keys(userMessage1.value).length,
+      text: inputValue.value,
+      user: {
+        id: 0,
+        login: 'Someone',
+        password: 'password',
+        email: 'someone@poop.com',
+      },
+      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
+    };
+    userMessage1.value[Object.keys(userMessage1.value).length] = message;
+
+    inputValue.value = '';
+
+    checkCommand();
+  };
+};
+
+const showWhatIsTyping = () =>{
+  let newValue = '';
+
+  if (messageBeingTyped.value.split('\t')[1] === (inputValue.value) || newValue.split('\t')[1] === (inputValue.value)){
+    messageBeingTyped.value = 'Someone is typing ...';
+  }else{
+    messageBeingTyped.value = 'Someone:\t' + inputValue.value
+    newValue = messageBeingTyped.value;
+  }
+}
 
 const checkCommand = () =>{
   showComponent.value = false; 
@@ -127,8 +165,13 @@ const checkCommand = () =>{
     showComponent.value = false;
   }
 
-  console.log(filteredCommands);
+  if (inputValue.value.length > 0 && !inputValue.value.startsWith('/')) {
+    someIsTypingBool.value = true;
+  }else{
+    someIsTypingBool.value = false;
+  }
 
+  console.log(someIsTypingBool.value);
 };
 
 
@@ -168,4 +211,10 @@ const pickCommand = (command : string) => {
   position: absolute;
   bottom: 10%;
 }
+
+
+.someone-typing{
+  bottom: 6% !important;
+}
+
 </style>
