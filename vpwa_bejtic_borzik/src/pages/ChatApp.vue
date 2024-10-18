@@ -1,13 +1,15 @@
 <template>
   <q-page>
-    <SidePanel />
-
+    <div class="row fullscreen ">
+      <SidePanel />
+      <jebo />
+    </div>
   </q-page>
 </template>
 
 <script setup lang="ts">
 import SidePanel from '../components/SidePanel.vue'
-
+import jebo from '../components/JeboPes.vue'
 
 </script>
 

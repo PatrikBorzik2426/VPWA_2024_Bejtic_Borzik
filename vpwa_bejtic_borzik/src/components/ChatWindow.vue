@@ -1,5 +1,5 @@
 <template>
-  <div class=" row justify-between fullscreen bg-primary q-pa-sm">
+  <div class=" row fullscreen justify-between fullscreen q-pa-sm">
     <div class="channel-rooms rounded-borders col-2  bg-dark">
        
     </div>
