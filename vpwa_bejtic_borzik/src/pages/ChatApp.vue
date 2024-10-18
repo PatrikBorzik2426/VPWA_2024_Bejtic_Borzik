@@ -21,6 +21,6 @@ import ChatWindow from '../components/ChatWindow.vue'
   }
 
   .menu{
-    width: 4.75%;
+    width: 75px;
   }
 </style>
