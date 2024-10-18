@@ -1,5 +1,5 @@
 <template>
-  <q-page>
+  <q-page class=" bg-dark">
     <HomeTitleBar />
     <div class="page">
       <div class="container column" >

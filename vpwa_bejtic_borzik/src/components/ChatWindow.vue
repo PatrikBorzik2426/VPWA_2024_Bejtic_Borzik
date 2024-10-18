@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-frame row justify-between fullscreen bg-dark q-pa-sm">
+  <div class="chat-frame row justify-between bg-dark q-pa-sm">
     <div class="channel-rooms rounded-borders col-2 bg-grey-9">
       <h2 class=" text-h5 text-center">Server Name</h2>
       <q-list class=" full-width text-center ">
@@ -161,6 +161,7 @@ const pickCommand = (command : string) => {
 
 .hover-fill:hover {
   background-color: var(--q-primary);
+  border-radius: 0.35rem;
 }
 
 .command-list{
