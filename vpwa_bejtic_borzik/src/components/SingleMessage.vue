@@ -1,5 +1,10 @@
 <template>
-  <q-list class=" text-frame overflow-auto q-pt-lg">
+  <q-infinite-scroll @load="onLoad" :offset="250" reverse class=" text-frame overflow-auto" ref="messageList">
+    <template v-slot:loading>
+        <div class="row justify-center">
+          <q-spinner-dots color="primary" size="40px" />
+        </div>
+    </template>
     <q-item v-for="(message,index) in props.message" :key="message.id">
       <div class="row item-section-msg">
         <q-avatar class="profile-box q-mr-md">
@@ -11,18 +16,35 @@
         </div>
       </div>
     </q-item>
-  </q-list>
+    
+  </q-infinite-scroll>
 </template>
 
 <script setup lang="ts">
 import { defineProps } from 'vue';
 import { User } from 'src/types/User';
 import { Message } from 'src/types/Message';
+import { ref } from 'vue';
 
 const props = defineProps<{
   username: User[];
   message: {[key: number]: Message};
 }>();
+
+const messages = ref<{[key: number]: Message;}>();
+const users = ref<User[]>();
+const messageList = ref<HTMLElement|null>(null);
+
+if (messageList.value) {
+    messageList.value.scrollTop = messageList.value.scrollHeight;
+  }
+
+const onLoad = () => {
+  console.log('loading');
+  // fetch more messages
+};
+
+
 </script>
 
 <style>
