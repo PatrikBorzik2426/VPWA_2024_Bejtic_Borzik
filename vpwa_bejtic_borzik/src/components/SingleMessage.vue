@@ -15,7 +15,7 @@
         </q-avatar>
         <div class=" message-box column">
           <p><span class=" text-bold cursor-pointer ">{{message.user.login}}</span>  <span class=" text-grey-7 q-ml-lg">{{ message.timestamp }}</span></p>
-          <p class="">{{message.text }}</p>
+          <p class="">{{message.text}}</p>
         </div>
       </div>
     </q-item>

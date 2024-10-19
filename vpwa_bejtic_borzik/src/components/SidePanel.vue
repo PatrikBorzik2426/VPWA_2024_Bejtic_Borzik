@@ -135,6 +135,7 @@
 </template>
 
 <script setup lang="ts">
+import { server } from 'typescript';
 import { ref, computed } from 'vue';
 
 interface User {
@@ -162,8 +163,13 @@ const showservers = ref(false);
 const showfriends = ref(true);
 const showaccount = ref(false);
 const showselectedserver = ref(false);
-const selectedServerId = ref<number | null>(null);
+const selectedServerId = ref<number>(-1);
 
+const emit = defineEmits(['showFriends']);
+
+function emitFriends(showFriends:boolean|number){
+  emit('showFriends', showFriends);
+}
 
 const Users = ref<User[]>([
   {
@@ -371,17 +377,31 @@ const Mainuser = computed(() => {
 
 
 function selectServer(serverId: number) {
+  console.log(selectedServerId.value,serverId,showfriends.value);
+
+  if (selectedServerId.value != serverId) {
+    emitFriends(serverId);
+  } 
+
   selectedServerId.value = serverId;
   showselectedserver.value = true;
   showfriends.value = false;
   showaccount.value = false;
   page.value = '';
+
 }
+
 function ShowServers() {
   showservers.value = !showservers.value;
 }
 
 function ShowFriends() {
+  console.log(selectedServerId.value,showfriends.value);
+
+  if (!showfriends){
+    emitFriends(true);
+  }
+
   showfriends.value = true;
   showaccount.value = false;
   showselectedserver.value = false;
