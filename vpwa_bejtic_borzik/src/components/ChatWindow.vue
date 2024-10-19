@@ -1,18 +1,31 @@
 <template>
   <div class="chat-frame row justify-between bg-grey-10">
-    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm">
+    
+    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm" style="width: 15%;">
+    <div v-if="showChannels">
       <h2 class=" text-h5 text-center">Server Name</h2>
       <q-list class=" full-width text-center ">
-        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }"
->
+        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
           <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
             <q-item-label># {{ channel }}</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
     </div>
+    <div v-else>
+      <h2 class=" text-h5 text-center">FriendsList</h2>
+      <q-list class=" full-width text-center ">
+        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
+          <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
+            <q-item-label># {{ channel }}</q-item-label>
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </div>
+  </div>
+    
 
-    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style=" max-width: 82.75%;">
+    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style=" max-width: 84.75%;">
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
@@ -64,7 +77,7 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User'; 
 import { Message } from 'src/types/Message';
-import { ref, defineProps } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 
@@ -81,11 +94,26 @@ let filteredCommands = ref({});
 let userMessage1 = ref< { [key: number]: Message }>({});
 let userMessage2 = ref< { [key: number]: Message }>({});
 
-const props = defineProps<{
-  showFriends: boolean|number;
-}>();
+const showChannels = ref<boolean>(false);
 
-const showFriendsValue = ref<boolean|number>(props.showFriends || true);
+const props = defineProps({ 
+  receivedServerId: Number, 
+  receivedShowFriends: Boolean 
+})
+
+watch(() => props.receivedServerId, (newVal) => {
+  if (newVal !== undefined && newVal !== null) {
+    showChannels.value = true 
+    console.log('isNumberSet:', showChannels.value)
+  }
+})
+
+watch(() => props.receivedShowFriends, (newVal) => {
+  if (newVal !== undefined) {
+    showChannels.value = false 
+    }
+})
+
 
 const commands = {
   '/create': 'Create a new channel',

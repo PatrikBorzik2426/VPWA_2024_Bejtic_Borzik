@@ -1,7 +1,7 @@
 <template>
   <q-page padding class=" row q-pa-none">
-    <SidePanel class="menu" @show-friends="showDataList"/>
-    <ChatWindow class="chat-compo" :showFriends="showDataListBoolean"/>
+    <SidePanel class="menu" @emit-friends="ReceiveShowFriends" @emit-server-id="ReceiveServerId"/>
+    <ChatWindow class="chat-compo" :receivedShowFriends="showFriends" :receivedServerId="ServerId"/>
   </q-page>
 </template>
 
@@ -11,10 +11,15 @@ import ChatWindow from '../components/ChatWindow.vue'
 
 import { ref } from 'vue';
 
-const showDataListBoolean = ref<boolean|number>(false);
+const showFriends = ref<boolean>(false);
+const ServerId = ref<number>(-1);
 
-const showDataList = (showFriends:boolean|number) => {
-  showDataListBoolean.value = showFriends
+const ReceiveShowFriends = () => {
+  showFriends.value = !showFriends.value
+}
+
+const ReceiveServerId = (id:number) => {
+  ServerId.value = id
 }
 
 

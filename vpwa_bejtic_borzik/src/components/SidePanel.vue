@@ -135,7 +135,6 @@
 </template>
 
 <script setup lang="ts">
-import { server } from 'typescript';
 import { ref, computed } from 'vue';
 
 interface User {
@@ -165,11 +164,7 @@ const showaccount = ref(false);
 const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 
-const emit = defineEmits(['showFriends']);
-
-function emitFriends(showFriends:boolean|number){
-  emit('showFriends', showFriends);
-}
+const emit = defineEmits(['emit-friends', 'emit-server-id']);
 
 const Users = ref<User[]>([
   {
@@ -183,128 +178,22 @@ const Users = ref<User[]>([
   },
 ]);
 
-const serverList = ref<Server[]>([
-  {
-    id: 1,
-    name: 'Server 1',
-    avatar: 'https://cdn.quasar.dev/img/avatar1.jpg',
-    notifications: 2,
-  },
-  {
-    id: 2,
-    name: 'Server 2',
-    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg',
-    notifications: 3,
-  },
-  {
-    id: 3,
-    name: 'Server 3',
-    avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
-    notifications: 0,
-  },
-  {
-    id: 4,
-    name: 'Server 4',
-    avatar: 'https://cdn.quasar.dev/img/avatar4.jpg',
-    notifications: 1,
-  },
-  {
-    id: 5,
-    name: 'Server 5',
-    avatar: 'https://cdn.quasar.dev/img/avatar5.jpg',
-    notifications: 4,
-  },
-  {
-    id: 6,
-    name: 'Server 6',
-    avatar: 'https://cdn.quasar.dev/img/avatar6.jpg',
-    notifications: 0,
-  },
-  {
-    id: 7,
-    name: 'Server 7',
-    avatar: 'https://cdn.quasar.dev/img/avatar7.jpg',
-    notifications: 5,
-  },
-  {
-    id: 8,
-    name: 'Server 8',
-    avatar: 'https://cdn.quasar.dev/img/avatar8.jpg',
-    notifications: 2,
-  },
-  {
-    id: 9,
-    name: 'Server 9',
-    avatar: 'https://cdn.quasar.dev/img/avatar9.jpg',
-    notifications: 0,
-  },
-  {
-    id: 10,
-    name: 'Server 10',
-    avatar: 'https://cdn.quasar.dev/img/avatar10.jpg',
-    notifications: 3,
-  },
-  {
-    id: 11,
-    name: 'Server 11',
-    avatar: 'https://cdn.quasar.dev/img/avatar11.jpg',
-    notifications: 0,
-  },
-  {
-    id: 12,
-    name: 'Server 12',
-    avatar: 'https://cdn.quasar.dev/img/avatar12.jpg',
-    notifications: 1,
-  },
-  {
-    id: 13,
-    name: 'Server 13',
-    avatar: 'https://cdn.quasar.dev/img/avatar13.jpg',
-    notifications: 0,
-  },
-  {
-    id: 14,
-    name: 'Server 14',
-    avatar: 'https://cdn.quasar.dev/img/avatar14.jpg',
-    notifications: 2,
-  },
-  {
-    id: 15,
-    name: 'Server 15',
-    avatar: 'https://cdn.quasar.dev/img/avatar15.jpg',
-    notifications: 0,
-  },
-  {
-    id: 16,
-    name: 'Server 16',
-    avatar: 'https://cdn.quasar.dev/img/avatar16.jpg',
-    notifications: 3,
-  },
-  {
-    id: 17,
-    name: 'Server 17',
-    avatar: 'https://cdn.quasar.dev/img/avatar17.jpg',
-    notifications: 4,
-  },
-  {
-    id: 18,
-    name: 'Server 18',
-    avatar: 'https://cdn.quasar.dev/img/avatar18.jpg',
-    notifications: 0,
-  },
-  {
-    id: 19,
-    name: 'Server 19',
-    avatar: 'https://cdn.quasar.dev/img/avatar19.jpg',
-    notifications: 5,
-  },
-  {
-    id: 20,
-    name: 'Server 20',
-    avatar: 'https://cdn.quasar.dev/img/avatar20.jpg',
-    notifications: 1,
-  },
-]);
+const generateServerList = (count: number): Server[] => {
+  const serverList: Server[] = [];
+
+  for (let i = 1; i <= count; i++) {
+    serverList.push({
+      id: i,
+      name: `Server ${i}`,
+      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
+      notifications: Math.floor(Math.random() * 100), 
+    });
+  }
+
+  return serverList;
+};
+
+const serverList = ref<Server[]>(generateServerList(20));
 
 const options = [
         {
@@ -380,7 +269,7 @@ function selectServer(serverId: number) {
   console.log(selectedServerId.value,serverId,showfriends.value);
 
   if (selectedServerId.value != serverId) {
-    emitFriends(serverId);
+    emit('emit-server-id', serverId);
   } 
 
   selectedServerId.value = serverId;
@@ -398,8 +287,8 @@ function ShowServers() {
 function ShowFriends() {
   console.log(selectedServerId.value,showfriends.value);
 
-  if (!showfriends){
-    emitFriends(true);
+  if (!showfriends.value){
+    emit('emit-friends', true);
   }
 
   showfriends.value = true;
