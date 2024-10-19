@@ -4,7 +4,7 @@
       <q-form
         @submit.prevent="handleSubmit"
         greedy
-        class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white"
+        class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white login-register-form"
       >
       
       <h1 class=" text-h4 q-ml-none q-mt-none q-mb-lg">Login Form</h1>
@@ -71,7 +71,7 @@ defineOptions({
       width: 100%;
   }
 
-  .q-form{
+  .login-register-form{
       width: 32rem;
       border: var(--q-primary) 3px solid;
       border-radius: 1.5rem;
