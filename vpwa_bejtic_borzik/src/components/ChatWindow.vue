@@ -3,7 +3,8 @@
     <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm">
       <h2 class=" text-h5 text-center">Server Name</h2>
       <q-list class=" full-width text-center ">
-        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" >
+        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }"
+>
           <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
             <q-item-label># {{ channel }}</q-item-label>
           </q-item-section>
@@ -64,13 +65,15 @@ import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User'; 
 import { Message } from 'src/types/Message';
 import { ref } from 'vue';
+import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 
 const inputValue = ref<string>('');
 const inputCli = ref<null|any>(null);
 const showComponent = ref<boolean>(false);
-const currentChannel = ref<string>('Current Channel');
+const currentChannel = ref<string>('Channel 1');
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
+const $q = useQuasar();
 
 let messageBeingTyped = ref<string>('Someone is typing ...')
 let someIsTypingBool = ref<boolean>(false);
@@ -84,6 +87,13 @@ const commands = {
   '/leave': 'Leave a channel',
   '/delete': 'Delete a channel',
 }
+
+const loadMessages = () => {
+
+console.log('loading messages');
+
+userMessage1.value = {};
+userMessage2.value = {};
 
 for (let i = 0; i < 100; i++) {
   const user1: User = {
@@ -119,6 +129,9 @@ for (let i = 0; i < 100; i++) {
   userMessage2.value[i+100] = message2;
 
 }
+};
+
+loadMessages();
 
 const sendMessage = () => {
   if (inputValue.value.length > 0) {
@@ -134,11 +147,25 @@ const sendMessage = () => {
       timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
     };
     userMessage1.value[Object.keys(userMessage1.value).length] = message;
-
-    inputValue.value = '';
-
-    checkCommand();
   };
+
+  showNotification(inputValue.value, currentChannel.value);
+    
+  inputValue.value = '';
+  
+  checkCommand();
+};
+
+const showNotification = (text: string, currentChannel :string) => {
+  const htmlMessage = '<p class=" text-bold ">'+currentChannel+'</p>' + '<p>'+'Someone: '+text+'</p>';
+
+  $q.notify({
+    message:  htmlMessage,
+    color: 'primary',
+    position: 'bottom-right',
+    timeout: 2000,
+    html: true
+  });
 };
 
 const showWhatIsTyping = () =>{
@@ -177,6 +204,7 @@ const checkCommand = () =>{
 
 const loadChannel = (channelName : string) => {
   currentChannel.value = channelName;
+  loadMessages();
 };
 
 const pickCommand = (command : string) => {
@@ -219,6 +247,11 @@ const pickCommand = (command : string) => {
 
 .someone-typing{
   bottom: 6% !important;
+}
+
+.selected-channel {
+  background-color: var(--q-primary);
+  border-radius: 0.35rem;
 }
 
 </style>
