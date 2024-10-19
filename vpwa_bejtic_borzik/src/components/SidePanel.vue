@@ -4,6 +4,9 @@
       <q-item>
         <q-btn round unelevated :color="showaccount ? 'grey-8' : 'grey-9'" @click="ShowAccount">
           <q-icon center size="1.7rem" color="primary" name="account_circle" />
+          <q-badge rounded floating color="transparent" class="q-pa-none">
+            <q-icon :color="statusColor" :name="statusIcon" />
+          </q-badge>
           <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
             Account
           </q-tooltip>
@@ -106,17 +109,21 @@
           <!-- Status Picker -->
           <q-card-section>
           <p><strong>Status:</strong></p>
-          <q-select v-model="Mainuser.status" :options="options" emit-value dark>
-            <!-- <template v-slot:option="scope"> 
-              <q-item v-ripple> 
-                <q-icon :name="scope.opt.icon" class="q-mr-sm"
-                  :color="getIconColor(scope.opt.value)">
-                  <q-item-section> 
-                    {{ scope.opt.label }} 
-                  </q-item-section> 
+          <q-select v-model="Mainuser.status" :options="options" emit-value rounded standout dark bg-color="grey-8"
+          popup-content-class="bg-grey-9">
+            <template v-slot:prepend>
+              <q-icon :color="statusColor" :name="statusIcon" />
+             </template>
+            <template v-slot:option="scope"> 
+              <q-item v-bind="scope.itemProps" class="q-ml-sm"> 
+                <q-icon :name="scope.opt.icon" :color="scope.opt.color" class="q-mr-xs">
                 </q-icon>
+                  <q-item-section> 
+                    <q-item-label>{{ scope.opt.label }}</q-item-label>
+                    <q-item-label style="max-width: 60%" caption>{{ scope.opt.description }}</q-item-label>
+                  </q-item-section> 
               </q-item> 
-            </template>  -->
+            </template> 
           </q-select>
           </q-card-section>
 
@@ -297,26 +304,54 @@ const options = [
         {
           label: 'Online',
           value: 'Online',
-          icon: 'mdi-check-circle'
+          icon: 'circle',
+          color: 'green'
         },
         {
           label: 'Do Not Disturb',
           value: 'Do Not Disturb',
           description: 'You will not receive any notifications.',
-          icon: 'mdi-minus-circle'
+          icon: 'remove_circle',
+          color: 'red'
         },
         {
           label: 'Offline',
           value: 'Offline',
           description: 'You will not appear online, but will have full access to all of Discord.',
-          icon: 'mdi-circle-outline'
+          icon: 'trip_origin',
+          color: 'grey'
         },
       ];
 
+const statusColor = computed(() => {
+  switch (Mainuser.value.status) {
+    case 'Online':
+      return 'green';
+    case 'Do Not Disturb':
+      return 'red';
+    case 'Offline':
+      return 'grey';
+    default:
+      return 'primary';
+  }
+});
+
+const statusIcon = computed(() => {
+  switch (Mainuser.value.status) {
+    case 'Online':
+      return 'circle';
+    case 'Do Not Disturb':
+      return 'remove_circle';
+    case 'Offline':
+      return 'trip_origin';
+    default:
+      return 'circle';
+  }
+});
+
 const totalUnreadServers = computed(() => {
   return serverList.value.reduce(
-    (acc, server) => acc + server.notifications,
-    0
+    (acc, server) => acc + server.notifications, 0
   );
 });
 
@@ -333,20 +368,6 @@ const Mainuser = computed(() => {
     null
   );
 });
-
-// function getIconColor(status: string): string {
-//   switch (status) {
-//     case 'Online':
-//       return 'green';
-//     case 'Do Not Disturb':
-//       return 'red';
-//     case 'Offline':
-//       return 'grey';
-//     default:
-//       return 'primary';
-//   }
-// }
-
 
 
 function selectServer(serverId: number) {
