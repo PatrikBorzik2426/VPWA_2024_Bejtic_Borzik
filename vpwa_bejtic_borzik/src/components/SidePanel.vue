@@ -41,7 +41,7 @@
     <q-separator inset color="primary" class="q-ma-md" />
 
     <div v-if="showservers">
-      <div class="scrollable" ref="serverListContainer">
+      <div class="scrollable">
         <q-list>
           <q-item v-for="server in serverList" :key="server.id">
             <q-btn round elevated @click="selectServer(server.id)">
@@ -285,7 +285,6 @@ function ShowServers() {
 }
 
 function ShowFriends() {
-  console.log(selectedServerId.value,showfriends.value);
 
   if (!showfriends.value){
     emit('emit-friends', true);
@@ -310,7 +309,7 @@ function ShowAccount() {
 
 .scrollable {
   overflow: auto !important;
-  max-height: calc(100vh - 285px) !important;
+  max-height: calc(100vh - 240px) !important;
   max-width: 250px !important;
 }
 

@@ -14,13 +14,55 @@
     </div>
     <div v-else>
       <h2 class=" text-h5 text-center">FriendsList</h2>
-      <q-list class=" full-width text-center ">
-        <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
-          <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
-            <q-item-label># {{ channel }}</q-item-label>
-          </q-item-section>
-        </q-item>
-      </q-list>
+      <q-list class=" full-width text-left ">
+        <q-item v-for="friend in friendsList" :key="friend.id">
+        <q-btn
+        rounded
+        @click="selectFriend(friend.id)"
+        class="q-ma-none"
+        style="width: 100%; border-radius: .7rem;"
+      >
+        <q-avatar size="2rem" class="q-mr-xs">
+          <img :src="friend.avatar" alt="Friend Avatar" />
+        </q-avatar>
+      
+          <span class="q-mr-sm">{{ friend.name }}</span>
+          <q-badge
+            v-if="friend.status === 'online'"
+            color="green"
+            floating
+            rounded
+            label="Online"
+            class="q-mr-xs"
+          />
+          <q-badge
+            v-if="friend.status === 'away'"
+            color="yellow"
+            floating
+            rounded
+            label="Away"
+            class="q-mr-xs"
+          />
+          <q-badge
+            v-if="friend.status === 'offline'"
+            color="grey"
+            floating
+            rounded
+            label="Offline"
+            class="q-mr-xs"
+          />
+
+        <q-badge
+          v-if="friend.notifications > 0"
+          color="red"
+          floating
+          rounded
+        >
+          {{ friend.notifications }}
+        </q-badge>
+    </q-btn>
+    </q-item>
+  </q-list>
     </div>
   </div>
     
@@ -114,13 +156,47 @@ watch(() => props.receivedShowFriends, (newVal) => {
     }
 })
 
-
 const commands = {
   '/create': 'Create a new channel',
   '/join': 'Join an existing channel',
   '/leave': 'Leave a channel',
   '/delete': 'Delete a channel',
 }
+
+interface Friend {
+  id: number;
+  name: string;
+  notifications: number;
+  avatar: string;
+  status: string; 
+}
+
+// Function to generate a friends list
+const generateFriendsList = (count: number): Friend[] => {
+  const friendsList: Friend[] = [];
+  const statuses = ['Online', 'Offline', 'Do Not Disturb']; // Possible statuses
+
+  for (let i = 1; i <= count; i++) {
+    friendsList.push({
+      id: i,
+      name: `Friend ${i}`,
+      notifications: Math.floor(Math.random() * 100),
+      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
+      status: statuses[Math.floor(Math.random() * statuses.length)], 
+    });
+  }
+
+  return friendsList;
+};
+
+const friendsList = ref<Friend[]>(generateFriendsList(20));
+
+
+const selectFriend = (id: number) => {
+  console.log('Selected friend ID:', id);
+  // friendsList.
+};
+
 
 const loadMessages = () => {
 
