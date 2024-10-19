@@ -64,7 +64,7 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User'; 
 import { Message } from 'src/types/Message';
-import { ref } from 'vue';
+import { ref, defineProps } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 
@@ -80,6 +80,12 @@ let someIsTypingBool = ref<boolean>(false);
 let filteredCommands = ref({});
 let userMessage1 = ref< { [key: number]: Message }>({});
 let userMessage2 = ref< { [key: number]: Message }>({});
+
+const props = defineProps<{
+  showFriends: boolean|number;
+}>();
+
+const showFriendsValue = ref<boolean|number>(props.showFriends || true);
 
 const commands = {
   '/create': 'Create a new channel',
