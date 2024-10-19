@@ -1,5 +1,5 @@
 <template>
-  <div class=" text-frame overflow-auto" ref="messageList">
+  <div class=" text-frame overflow-auto q-pr-md" ref="messageList">
   <q-infinite-scroll @load="onLoad" :offset="250" reverse >
     <template v-slot:loading>
         <div class="row justify-center" >
@@ -8,7 +8,7 @@
         </div>
     </template>
 
-    <q-item class="q-pa-none" v-for="(message, index) in wholeMessage" :key="message.id">
+    <q-item class="q-pa-none" v-for="(message) in wholeMessage" :key="message.id">
       <div class="row item-section-msg full-width q-pa-sm rounded-borders" :class="{'bg-grey-10':isMentioned(message)}">
         <q-avatar class="profile-box q-mr-md">
           <img src="https://cdn.quasar.dev/img/avatar4.jpg" class=" full-height"/>
@@ -87,8 +87,7 @@ watch(
 
 <style>
 .text-frame{
-   max-height: 80vh;
+   max-height: 82.5vh;
 }
-
 
 </style>
