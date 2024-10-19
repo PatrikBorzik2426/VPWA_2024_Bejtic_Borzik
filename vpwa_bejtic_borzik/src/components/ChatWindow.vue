@@ -1,6 +1,6 @@
 <template>
-  <div class="chat-frame row justify-between bg-dark q-pa-sm">
-    <div class="channel-rooms rounded-borders col-2 bg-grey-9">
+  <div class="chat-frame row justify-between bg-grey-10">
+    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm">
       <h2 class=" text-h5 text-center">Server Name</h2>
       <q-list class=" full-width text-center ">
         <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }"
@@ -12,7 +12,7 @@
       </q-list>
     </div>
 
-    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md column" style=" max-width: 82.75%;">
+    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style=" max-width: 82.75%;">
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
@@ -238,6 +238,10 @@ const pickCommand = (command : string) => {
 .command-list{
   position: absolute;
   bottom: 10%;
+}
+
+.shadows {
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
 
 

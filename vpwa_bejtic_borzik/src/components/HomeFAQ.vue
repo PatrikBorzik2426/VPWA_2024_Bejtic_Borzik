@@ -1,7 +1,7 @@
 <template>
     <div class="q-pa-md text-body1 container full-window column  justify-center" style="max-width: 1200px">
       <h3 class="text-regular text-center q-ma-none q-mb-xl">FAQ</h3>
-      <q-list bordered class="rounded-borders">
+      <q-list bordered class="rounded-borders faq-list">
         <q-expansion-item
           expand-separator
           class="overflow-hidden"
@@ -169,7 +169,7 @@
        width: 100%;
    }
 
-  .q-list {
+  .faq-list {
     background-color: #1e2021;
     border-radius: 10px;
     padding: 10px;
