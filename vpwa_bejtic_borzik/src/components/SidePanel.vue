@@ -128,7 +128,11 @@
           </q-card-section>
 
         </q-card>
-        <q-btn flat rounded class="q-mt-md" label="Close" color="primary" @click="showaccount = false" />
+        <div class="q-mt-md">
+          <q-btn rounded label="Log Out" color="red-9" @click="LogOut"/>
+          <q-btn flat rounded class="q-ml-md" label="Close" color="primary" @click="showaccount = false"/>
+        </div>
+
       </div>
     </q-dialog>
   </div>
@@ -136,6 +140,9 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 interface User {
   id: number;
@@ -299,6 +306,10 @@ function ShowFriends() {
 function ShowAccount() {
   showaccount.value = !showaccount.value;
 }
+
+function LogOut() {
+  router.push('/login'); 
+}
 </script>
 
 <style scoped>
@@ -310,7 +321,7 @@ function ShowAccount() {
 
 .scrollable {
   overflow: auto !important;
-  max-height: calc(100vh - 240px) !important;
+  max-height: calc(100vh - 247px) !important;
   max-width: 250px !important;
 }
 
@@ -321,7 +332,7 @@ function ShowAccount() {
   transform: translateY(-50%);
   width: 5px;
   height: 15px;
-  background-color: white;
+  background-color: var(--q-primary);
   border-radius: 25%;
 }
 
