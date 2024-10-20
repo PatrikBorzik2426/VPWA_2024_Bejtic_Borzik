@@ -203,7 +203,7 @@
           </q-list>
 
         <div
-          class="someone-typing absolute z-top cursor-pointer"
+          class="someone-typing absolute full-width z-top cursor-pointer"
           v-if="someIsTypingBool"
           @click="showWhatIsTyping"
           style=" height: fit-content;"
