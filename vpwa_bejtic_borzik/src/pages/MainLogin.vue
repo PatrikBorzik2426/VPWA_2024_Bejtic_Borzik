@@ -1,13 +1,13 @@
 <template>
     <q-page padding class="fullscreen flex column flex-center page">
-      <h2>Welcome to <spam class=" text-bold text-primary">Comb-bot</spam></h2>
+      <h2 class="text-center"
+      style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <spam class=" text-bold text-primary" style="white-space: nowrap">Comb-bot</spam></h2>
       <q-form
         @submit.prevent="handleSubmit"
         greedy
-        class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white login-register-form"
-      >
+        class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white login-register-form" style="width: clamp(20rem, 80%, 32rem)">
       
-      <h1 class=" text-h4 q-ml-none q-mt-none q-mb-lg">Login Form</h1>
+      <h1 class=" text-h4 q-ml-none q-mt-none q-mb-lg" style="font-size: clamp(1.5rem, 3vw, 2rem)">Login Form</h1>
 
       <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
       <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
@@ -54,36 +54,28 @@ defineOptions({
 </script>
 
 <style>
-  .button {
-    border-radius: 20rem;
-    -webkit-border-radius: 20rem;
-    -moz-border-radius: 20rem;
-    -ms-border-radius: 20rem;
-    -o-border-radius: 20rem;
-    width: 45%;
+.button {
+  border-radius: 20rem;
+  width: 45%;
+  transition: width 0.3s ease;
+}
+
+.q-input {
+  width: 100%;
+}
+
+.login-register-form {
+  width: 32rem;
+  border: var(--q-primary) 3px solid;
+  border-radius: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.q-page {
+    padding: 1rem;
+    background-color: var(--q-dark-page);
+    color: white;
   }
 
-  body{
-    font-family: 'Manrope', sans-serif;
-  }
-
-  .q-input{
-      width: 100%;
-  }
-
-  .login-register-form{
-      width: 32rem;
-      border: var(--q-primary) 3px solid;
-      border-radius: 1.5rem;
-      -webkit-border-radius: 1.5rem;
-      -moz-border-radius: 1.5rem;
-      -ms-border-radius: 1.5rem;
-      -o-border-radius: 1.5rem;
-  }
-
-  .q-page{
-      background-color: var(--q-dark-page);
-      color: white;
-  }
 </style>
   

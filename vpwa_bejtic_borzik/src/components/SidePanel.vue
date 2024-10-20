@@ -1,6 +1,6 @@
 <template>
   <div 
-  v-if="!showMobileChat"
+  v-if="!showMobileChat || $q.screen.gt.sm"
   class="sidepannel column no-wrap q-pt-lg bg-grey-9 shadow-7"
   :style="{ paddingTop : $q.screen.gt.sm ? '1rem' : '0' }">
     <q-list style=" height: fit-content">
@@ -70,7 +70,7 @@
           </q-item>
         </q-list>
     </div>
-  </div>
+  
 
     <div v-else-if="selectedServer != null && !showservers && showselectedserver">
       <q-item>
@@ -88,7 +88,8 @@
       </q-item>
     </div>
   </div>
-</div>
+
+
     <q-dialog v-model="showaccount">
       <div class="popup bg-dark column">
         <div class="text-h6 text-white q-mt-md">Account Information</div>
@@ -149,6 +150,7 @@
 
       </div>
     </q-dialog>
+    </div>
 </template>
 
 <script setup lang="ts">
@@ -159,6 +161,7 @@ import { useQuasar } from 'quasar';
 const router = useRouter();
 const $q = useQuasar();
 
+// Interfaces
 interface User {
   id: number;
   nickname: string;
@@ -176,6 +179,7 @@ interface Server {
   notifications: number;
 }
 
+// Refs and State
 const page = ref('');
 const MainUserId = ref(1);
 const filesImages = ref<File[]>([]);
@@ -185,23 +189,6 @@ const showfriends = ref(true);
 const showaccount = ref(false);
 const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
-
-const emit = defineEmits(['emit-friends', 'emit-server-id']);
-
-emit('emit-friends', true);
-
-const props = defineProps<{
-  receivedShowMobileChat: boolean;
-}>();
-
-watch(
-  () => props.receivedShowMobileChat,
-  () => {
-    console.log('watch', props.receivedShowMobileChat);
-    showMobileChat.value = props.receivedShowMobileChat;
-  }
-);
-
 const showMobileChat = ref<boolean>(false);
 
 const Users = ref<User[]>([
@@ -216,106 +203,106 @@ const Users = ref<User[]>([
   },
 ]);
 
+// Emit events
+const emit = defineEmits(['emit-friends', 'emit-server-id']);
+emit('emit-friends', true);
+
+// Props
+const props = defineProps<{
+  receivedShowMobileChat: boolean;
+}>();
+
+// Watchers
+watch(
+  () => props.receivedShowMobileChat,
+  () => {
+    console.log('watch', props.receivedShowMobileChat);
+    showMobileChat.value = props.receivedShowMobileChat;
+  }
+);
+
+// Server List Generator
 const generateServerList = (count: number): Server[] => {
   const serverList: Server[] = [];
-
   for (let i = 1; i <= count; i++) {
     serverList.push({
       id: i,
       name: `Server ${i}`,
       avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
-      notifications: Math.floor(Math.random() * 100), 
+      notifications: Math.floor(Math.random() * 100),
     });
   }
-
   return serverList;
 };
 
+// Data
 const serverList = ref<Server[]>(generateServerList(20));
 
 const options = [
-        {
-          label: 'Online',
-          value: 'Online',
-          icon: 'circle',
-          color: 'green'
-        },
-        {
-          label: 'Do Not Disturb',
-          value: 'Do Not Disturb',
-          description: 'You will not receive any notifications.',
-          icon: 'remove_circle',
-          color: 'red'
-        },
-        {
-          label: 'Offline',
-          value: 'Offline',
-          description: 'You will not appear online, but will have full access to all of Discord.',
-          icon: 'trip_origin',
-          color: 'grey'
-        },
-      ];
+  {
+    label: 'Online',
+    value: 'Online',
+    icon: 'circle',
+    color: 'green'
+  },
+  {
+    label: 'Do Not Disturb',
+    value: 'Do Not Disturb',
+    description: 'You will not receive any notifications.',
+    icon: 'remove_circle',
+    color: 'red'
+  },
+  {
+    label: 'Offline',
+    value: 'Offline',
+    description: 'You will not appear online, but will have full access to all of Discord.',
+    icon: 'trip_origin',
+    color: 'grey'
+  },
+];
 
+// Computed Properties
 const statusColor = computed(() => {
-  switch (Mainuser.value.status) {
-    case 'Online':
-      return 'green';
-    case 'Do Not Disturb':
-      return 'red';
-    case 'Offline':
-      return 'grey';
-    default:
-      return 'primary';
+  switch (Mainuser.value?.status) {
+    case 'Online': return 'green';
+    case 'Do Not Disturb': return 'red';
+    case 'Offline': return 'grey';
+    default: return 'primary';
   }
 });
 
 const statusIcon = computed(() => {
-  switch (Mainuser.value.status) {
-    case 'Online':
-      return 'circle';
-    case 'Do Not Disturb':
-      return 'remove_circle';
-    case 'Offline':
-      return 'trip_origin';
-    default:
-      return 'circle';
+  switch (Mainuser.value?.status) {
+    case 'Online': return 'circle';
+    case 'Do Not Disturb': return 'remove_circle';
+    case 'Offline': return 'trip_origin';
+    default: return 'circle';
   }
 });
 
 const totalUnreadServers = computed(() => {
-  return serverList.value.reduce(
-    (acc, server) => acc + server.notifications, 0
-  );
+  return serverList.value.reduce((acc, server) => acc + server.notifications, 0);
 });
 
 const selectedServer = computed(() => {
-  return (
-    serverList.value.find((server) => server.id === selectedServerId.value) ||
-    null
-  );
+  return serverList.value.find((server) => server.id === selectedServerId.value) || null;
 });
 
 const Mainuser = computed(() => {
-  return (
-    Users.value.find((MainUser) => MainUser.id === MainUserId.value) ||
-    null
-  );
+  return Users.value.find((MainUser) => MainUser.id === MainUserId.value) || null;
 });
 
-
+// Functions
 function selectServer(serverId: number) {
-  console.log(selectedServerId.value,serverId,showfriends.value);
-
+  console.log(selectedServerId.value, serverId, showfriends.value);
   if (selectedServerId.value != serverId) {
     emit('emit-server-id', serverId);
   }
-
   selectedServerId.value = serverId;
   showselectedserver.value = true;
   showfriends.value = false;
   showaccount.value = false;
   page.value = '';
-
 }
 
 function CreateServer() {
@@ -327,12 +314,10 @@ function ShowServers() {
 }
 
 function ShowFriends() {
-
-  if (!showfriends.value){
+  if (!showfriends.value) {
     emit('emit-friends', true);
     selectedServerId.value = -1;
   }
-
   showfriends.value = true;
   showaccount.value = false;
   showselectedserver.value = false;
@@ -343,10 +328,11 @@ function ShowAccount() {
 }
 
 function LogOut() {
-  router.push('/login'); 
+  router.push('/login');
 }
 
 </script>
+
 
 <style scoped>
 .sidepannel {

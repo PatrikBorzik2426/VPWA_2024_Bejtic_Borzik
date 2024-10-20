@@ -26,7 +26,6 @@ const ReceiveServerId = (id:number) => {
 }
 
 const ReceiveMobileShowChat = (showMobileChatValue : boolean) => {
-  console.log("ReceiveMobileShowChat", showMobileChat.value)
   showMobileChat.value = showMobileChatValue;
 }
 
