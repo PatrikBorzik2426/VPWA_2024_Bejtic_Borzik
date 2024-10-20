@@ -321,7 +321,7 @@ function LogOut() {
 
 .scrollable {
   overflow: auto !important;
-  max-height: calc(100vh - 247px) !important;
+  max-height: 73vh !important;
   max-width: 250px !important;
 }
 

@@ -1,13 +1,13 @@
 <template>
-  <div class="chat-frame row justify-between bg-grey-10">
+  <div class="chat-frame row bg-grey-10">
     
-    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm" style="width: 15%;">
+    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm q-mr-sm" style="width: 15%;">
     <div v-if="showChannels">
       <q-expansion-item
         dark
         header-class="server-name"
         expand-separator
-        label="Account settings"
+        :label = "'Server ' + receivedServerId"
         class=" relative-position z-top"
         :duration = 0
       >
@@ -21,9 +21,8 @@
           </q-card-section>
         </div>
       </q-card>
-
-
       </q-expansion-item>
+
       <q-list class=" full-width text-center ">
         <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
           <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
@@ -31,28 +30,30 @@
           </q-item-section>
         </q-item>
       </q-list>
-    </div>
+      
     </div>
     <div v-else>
-      <div class="q-ml-md row items-center">
-        <h2 class=" q-ml-sm text-h6 text-left q-mr-md">Friends List</h2>
+      <div class="q-mx-md row items-center">
+        <h2 class=" q-ml-sm text-h6 text-left ">Friends List</h2>
         
-          <q-icon center color="primary" name="supervised_user_circle" class="cursor-pointer q-ml-xl" size="1.25rem">
-          <!-- <q-badge rounded floating color="red">3</q-badge> -->
-          <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
-            Friend Requests
-          </q-tooltip>
-          </q-icon>
-        
-          <q-icon center color="primary" name="add_circle" class="cursor-pointer q-ml-md q-mr-md" size="1.25rem">
-          <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
-            Add Friend
-          </q-tooltip>
-          </q-icon>
+          <div class="row q-ml-auto" style = "column-gap: 0.6rem;">
+            <q-icon center color="primary" name="supervised_user_circle" class="cursor-pointer " size="1.25rem">
+              <!-- <q-badge rounded floating color="red">3</q-badge> -->
+              <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                Friend Requests
+              </q-tooltip>
+            </q-icon>
+            
+            <q-icon center color="primary" name="add_circle" class="cursor-pointer" size="1.25rem">
+              <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                Add Friend
+              </q-tooltip>
+            </q-icon>
+          </div>
       </div>
       
       <div class="scrollable">
-      <q-list >
+      <q-list class=" q-pt-sm">
         <q-item v-for="friend in friendsList" :key="friend.id" class="q-pt-none q-pb-none">
         <q-btn
         rounded
@@ -84,7 +85,7 @@
   </div>
     
 
-    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style=" max-width: 84.75%;">
+    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style="width:84.25%">
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
@@ -136,10 +137,9 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User'; 
 import { Message } from 'src/types/Message';
-import { ref, defineProps, watch, computed } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
-import { getHeapSpaceStatistics } from 'v8';
 
 const inputValue = ref<string>('');
 const inputCli = ref<null|any>(null);
@@ -197,9 +197,9 @@ const commands = {
 }
 
 const options = {
-  "settings": "Settings",
-  "person_add" : "Invite friend",
-  "logout": "Leave server"
+  'settings': 'Settings',
+  'person_add' : 'Invite friend',
+  'logout': 'Leave server'
 }
 
 interface Friend {
