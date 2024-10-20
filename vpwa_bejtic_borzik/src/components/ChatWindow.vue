@@ -23,6 +23,15 @@
       </q-card>
       </q-expansion-item>
 
+      <div class="q-mx-md q-my-none row items-center justify-between">
+        <h2 class="q-my-xs text-caption text-left color-grey">Text Channel</h2>
+        <q-icon center color="primary" name="add" class="cursor-pointer" size="1.25rem" style="padding-right: 2px;">
+          <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+            Add Channel
+          </q-tooltip>
+        </q-icon>
+      </div>
+
       <q-list class=" full-width text-center ">
         <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
           <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
