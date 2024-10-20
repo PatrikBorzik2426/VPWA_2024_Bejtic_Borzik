@@ -45,7 +45,7 @@
       <q-separator inset color="primary"/>
     </div>
       
-    <div  :style="{ height: $q.screen.gt.sm ? '78%' : '68%' }" class=" q-pt-md">
+    <div  :style="{ height: $q.screen.gt.sm ? '78%' : '68%' }" class=" ">
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
             <q-item>
