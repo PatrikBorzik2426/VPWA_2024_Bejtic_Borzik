@@ -54,28 +54,32 @@
       
       <div class="scrollable">
       <q-list class=" q-pt-sm">
-        <q-item v-for="friend in friendsList" :key="friend.id" class="q-pt-none q-pb-none">
+        <q-item v-for="friend in friendsList" :key="friend.id" class="q-pa-none hover-fill" :class="{ 'selected-channel': currentChannel === friend.name }">
         <q-btn
         rounded
         flat
         @click="selectFriend(friend.id)"
-        class="hover-fill q-pl-sm"
-        style="width: 100%; border-radius: .7rem;">
-        <div class=" row justify-start items-center full-width">
-        <q-avatar size="1.7rem" class="q-mr-sm " >
-          <img :src="friend.avatar" alt="Friend Avatar" />
-          <q-badge rounded floating color="grey-9" class="q-pa-none" >
-            <q-icon :color="getStatusColor(friend.status)" :name="getStatusIcon(friend.status)" size="0.8rem"/>
-          </q-badge>
-          <q-img/>
-        </q-avatar>
-        <q-badge
-          v-if="friend.notifications > 0"
-          color="red"
-          floating
-          rounded
-        >{{ friend.notifications }}</q-badge>
+        class="q-pl-sm full-width row justify-center "
+        style=" border-radius: .7rem;">
+        <div class=" row justify-start items-center full-width " style=" max-width: 80%;">
+          <q-avatar size="1.7rem" class="q-mr-sm " >
+            <img :src="friend.avatar" alt="Friend Avatar" />
+            <q-badge rounded floating color="grey-9" class="q-pa-none" >
+              <q-icon :color="getStatusColor(friend.status)" :name="getStatusIcon(friend.status)" size="0.8rem"/>
+            </q-badge>
+            <q-img/>
+          </q-avatar>
           <p class="q-ma-none">{{ friend.name }}</p>   
+
+          <q-badge
+            v-if="friend.notifications > 0"
+            color="red"
+            floating
+            rounded
+            class=" relative-position q-ml-auto"
+            style=" top:0;"
+          >{{ friend.notifications }}
+          </q-badge>
         </div>  
     </q-btn>
     </q-item>
@@ -89,7 +93,9 @@
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
-          <SingleMessage :message1="userMessage1" :message2="userMessage2"/>
+          
+          <SingleMessage :message1="userMessage1" :message2="userMessage2" v-if="!friendChatStatus"/>
+          <SingleMessage :message1="dmMessageDict1" :message2="{}" v-else/>
         </div>
       </div>
 
@@ -144,7 +150,7 @@ import dayjs from 'dayjs';
 const inputValue = ref<string>('');
 const inputCli = ref<null|any>(null);
 const showComponent = ref<boolean>(false);
-const currentChannel = ref<string>('Channel 1');
+const currentChannel = ref<string>('');
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
 const $q = useQuasar();
 
@@ -154,6 +160,8 @@ let filteredCommands = ref({});
 let userMessage1 = ref< { [key: number]: Message }>({});
 let userMessage2 = ref< { [key: number]: Message }>({});
 
+let dmMessageDict1 = ref< { [key: number]: Message }>({});
+
 const showChannels = ref<boolean>(false);
 
 const props = defineProps<{
@@ -162,32 +170,7 @@ const props = defineProps<{
   lastUpdate: Date;
 }>();
 
-watch(
-  () => [props.receivedServerId, props.lastUpdate],
-  ([newId]) => {
-    console.log('receivedServerId value:', newId);
-
-    if (newId !== undefined && newId !== null) {
-      showChannels.value = true;
-      console.log('Server ID checked (same value too):', newId);
-    }
-  },
-  { immediate: true }
-);
-
-
-watch(
-  () => props.receivedShowFriends, 
-  (newVal) => {
-  if (newVal !== undefined) {
-    showChannels.value = false
-    }
-  },
-  {
-    immediate: true,
-    deep: true,
-  }
-);
+const friendChatStatus = ref<boolean>(true);
 
 const commands = {
   '/create': 'Create a new channel',
@@ -231,8 +214,15 @@ const friendsList = ref<Friend[]>(generateFriendsList(20));
 
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
+    console.log('Prop friend: ', props.receivedShowFriends);
+
     if (friend.id === id) {
+      currentChannel.value = friend.name;
       friend.notifications = 0;
+
+      friendChatStatus.value = props.receivedShowFriends;
+
+      loadChannel(friendsList.value[id-1].name)
     }
     return friend;
   });
@@ -269,10 +259,11 @@ const getStatusIcon = (status:string) => {
 
 const loadMessages = () => {
 
-console.log('loading messages');
+console.log('loading messages ', friendChatStatus.value);
 
 userMessage1.value = {};
 userMessage2.value = {};
+dmMessageDict1.value = {};
 
 for (let i = 0; i < 100; i++) {
   const user1: User = {
@@ -302,15 +293,39 @@ for (let i = 0; i < 100; i++) {
     user: user2,
     timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
   };  
+
+  const dmMessage1: Message = {
+    id: i,
+    text: 'Message ' + i,
+    user: {
+      id: 0,
+      login: 'Someone',
+      password: 'password',
+      email: ''},
+    timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
+  };
   
+  const dmMessage2: Message = {
+    id: i,
+    text: 'Message ' + i,
+    user: {
+      id: 0,
+      login: 'myDm',
+      password: 'password',
+      email: ''},
+    timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
+  };
 
   userMessage1.value[i] = message1;
   userMessage2.value[i+100] = message2;
 
+  const dictLen = Object.keys(dmMessageDict1.value).length;
+
+  dmMessageDict1.value[dictLen] = dmMessage1;
+  dmMessageDict1.value[dictLen+1] = dmMessage2;
+
 }
 };
-
-loadMessages();
 
 const sendMessage = () => {
   if (inputValue.value.length > 0) {
@@ -395,6 +410,42 @@ const pickCommand = (command : string) => {
   }
   
 };
+
+watch(
+  () => [props.receivedServerId, props.lastUpdate],
+  ([newId]) => {
+    console.log('receivedServerId value:', newId);
+    if (newId !== undefined && newId !== null) {
+      showChannels.value = true;
+
+      if (newId !== -1) {
+        friendChatStatus.value = false;
+      }
+
+      console.log('Server ID checked (same value too):', newId);
+    }
+  },
+  { immediate: true }
+);
+
+watch(
+  () => props.receivedShowFriends, 
+  (newVal) => {
+
+    
+    if (newVal !== undefined) {
+      showChannels.value = false
+    }
+    
+    loadChannel(currentChannel.value);
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
+
+loadChannel(friendsList.value[0].name);
 
 </script>
 

@@ -173,6 +173,8 @@ const selectedServerId = ref<number>(-1);
 
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
 
+emit('emit-friends', true);
+
 const Users = ref<User[]>([
   {
     id: 1,
@@ -310,6 +312,8 @@ function ShowAccount() {
 function LogOut() {
   router.push('/login'); 
 }
+
+
 </script>
 
 <style scoped>
