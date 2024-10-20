@@ -1,5 +1,7 @@
 <template>
-  <div class=" text-frame overflow-auto q-pr-md" ref="messageList">
+  <div class="  overflow-auto q-pr-md" ref="messageList"
+    :style = "{maxHeight: $q.screen.gt.sm ? '82.5vh' : '70vh'}"
+  >
   <q-infinite-scroll @load="onLoad" :offset="250" reverse >
     <template v-slot:loading>
         <div class="row justify-center" >
@@ -28,6 +30,9 @@
 <script setup lang="ts">
 import { defineProps,ref,watch } from 'vue';
 import { Message } from 'src/types/Message';
+import { useQuasar } from 'quasar';
+
+const $q = useQuasar();
 
 const props = defineProps<{
   message1: {[key: number]: Message};
@@ -85,9 +90,3 @@ watch(
 
 </script>
 
-<style>
-.text-frame{
-   max-height: 82.5vh;
-}
-
-</style>
