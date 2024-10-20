@@ -1,6 +1,9 @@
 <template>
-  <div class="sidepannel q-pt-lg q-ma-sm bg-grey-9 shadow-7">
-    <q-list>
+  <div 
+  v-if="!showMobileChat"
+  class="sidepannel column no-wrap q-pt-lg bg-grey-9 shadow-7"
+  :style="{ paddingTop : $q.screen.gt.sm ? '1rem' : '0' }">
+    <q-list style=" height: fit-content">
       <q-item>
         <q-btn round unelevated :color="showaccount ? 'grey-8' : 'grey-9'" @click="ShowAccount">
           <q-icon center size="1.7rem" color="primary" name="account_circle" />
@@ -38,11 +41,13 @@
       </q-item>
     </q-list>
 
-    <q-separator inset color="primary" class="q-ma-md" />
-
-    <div v-if="showservers">
-      <div class="scrollable">
-        <q-list>
+    <div class="content-center"  style=" height: 1%">
+      <q-separator inset color="primary"/>
+    </div>
+      
+    <div  :style="{ height: $q.screen.gt.sm ? '78%' : '68%' }" class=" q-pt-md">
+      <div v-if="showservers" class=" full-height">
+        <q-list class="scrollable full-height">
           <q-item v-for="server in serverList" :key="server.id">
             <q-btn round elevated @click="selectServer(server.id)">
               <div v-if="selectedServerId === server.id && showselectedserver" class="server-dot"></div>
@@ -56,7 +61,6 @@
             </q-btn>
           </q-item>
         </q-list>
-      </div>
     </div>
 
     <div v-else-if="selectedServer != null && !showservers && showselectedserver">
@@ -74,6 +78,9 @@
         </q-btn>
       </q-item>
     </div>
+  </div>
+</div>
+
 
     <q-dialog v-model="showaccount">
       <div class="popup bg-dark column">
@@ -135,14 +142,15 @@
 
       </div>
     </q-dialog>
-  </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { useQuasar } from 'quasar';
 
 const router = useRouter();
+const $q = useQuasar();
 
 interface User {
   id: number;
@@ -174,6 +182,20 @@ const selectedServerId = ref<number>(-1);
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
 
 emit('emit-friends', true);
+
+const props = defineProps<{
+  receivedShowMobileChat: boolean;
+}>();
+
+watch(
+  () => props.receivedShowMobileChat,
+  () => {
+    console.log('watch', props.receivedShowMobileChat);
+    showMobileChat.value = props.receivedShowMobileChat;
+  }
+);
+
+const showMobileChat = ref<boolean>(false);
 
 const Users = ref<User[]>([
   {
@@ -313,20 +335,18 @@ function LogOut() {
   router.push('/login'); 
 }
 
-
 </script>
 
 <style scoped>
 .sidepannel {
-  max-height: 100vh !important;
+  max-height: 97.5vh !important;
+  max-width: 75px;
   border-radius: 1rem;
   color: grey;
 }
 
 .scrollable {
   overflow: auto !important;
-  max-height: 73vh !important;
-  max-width: 250px !important;
 }
 
 .server-dot {

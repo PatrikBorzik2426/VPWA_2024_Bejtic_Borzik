@@ -1,7 +1,7 @@
 <template>
-  <q-page padding class=" row q-pa-none">
-    <SidePanel class="menu" @emit-friends="ReceiveShowFriends" @emit-server-id="ReceiveServerId"/>
-    <ChatWindow class="chat-compo" :receivedShowFriends="showFriends" :receivedServerId="ServerId" :lastUpdate="lastUpdate"/>
+  <q-page padding class=" row q-pa-sm no-wrap" style="gap: 0.5%">
+    <SidePanel class="menu" @emit-friends="ReceiveShowFriends" @emit-server-id="ReceiveServerId" :receivedShowMobileChat = "showMobileChat"/>
+    <ChatWindow class="chat-compo" @emit-mobileShowChat="ReceiveMobileShowChat" :receivedShowFriends="showFriends" :receivedServerId="ServerId" :lastUpdate="lastUpdate"/>
   </q-page>
 </template>
 
@@ -14,6 +14,7 @@ import { ref } from 'vue';
 const showFriends = ref<boolean>(false);
 const ServerId = ref<number>(-1);
 const lastUpdate = ref<Date>(new Date());
+const showMobileChat = ref<boolean>(false);
 
 const ReceiveShowFriends = () => {
   showFriends.value = !showFriends.value
@@ -22,6 +23,11 @@ const ReceiveShowFriends = () => {
 const ReceiveServerId = (id:number) => {
   ServerId.value = id;
   lastUpdate.value = new Date();
+}
+
+const ReceiveMobileShowChat = (showMobileChatValue : boolean) => {
+  console.log("ReceiveMobileShowChat", showMobileChat.value)
+  showMobileChat.value = showMobileChatValue;
 }
 
 
