@@ -310,6 +310,8 @@ function ShowAccount() {
 function LogOut() {
   router.push('/login'); 
 }
+
+
 </script>
 
 <style scoped>
