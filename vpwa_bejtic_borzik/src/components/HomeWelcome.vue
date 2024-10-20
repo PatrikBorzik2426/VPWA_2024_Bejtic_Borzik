@@ -1,9 +1,10 @@
 <template>
-    <div class="text-center welcome-section column flex-center full-window">
+    <div class="text-center welcome-section column flex-center full-window"
+    :style = "{ marginTop : !$q.screen.gt.sm ? '4rem' : '0rem' }">
       <div class="row flex-center fit q-gutter-x-lg">
         <div class="col-xs-12 col-sm-5 col-md-5 ">
           <div class="q-py-md row flex-center text-center left-column col-div">
-            <h4 class="q-ma-none">Welcome to <span class="text-bold text-primary">Comb-bot</span></h4>
+            <h4 class="q-ma-none">Welcome to <span class="text-bold text-primary text-no-wrap">Comb-bot</span></h4>
             <div class=" q-mx-auto column items-center">
               <p class="welcome-subtitle text-subtitle1">Your all-in-one platform for connecting, sharing, and discovering!</p>
               <p class="q-mt-md welcome-description">Join our community and stay updated with the latest features and enhancements. Explore, interact, and make the most out of your experience!</p>
@@ -42,7 +43,10 @@
 
 
 <script setup lang="ts">
-    import { useRouter } from 'vue-router'
+    import { useRouter } from 'vue-router';
+    import { useQuasar } from 'quasar';
+
+    const $q = useQuasar();
     const router = useRouter()
     function goToRegister() {
       router.push('/register')

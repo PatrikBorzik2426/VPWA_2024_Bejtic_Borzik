@@ -264,6 +264,7 @@ const userMessage1 = ref<{ [key: number]: Message }>({});
 const userMessage2 = ref<{ [key: number]: Message }>({});
 const dmMessageDict1 = ref<{ [key: number]: Message }>({});
 const friendChatStatus = ref<boolean>(true);
+const seeMessagePresent = ref<boolean>(false);
 const $q = useQuasar();
 
 // Props
@@ -491,16 +492,7 @@ const showNotification = (text: string, currentChannel: string) => {
 
 const showWhatIsTyping = () => {
   let newValue = '';
-
-  if (
-    messageBeingTyped.value.split('\t')[1] === inputValue.value ||
-    newValue.split('\t')[1] === inputValue.value
-  ) {
-    messageBeingTyped.value = 'Someone is typing ...';
-  } else {
-    messageBeingTyped.value = 'Someone:\t' + inputValue.value;
-    newValue = messageBeingTyped.value;
-  }
+  seeMessagePresent.value = !seeMessagePresent.value;  
 };
 
 const checkCommand = () => {
@@ -585,6 +577,17 @@ watch(
     deep: true,
   }
 );
+
+watch(
+  () => [seeMessagePresent.value, inputValue.value],
+  () => {
+    if (seeMessagePresent.value){
+      messageBeingTyped.value = 'Someone: ' + inputValue.value;
+    }else{
+      messageBeingTyped.value = 'Someone is typing ...';
+    }
+  }
+)
 
 // Initial load
 loadChannel(friendsList.value[0].name);

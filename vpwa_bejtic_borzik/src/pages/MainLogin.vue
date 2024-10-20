@@ -1,7 +1,7 @@
 <template>
     <q-page padding class="fullscreen flex column flex-center page">
       <h2 class="text-center"
-      style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <spam class=" text-bold text-primary" style="white-space: nowrap">Comb-bot</spam></h2>
+      style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <spam class=" text-bold text-primary text-no-wrap">Comb-bot</spam></h2>
       <q-form
         @submit.prevent="handleSubmit"
         greedy
