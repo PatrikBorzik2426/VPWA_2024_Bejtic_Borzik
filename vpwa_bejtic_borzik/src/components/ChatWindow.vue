@@ -1,7 +1,7 @@
 <template>
   <div class=" row chat-frame full-width bg-grey-10" style="gap: 0.5%">
     <div
-      v-if="!mobileShowChat"
+      v-if="!mobileShowChat || $q.screen.gt.sm"
       class="channel-rooms rounded-borders bg-grey-9 shadow-7"
       :style="{ width: $q.screen.gt.sm ? '18%' : '99.5%' }"
     >
@@ -192,7 +192,7 @@
           </q-list>
 
         <div
-          class="someone-typing absolute z-top cursor-pointer"
+          class="someone-typing absolute full-width z-top cursor-pointer"
           v-if="someIsTypingBool"
           @click="showWhatIsTyping"
           style=" height: fit-content;"

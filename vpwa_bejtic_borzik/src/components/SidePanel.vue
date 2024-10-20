@@ -1,6 +1,6 @@
 <template>
   <div 
-  v-if="!showMobileChat"
+  v-if="!showMobileChat || $q.screen.gt.sm"
   class="sidepannel column no-wrap q-pt-lg bg-grey-9 shadow-7"
   :style="{ paddingTop : $q.screen.gt.sm ? '1rem' : '0' }">
     <q-list style=" height: fit-content">
