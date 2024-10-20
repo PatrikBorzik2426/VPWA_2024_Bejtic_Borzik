@@ -1,7 +1,7 @@
 <template>
   <div class=" row chat-frame full-width bg-grey-10" style="gap: 0.5%">
     <div
-      v-if="!mobileShowChat"
+      v-if="!mobileShowChat || $q.screen.gt.sm"
       class="channel-rooms rounded-borders bg-grey-9 shadow-7"
       :style="{ width: $q.screen.gt.sm ? '18%' : '99.5%' }"
     >
@@ -249,34 +249,34 @@ import { ref, defineProps, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 
+// Refs and State
 const inputValue = ref<string>('');
 const inputCli = ref<null | any>(null);
 const showComponent = ref<boolean>(false);
 const currentChannel = ref<string>('');
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
 const mobileShowChat = ref<boolean>(false);
-const $q = useQuasar();
 const showChannels = ref<boolean>(false);
+const messageBeingTyped = ref<string>('Someone is typing ...');
+const someIsTypingBool = ref<boolean>(false);
+const filteredCommands = ref({});
+const userMessage1 = ref<{ [key: number]: Message }>({});
+const userMessage2 = ref<{ [key: number]: Message }>({});
+const dmMessageDict1 = ref<{ [key: number]: Message }>({});
+const friendChatStatus = ref<boolean>(true);
+const $q = useQuasar();
 
-const emit = defineEmits(['emit-mobileShowChat']);
-
-let messageBeingTyped = ref<string>('Someone is typing ...');
-let someIsTypingBool = ref<boolean>(false);
-let filteredCommands = ref({});
-let userMessage1 = ref<{ [key: number]: Message }>({});
-let userMessage2 = ref<{ [key: number]: Message }>({});
-
-let dmMessageDict1 = ref<{ [key: number]: Message }>({});
-
-
+// Props
 const props = defineProps<{
   receivedServerId: number;
   receivedShowFriends: boolean;
   lastUpdate: Date;
 }>();
 
-const friendChatStatus = ref<boolean>(true);
+// Emit events
+const emit = defineEmits(['emit-mobileShowChat']);
 
+// Commands and Options
 const commands = {
   '/create': 'Create a new channel',
   '/join': 'Join an existing channel',
@@ -290,6 +290,7 @@ const options = {
   logout: 'Leave server',
 };
 
+// Interfaces
 interface Friend {
   id: number;
   name: string;
@@ -298,6 +299,7 @@ interface Friend {
   status: string;
 }
 
+// Functions
 const requestNotificationPermission = () => {
   if (Notification.permission === 'default') {
     Notification.requestPermission();
@@ -328,15 +330,12 @@ const friendsList = ref<Friend[]>(generateFriendsList(20));
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
     console.log('Prop friend: ', props.receivedShowFriends);
-
     mobileShowChat.value = true;
 
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friend.notifications = 0;
-
       friendChatStatus.value = props.receivedShowFriends;
-
       loadChannel(friendsList.value[id - 1].name);
     }
     return friend;
@@ -386,9 +385,9 @@ const loadMessages = () => {
 
     const user2: User = {
       id: i + 100,
-      login: 'User ' + i + 100,
+      login: 'User ' + (i + 100),
       password: 'password',
-      email: 'user' + i + 100 + '@gmail.com',
+      email: 'user' + (i + 100) + '@gmail.com',
     };
 
     const message1: Message = {
@@ -400,7 +399,7 @@ const loadMessages = () => {
 
     const message2: Message = {
       id: i + 100,
-      text: 'Message ' + i + 100,
+      text: 'Message ' + (i + 100),
       user: user2,
       timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
     };
@@ -454,11 +453,11 @@ const sendMessage = () => {
       },
       timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
     };
+
     userMessage1.value[Object.keys(userMessage1.value).length] = message;
   }
 
   inputValue.value = '';
-
   checkCommand();
 };
 
@@ -533,7 +532,6 @@ const loadChannel = (channelName: string) => {
   loadMessages();
 };
 
-
 const pickCommand = (command: string) => {
   inputValue.value = command + ' ';
   showComponent.value = false;
@@ -543,6 +541,7 @@ const pickCommand = (command: string) => {
   }
 };
 
+// Watchers
 watch(
   () => [props.receivedServerId, props.lastUpdate],
   ([newId]) => {
@@ -579,17 +578,18 @@ watch(
 watch(
   () => mobileShowChat.value,
   (newVal) => {
-    emit('emit-mobileShowChat',newVal);
+    emit('emit-mobileShowChat', newVal);
   },
   {
     immediate: true,
     deep: true,
   }
-)
+);
 
-
+// Initial load
 loadChannel(friendsList.value[0].name);
 </script>
+
 
 <style>
 .chat-window,

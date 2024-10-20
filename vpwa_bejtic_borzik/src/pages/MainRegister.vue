@@ -1,11 +1,11 @@
 <template>
 <q-page padding class="fullscreen flex flex-center">
-  <div class=" q-mr-xl" style="max-width: 35%;">
+  <div v-if="$q.screen.gt.sm" class="q-mr-xl" style="max-width: 35%;">
     <h2 class="text-center" style="width: fit-content; margin: 0 auto;">
       Welcome to 
     </h2>
     <h2 class="text-bold text-primary text-center" style="width: fit-content; margin: 0 auto;">Comb-bot</h2>
-    <p class=" text-h5 q-mt-xl" style="text-align: center; width: fit-content;">
+    <p class=" text-h5 q-mt-xl text-center" >
       Our comb is your comb as well, where you can meet your friends, family and colleagues.<br>
       The biggest advantage of our comb is that you can meet people from all over the world. 
     </p>
