@@ -1,7 +1,7 @@
 <template>
   <q-page padding class=" row q-pa-none">
     <SidePanel class="menu" @emit-friends="ReceiveShowFriends" @emit-server-id="ReceiveServerId"/>
-    <ChatWindow class="chat-compo" :receivedShowFriends="showFriends" :receivedServerId="ServerId"/>
+    <ChatWindow class="chat-compo" :receivedShowFriends="showFriends" :receivedServerId="ServerId" :lastUpdate="lastUpdate"/>
   </q-page>
 </template>
 
@@ -13,13 +13,15 @@ import { ref } from 'vue';
 
 const showFriends = ref<boolean>(false);
 const ServerId = ref<number>(-1);
+const lastUpdate = ref<Date>(new Date());
 
 const ReceiveShowFriends = () => {
   showFriends.value = !showFriends.value
 }
 
 const ReceiveServerId = (id:number) => {
-  ServerId.value = id
+  ServerId.value = id;
+  lastUpdate.value = new Date();
 }
 
 
