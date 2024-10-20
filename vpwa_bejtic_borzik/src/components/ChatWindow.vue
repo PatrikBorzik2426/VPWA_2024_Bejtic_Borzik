@@ -214,6 +214,8 @@ const friendsList = ref<Friend[]>(generateFriendsList(20));
 
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
+    console.log('Prop friend: ', props.receivedShowFriends);
+
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friend.notifications = 0;
