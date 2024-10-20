@@ -1,39 +1,59 @@
 <template>
-  <div class="chat-frame row justify-between bg-grey-10">
+  <div class="chat-frame row bg-grey-10">
     
-    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm" style="width: 15%;">
-    <div v-if="showChannels" >
-      <h2 class=" text-h5 text-left">Server Name</h2>
-      <div class="scrollable">
-      <q-list class=" full-width text-center">
+    <div class="channel-rooms rounded-borders col-2 bg-grey-9 shadow-7 q-mt-sm q-mb-sm q-mr-sm" style="width: 15%;">
+    <div v-if="showChannels">
+      <q-expansion-item
+        dark
+        header-class="server-name"
+        expand-separator
+        :label = "'Server ' + receivedServerId"
+        class=" relative-position z-top"
+        :duration = 0
+      >
+      <q-card dark class=" relative-position full-width">
+        <div class=" absolute full-width bg-grey-9" style="top: 0; left: 0;">
+          <q-card-section v-for="(value, key, index) in options" :key="key" class="cursor-pointer setting-row" :class="{ 'last-item-style': index === listOfChannels.length }" >
+            <div class="row full-height full-width items-center setting-row" >
+              <q-icon :name="key" color="" size="1.5rem" class="q-mr-sm" />
+              <p class="q-ma-none">{{ value }}</p>
+            </div>
+          </q-card-section>
+        </div>
+      </q-card>
+      </q-expansion-item>
+
+      <q-list class=" full-width text-center ">
         <q-item class="hover-fill" v-for="(channel, index) in listOfChannels" :key="index" :class="{ 'selected-channel': currentChannel === channel }">
           <q-item-section @click="loadChannel(channel)" class=" cursor-pointer">
             <q-item-label># {{ channel }}</q-item-label>
           </q-item-section>
         </q-item>
       </q-list>
-    </div>
+      
     </div>
     <div v-else>
-      <div class="q-ml-md row items-center">
-        <h2 class=" q-ml-sm text-h6 text-left q-mr-md">Friends List</h2>
+      <div class="q-mx-md row items-center">
+        <h2 class=" q-ml-sm text-h6 text-left ">Friends List</h2>
         
-          <q-icon center color="primary" name="supervised_user_circle" class="cursor-pointer q-ml-xl" size="1.25rem">
-          <!-- <q-badge rounded floating color="red">3</q-badge> -->
-          <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
-            Friend Requests
-          </q-tooltip>
-          </q-icon>
-        
-          <q-icon center color="primary" name="add_circle" class="cursor-pointer q-ml-md q-mr-md" size="1.25rem">
-          <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
-            Add Friend
-          </q-tooltip>
-          </q-icon>
+          <div class="row q-ml-auto" style = "column-gap: 0.6rem;">
+            <q-icon center color="primary" name="supervised_user_circle" class="cursor-pointer " size="1.25rem">
+              <!-- <q-badge rounded floating color="red">3</q-badge> -->
+              <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                Friend Requests
+              </q-tooltip>
+            </q-icon>
+            
+            <q-icon center color="primary" name="add_circle" class="cursor-pointer" size="1.25rem">
+              <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                Add Friend
+              </q-tooltip>
+            </q-icon>
+          </div>
       </div>
       
       <div class="scrollable">
-      <q-list >
+      <q-list class=" q-pt-sm">
         <q-item v-for="friend in friendsList" :key="friend.id" class="q-pt-none q-pb-none">
         <q-btn
         rounded
@@ -65,7 +85,7 @@
   </div>
     
 
-    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style=" max-width: 84.75%;">
+    <div class="chat-window rounded-borders bg-grey-9 col-10 q-pa-md q-mt-sm q-mb-sm column shadow-7" style="width:84.25%">
       <div class="message-holder">
         <h6 class=" q-mb-lg q-ma-none">{{ currentChannel }}</h6>
         <div>
@@ -117,10 +137,9 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User'; 
 import { Message } from 'src/types/Message';
-import { ref, defineProps, watch, computed } from 'vue';
+import { ref, defineProps, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
-import { getHeapSpaceStatistics } from 'v8';
 
 const inputValue = ref<string>('');
 const inputCli = ref<null|any>(null);
@@ -137,29 +156,50 @@ let userMessage2 = ref< { [key: number]: Message }>({});
 
 const showChannels = ref<boolean>(false);
 
-const props = defineProps({ 
-  receivedServerId: Number, 
-  receivedShowFriends: Boolean 
-})
+const props = defineProps<{
+  receivedServerId: number;
+  receivedShowFriends: boolean;
+  lastUpdate: Date;
+}>();
 
-watch(() => props.receivedServerId, (newVal) => {
-  if (newVal !== undefined && newVal !== null) {
-    showChannels.value = true 
-    console.log('isNumberSet:', showChannels.value)
-  }
-})
+watch(
+  () => [props.receivedServerId, props.lastUpdate],
+  ([newId]) => {
+    console.log('receivedServerId value:', newId);
 
-watch(() => props.receivedShowFriends, (newVal) => {
-  if (newVal !== undefined) {
-    showChannels.value = false 
+    if (newId !== undefined && newId !== null) {
+      showChannels.value = true;
+      console.log('Server ID checked (same value too):', newId);
     }
-})
+  },
+  { immediate: true }
+);
+
+
+watch(
+  () => props.receivedShowFriends, 
+  (newVal) => {
+  if (newVal !== undefined) {
+    showChannels.value = false
+    }
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
 
 const commands = {
   '/create': 'Create a new channel',
   '/join': 'Join an existing channel',
   '/leave': 'Leave a channel',
   '/delete': 'Delete a channel',
+}
+
+const options = {
+  'settings': 'Settings',
+  'person_add' : 'Invite friend',
+  'logout': 'Leave server'
 }
 
 interface Friend {
@@ -170,7 +210,6 @@ interface Friend {
   status: string; 
 }
 
-// Function to generate a friends list
 const generateFriendsList = (count: number): Friend[] => {
   const friendsList: Friend[] = [];
   const statuses = ['Online', 'Offline', 'Do Not Disturb']; // Possible statuses
@@ -189,7 +228,6 @@ const generateFriendsList = (count: number): Friend[] => {
 };
 
 const friendsList = ref<Friend[]>(generateFriendsList(20));
-
 
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
@@ -399,6 +437,18 @@ const pickCommand = (command : string) => {
 .selected-channel {
   background-color: var(--q-primary);
   border-radius: 0.35rem;
+}
+
+.server-name{
+  border-radius: 1rem 1rem 0 0 !important;
+}
+
+.setting-row:hover{
+  background-color: var(--q-primary);
+}
+
+.last-item-style{
+  background-color: #ff0000;
 }
 
 ::-webkit-scrollbar {

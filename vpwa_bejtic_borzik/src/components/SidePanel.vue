@@ -277,7 +277,7 @@ function selectServer(serverId: number) {
 
   if (selectedServerId.value != serverId) {
     emit('emit-server-id', serverId);
-  } 
+  }
 
   selectedServerId.value = serverId;
   showselectedserver.value = true;
@@ -295,6 +295,7 @@ function ShowFriends() {
 
   if (!showfriends.value){
     emit('emit-friends', true);
+    selectedServerId.value = -1;
   }
 
   showfriends.value = true;
@@ -320,7 +321,7 @@ function LogOut() {
 
 .scrollable {
   overflow: auto !important;
-  max-height: calc(100vh - 247px) !important;
+  max-height: 73vh !important;
   max-width: 250px !important;
 }
 
