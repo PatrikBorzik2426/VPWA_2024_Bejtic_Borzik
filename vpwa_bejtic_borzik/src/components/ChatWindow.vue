@@ -413,7 +413,7 @@ const pickCommand = (command : string) => {
 }
 
 .last-item-style{
-  background-color: red;
+  background-color: #ff0000;
 }
 
 </style>
