@@ -48,6 +48,14 @@
     <div  :style="{ height: $q.screen.gt.sm ? '78%' : '68%' }" class=" q-pt-md">
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
+            <q-item>
+            <q-btn round flat @click="CreateServer" class="q-my-sm">
+                <q-icon center name="add" size="2.6rem" color="primary"/>
+              <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
+                Create Server
+              </q-tooltip>
+            </q-btn>
+          </q-item>
           <q-item v-for="server in serverList" :key="server.id">
             <q-btn round elevated @click="selectServer(server.id)">
               <div v-if="selectedServerId === server.id && showselectedserver" class="server-dot"></div>
@@ -62,6 +70,7 @@
           </q-item>
         </q-list>
     </div>
+  </div>
 
     <div v-else-if="selectedServer != null && !showservers && showselectedserver">
       <q-item>
@@ -80,8 +89,6 @@
     </div>
   </div>
 </div>
-
-
     <q-dialog v-model="showaccount">
       <div class="popup bg-dark column">
         <div class="text-h6 text-white q-mt-md">Account Information</div>
@@ -309,6 +316,10 @@ function selectServer(serverId: number) {
   showaccount.value = false;
   page.value = '';
 
+}
+
+function CreateServer() {
+  console.log('Create Server');
 }
 
 function ShowServers() {
