@@ -102,7 +102,8 @@ module.exports = configure(function (/* ctx */) {
 
       // Quasar plugins
       plugins: [
-        'Notify'
+        'Notify',
+        'AppVisibility'
       ],
       config:{
         notify: { /* look at QuasarConfOptions from the API card */ },
