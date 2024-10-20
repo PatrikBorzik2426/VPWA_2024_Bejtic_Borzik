@@ -70,7 +70,7 @@ const onLoad = (index : number,done : any) => {
       wholeMessageLen.value = Object.keys(wholeMessage.value).length;
 
     done();
-  }, 500);
+  }, 1000);
 };
 
 watch(
