@@ -70,9 +70,10 @@
               name="supervised_user_circle"
               class="cursor-pointer"
               size="1.25rem"
+              @click="showFriendRequests = true"
             >
-
-              <!-- <q-badge rounded floating color="red">3</q-badge> -->
+              <div v-if="friendrequests.length > 0" class="absolute bg-red text-white q-ml-md q-mb-md"
+              style="width: 0.7rem; height: 0.7rem; font-size: 1rem; border-radius: 0.3rem;"></div>
               <q-tooltip
                 anchor="bottom middle"
                 self="top middle"
@@ -82,12 +83,54 @@
               </q-tooltip>
             </q-icon>
 
+            <q-dialog no-focus v-model="showFriendRequests" position="top">
+              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 20rem; width: fit-content; max-width: 22rem;" :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-63vw' : '0'} " >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-subtitle1" >Friend Requests</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.1rem"
+                    @click="showFriendRequests = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                  <q-card-section class=" scroll q-px-none" style="max-height: 15.5rem;">
+                <q-list v-if="friendrequests.length > 0">
+                  <q-item v-for="request in friendrequests" :key="request.id" class="row justify-between items-center">
+                      <q-avatar size="2.5rem">
+                         <img :src="request.avatar" alt="Avatar" /> 
+                      </q-avatar>
+                      <q-item-label class="q-ml-sm q-mr-xl">{{ request.name }}</q-item-label>
+                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm">
+                        <q-tooltip anchor="center start" self="center end" class="bg-grey-8 text-caption">
+                          Accept 
+                        </q-tooltip>
+                      </q-btn>
+                        <q-btn round size="0.5rem" color="red-7" icon="close">
+                        <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-caption">
+                          Reject
+                        </q-tooltip>
+                      </q-btn>
+                  </q-item>
+                </q-list>
+              
+                <q-card-section v-else style="margin-top: 4rem;">
+                  <div class="text-subtitle2 text-center text-grey-6">Oooops... Looks like nobody wants to be your friend</div>
+                </q-card-section>
+              </q-card-section>
+              </q-card>
+            </q-dialog>
+
             <q-icon
               center
               color="primary"
               name="add_circle"
               class="cursor-pointer"
               size="1.25rem"
+              @click="showAddFriend = true"
             >
               <q-tooltip
                 anchor="bottom middle"
@@ -99,6 +142,38 @@
             </q-icon>
           </div>
         </div>
+
+        <q-dialog v-model="showAddFriend" position="top">
+              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 11rem; width: 25rem; " :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-60vw' : '0'} " >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-subtitle1" >Add Friend</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.1rem"
+                    @click="showAddFriend = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                <q-card-section >
+                  <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm">
+                    <template v-slot:append>
+                      <q-btn
+                        no-caps    
+                        label="Add"
+                        color="grey-8"
+                        class="q-py-md"
+                        style="border-radius: 0.8rem;"
+                        @click="AddedFriend = ''; showAddFriend = false"
+                      />
+                    </template>
+                  </q-input>
+                </q-card-section>
+                  
+              </q-card>
+            </q-dialog>
 
         <div class="scrollable">
           <q-list class="q-pt-sm">
@@ -245,7 +320,7 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User';
 import { Message } from 'src/types/Message';
-import { ref, defineProps, watch } from 'vue';
+import { ref, defineProps, watch, reactive } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 
@@ -257,6 +332,9 @@ const currentChannel = ref<string>('');
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
 const mobileShowChat = ref<boolean>(false);
 const showChannels = ref<boolean>(false);
+const showFriendRequests = ref<boolean>(false);
+const showAddFriend = ref<boolean>(false);
+const AddedFriend = ref<string>('');
 const messageBeingTyped = ref<string>('Someone is typing ...');
 const someIsTypingBool = ref<boolean>(false);
 const filteredCommands = ref({});
@@ -300,6 +378,30 @@ interface Friend {
   status: string;
 }
 
+interface FriendRequest {
+  id: number;
+  name: string;
+  avatar: string;
+}
+
+interface Server {
+  id: number;
+  name: string;
+  avatar: string;
+  private : boolean;
+  notifications: number;
+  channels: Array<ServerChannel>;
+}
+
+interface ServerChannel {
+  id: number;
+  name: string;
+  notifications: number;
+  messages: Message[];
+}
+
+const ServerChannels = ref<FriendRequest[]>();
+
 // Functions
 const requestNotificationPermission = () => {
   if (Notification.permission === 'default') {
@@ -327,6 +429,22 @@ const generateFriendsList = (count: number): Friend[] => {
 };
 
 const friendsList = ref<Friend[]>(generateFriendsList(20));
+
+const generateFriendRequests = (count: number): FriendRequest[] => {
+  const friendRequests: FriendRequest[] = [];
+
+  for (let i = 1; i <= count; i++) {
+    friendRequests.push({
+      id: i,
+      name: `Friend Request ${i}`,
+      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
+    });
+  }
+
+  return friendRequests;
+};
+
+const friendrequests = ref<FriendRequest[]>(generateFriendRequests(20));
 
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
@@ -622,6 +740,12 @@ loadChannel(friendsList.value[0].name);
   bottom: 10%;
 }
 
+.fr-badge {
+  font-size: 0.001rem !important;
+  margin-top: -0.2rem;
+  margin-right: -0.3rem;
+}
+
 .shadows {
   box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
 }
@@ -647,7 +771,7 @@ loadChannel(friendsList.value[0].name);
   background-color: #ff0000;
 }
 
-::-webkit-scrollbar {
+.scrollable::-webkit-scrollbar {
   display: none;
 }
 </style>
