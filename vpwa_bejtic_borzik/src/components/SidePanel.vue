@@ -1,6 +1,6 @@
 <template>
   <div 
-  v-if="!showMobileChat || $q.screen.gt.sm"
+  v-if="!showMobileChat || $q.screen.gt.md"
   class="sidepannel column no-wrap q-pt-lg bg-grey-9 shadow-7"
   :style="{ paddingTop : $q.screen.gt.sm ? '1rem' : '0' }">
     <q-list style=" height: fit-content">
@@ -49,13 +49,55 @@
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
             <q-item>
-            <q-btn round flat @click="CreateServer" class="q-my-sm">
+            <q-btn round flat @click="showCreateServer = true" class="q-my-sm">
                 <q-icon center name="add" size="2.6rem" color="primary"/>
               <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
                 Create Server
               </q-tooltip>
             </q-btn>
           </q-item>
+
+          <q-dialog v-model="showCreateServer">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Create Server</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showCreateServer = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                <q-card-section >
+                  <div class="text-subtitle2 text-center text-grey-6">Give your new server a personality with a name and an icon. You can always change it later.</div>
+                  
+                </q-card-section>
+                  <q-card-section class="text-center">
+            <q-avatar size="5rem" class="file-avatar">
+              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" />
+              <img :src="filesImages" alt="Avatar" class="accavatar file-image"/>
+              <q-icon name="edit" size="2rem" class="hover-icon" />
+            </q-avatar>
+                  </q-card-section>
+                <q-card-section >
+                  <div class="text-subtitle2 text-grey-6">Server name</div>
+                  <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;" class="q-my-sm">
+                  </q-input>
+                  <q-btn
+                        no-caps    
+                        label="Add"
+                        color="grey-8"
+                        style="border-radius: 0.8rem;"
+                        @click="newServerName = ''"
+                      />
+                </q-card-section>
+                  
+              </q-card>
+          </q-dialog>
+
           <q-item v-for="server in serverList" :key="server.id">
             <q-btn round elevated @click="selectServer(server.id)">
               <div v-if="selectedServerId === server.id && showselectedserver" class="server-dot"></div>
@@ -187,6 +229,7 @@ const unreadFriends = ref(4);
 const showservers = ref(false);
 const showfriends = ref(true);
 const showaccount = ref(false);
+const showCreateServer = ref(false);
 const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
@@ -202,6 +245,8 @@ const Users = ref<User[]>([
     status: 'Online',
   },
 ]);
+
+const newServerName = ref<string>(Users.value[0].name + '\'s Server');
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
@@ -303,10 +348,6 @@ function selectServer(serverId: number) {
   showfriends.value = false;
   showaccount.value = false;
   page.value = '';
-}
-
-function CreateServer() {
-  console.log('Create Server');
 }
 
 function ShowServers() {
