@@ -1,0 +1,66 @@
+import { BaseModel, beforeSave, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import hash from '@adonisjs/core/services/hash'
+import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
+import { DateTime } from 'luxon'
+import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
+import Server from './server.js'
+import ChannelMessage from './channel_message.js'
+import DirectMessage from './direct_message.js'
+import FriendRequest from './friend_request.js'
+
+export default class User extends BaseModel {
+  @column({ isPrimary: true })
+  declare id: number
+
+  @column()
+  declare login: string
+
+  @column({ serializeAs: null })
+  declare password: string
+
+  @column()
+  declare firstName: string
+
+  @column()
+  declare lastName: string
+
+  @column()
+  declare email: string
+
+  @column()
+  declare status: 'online' | 'offline' | 'DND'
+
+  @column.dateTime({ autoCreate: true })
+  declare createdAt: DateTime
+
+  @hasMany(() => ChannelMessage, {
+    foreignKey: 'userId',
+  })
+  declare messages: HasMany<typeof ChannelMessage>
+
+  @manyToMany(() => Server, {
+    pivotTable: 'server_user',
+    pivotForeignKey: 'user_id',
+    relatedKey: 'server_id',
+  })
+  declare servers: ManyToMany<typeof Server>
+
+  @hasMany(() => DirectMessage, {
+    foreignKey: 'senderUserId',
+  })
+  declare directMessages: HasMany<typeof DirectMessage>
+
+  @hasMany(() => FriendRequest, {
+    foreignKey: 'senderId',
+  })
+  declare friendRequests: HasMany<typeof FriendRequest>
+
+  @beforeSave()
+  public static async hashPassword(user: User) {
+    if (user.$dirty.password) {
+      user.password = await hash.make(user.password)
+    }
+  }
+
+  static accessTokens = DbAccessTokensProvider.forModel(User)
+}
