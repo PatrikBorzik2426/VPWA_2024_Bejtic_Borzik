@@ -11,5 +11,6 @@ export default class IndexSeeder extends BaseSeeder {
     await this.seed(await import('../channel_seeder.js'))
     await this.seed(await import('../channel_message_seeder.js'))
     await this.seed(await import('../friend_request_seeder.js'))
+    // await this.seed(await import('../friend_seeder.js'))
   }
 }

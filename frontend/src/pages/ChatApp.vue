@@ -8,13 +8,33 @@
 <script setup lang="ts">
 import SidePanel from '../components/SidePanel.vue'
 import ChatWindow from '../components/ChatWindow.vue'
+import axios from 'axios'
 
-import { ref } from 'vue';
+import { ref,onBeforeMount } from 'vue';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const showFriends = ref<boolean>(false);
 const ServerId = ref<number>(-1);
 const lastUpdate = ref<Date>(new Date());
 const showMobileChat = ref<boolean>(false);
+
+onBeforeMount(() => {
+  axios.post('http://127.0.0.1:3333/auth/check',{
+
+  }, {
+  headers: {
+    'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+    'Content-Type': 'application/json'
+  }
+  }).then(response => {
+    console.log(response.data);
+  }).catch(error => {
+    router.push('/login');
+  });
+});
+
 
 const ReceiveShowFriends = () => {
   showFriends.value = !showFriends.value

@@ -7,6 +7,7 @@ import Server from './server.js'
 import ChannelMessage from './channel_message.js'
 import DirectMessage from './direct_message.js'
 import FriendRequest from './friend_request.js'
+import Friend from './friend.js'
 
 export default class User extends BaseModel {
   @column({ isPrimary: true })
@@ -55,12 +56,27 @@ export default class User extends BaseModel {
   })
   declare friendRequests: HasMany<typeof FriendRequest>
 
+  @hasMany(() => Friend, {
+    foreignKey: 'user1Id',
+  })
+  declare friends1: HasMany<typeof Friend>
+
   @beforeSave()
   public static async hashPassword(user: User) {
     if (user.$dirty.password) {
+      console.log(user.password)
       user.password = await hash.make(user.password)
     }
   }
 
-  static accessTokens = DbAccessTokensProvider.forModel(User)
+  static accessTokens = DbAccessTokensProvider.forModel(User,{
+    expiresIn: '12h'
+  })
+
+  public async verifyPassword(user : User,plainText: string): Promise<boolean> {
+    const passwordHash = Buffer.isBuffer(user.password)
+    ? user.password.toString('utf-8')
+    : user.password;
+
+  return hash.verify(passwordHash, plainText);  }
 }

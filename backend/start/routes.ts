@@ -8,5 +8,20 @@
 */
 
 import router from '@adonisjs/core/services/router'
+import {middleware} from '#start/kernel'
 
-router.on('/').render('pages/home')
+const AuthController = () => import('#controllers/auth_controller')
+
+router.get('/csrf-secret', async ({ response, request }) => {
+    const csrfToken = request.csrfToken
+    return response.json({ csrfToken })
+})
+
+router.group(()=>{
+    router.post('register',[AuthController,'register']);
+    router.post('login',[AuthController,'login']);
+    router.post('logout',[AuthController,'logout']).use(middleware.auth());
+    router.post('check',[AuthController,'check'])
+
+
+}).prefix('auth')

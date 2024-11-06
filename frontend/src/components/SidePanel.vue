@@ -196,12 +196,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 
+onBeforeMount(() => {
+  page.value = 'ChatApp';
+});
+
 const router = useRouter();
 const $q = useQuasar();
+
+(() => {
+  page.value = 'ChatApp';
+});
 
 // Interfaces
 interface User {

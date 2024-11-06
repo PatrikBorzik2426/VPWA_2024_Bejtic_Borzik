@@ -18,12 +18,11 @@
   >
     <h1 class="text-h4 q-ml-none q-mt-none q-mb-lg">Register Form</h1>
 
-
     <q-input dark v-model="firstName" :rules="[requiredRule]" :error="!!loginError" :error-message="firstNameError" type="text" label="First Name" placeholder="example: Joe" class="no-margin"/>
     <q-input dark v-model="lastName" :rules="[requiredRule]" :error="!!loginError" :error-message="lastNameError" type="text" label="Last Name" placeholder="example: Doe" class="no-margin"/>
-    <q-input dark v-model="email" :rules="[requiredRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
+    <q-input dark v-model="email" :rules="[requiredRule,emailRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
     <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
-    <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
+    <q-input dark v-model="password" :rules="[requiredRule,passwordRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword@" class="no-margin"/>
 
     <q-btn class="button q-mx-auto" label="Register" type="submit" color="primary"/>
 
@@ -34,7 +33,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref } from 'vue';
+import axios from 'axios';
+import { useRouter } from 'vue-router';
+
+
 const login = ref<string>('')
 const password = ref<string>('')
 const firstName = ref<string>('')
@@ -47,25 +50,57 @@ const firstNameError = ref<string>('')
 const lastNameError = ref<string>('')
 const emailError = ref<string>('')
 
-const requiredRule = (value: string) => !!value || 'This field is required.'
+axios.defaults.withCredentials = true;
+const router = useRouter();
 
-function handleSubmit(){
-  if (!login.value) {
-    loginError.value = 'This field is required.'
+
+const requiredRule = (value: string) => !!value || 'This field is required.'
+const emailRule = (value: string) => /.+@.+\..+/.test(value) || 'E-mail must be valid.'
+const passwordRule = (value: string) => {
+  const hasMinLength = value.length > 6;
+  const hasUpperCase = /[A-Z]/.test(value);
+  const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(value);
+
+  if (!hasMinLength) {
+    return 'Password must be at least 7 characters long.';
   }
-  if (!password.value) {
-    passwordError.value = 'This field is required.'
+  if (!hasUpperCase) {
+    return 'Password must contain at least one uppercase letter.';
   }
-  if (!firstName.value) {
-    firstNameError.value = 'This field is required.'
+  if (!hasSpecialChar) {
+    return 'Password must contain at least one special character.';
   }
-  if (!lastName.value) {
-    lastNameError.value = 'This field is required.'
-  }
-  if (!email.value) {
-    emailError.value = 'This field is required.'
-  }
+  return true; // Password is valid
+};
+
+function handleSubmit() {
+
+  axios.post('http://127.0.0.1:3333/auth/register', {
+    login: login.value,
+    password: password.value,
+    firstName: firstName.value,
+    lastName: lastName.value,
+    email: email.value
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(response => {
+    const token = response.data.token;
+    localStorage.setItem('bearer', token.token);
+
+    if (token){
+      router.push('/chatapp');
+    }
+
+  })
+  .catch(error => {
+    console.error('Error during registration:', error.response ? error.response.data : error.message);
+  });
+
 }
+
 
 defineOptions({
 name: 'MainLogin'

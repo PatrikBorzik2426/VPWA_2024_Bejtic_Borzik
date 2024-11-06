@@ -1,7 +1,7 @@
 <template>
     <q-page padding class="fullscreen flex column flex-center page">
       <h2 class="text-center"
-      style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <spam class=" text-bold text-primary text-no-wrap">Comb-bot</spam></h2>
+      style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <span class=" text-bold text-primary text-no-wrap">Comb-bot</span></h2>
       <q-form
         @submit.prevent="handleSubmit"
         greedy
@@ -12,7 +12,9 @@
       <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
       <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
-      <q-btn class="button q-mx-auto" label="Submit" type="submit" color="primary" @click="LoginUser"/>
+      <p v-if="registrationError" class=" text-center q-ma-none text-red"> Incorrect password and/or registration</p>
+
+      <q-btn class="button q-mx-auto" label="Submit" type="submit" color="primary"/>
       
       <router-link to="/register" class=" q-ml-none text-primary">Go to Registration Page</router-link>
 
@@ -23,6 +25,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router';
+import axios from 'axios';
 
 const router = useRouter();
 
@@ -32,15 +35,34 @@ const password = ref<string>('')
 const loginError = ref<string>('')
 const passwordError = ref<string>('')
 
+const registrationError = ref<boolean>(false)
+
 const requiredRule = (value: string) => !!value || 'This field is required.'
 
 function handleSubmit(){
-  if (!login.value) {
-    loginError.value = 'This field is required.'
-  }
-  if (!password.value) {
-    passwordError.value = 'This field is required.'
-  }
+  axios.post('http://127.0.0.1:3333/auth/login', {
+    login: login.value,
+    password: password.value,
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  .then(response => {
+    const token = response.data.token;
+    localStorage.setItem('bearer', token.token);
+
+    if (token){
+      router.push('/chatapp');
+    }else{
+      registrationError.value = true;
+    }
+
+  })
+  .catch(error => {
+    console.error('Error during registration:', error.response ? error.response.data : error.message);
+    registrationError.value = true;
+  });
 }
 
 function LoginUser(){
