@@ -49,7 +49,7 @@
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
             <q-item>
-            <q-btn round flat @click="showCreateServer = true" class="q-my-sm">
+            <q-btn round flat @click="showCreateServer = true, halabala()" class="q-my-sm">
                 <q-icon center name="add" size="2.6rem" color="primary"/>
               <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
                 Create Server
@@ -77,23 +77,37 @@
                 </q-card-section>
                   <q-card-section class="text-center">
             <q-avatar size="5rem" class="file-avatar">
-              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" />
-              <img :src="filesImages" alt="Avatar" class="accavatar file-image"/>
+              <q-file v-model="image" class="file-circle file-input" filled rounded multiple accept=".jpg, image/*" @update:model-value="previewImage"/>
+              <img :src="uploadimglink" alt="Avatar" class="accavatar file-image"/>
               <q-icon name="edit" size="2rem" class="hover-icon" />
             </q-avatar>
                   </q-card-section>
-                <q-card-section >
+                <q-card-section class="q-pt-none ">
+                  
+
                   <div class="text-subtitle2 text-grey-6">Server name</div>
                   <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;" class="q-my-sm">
                   </q-input>
+                  <q-card-section class=" row items-center justify-between q-pb-none q-pt-sm q-pl-xs">
+                  <q-toggle
+                  dark
+                  v-model="privateserver"
+                  checked-icon="lock"
+                  color="red"
+                  label="Private Server"
+                  unchecked-icon="clear"
+                  class="q-mt-sm"
+                  />
                   <q-btn
                         no-caps    
-                        label="Add"
+                        label="Create"
                         color="grey-8"
+                        class="q-mt-sm"
                         style="border-radius: 0.8rem;"
                         @click="newServerName = ''"
                       />
-                </q-card-section>
+                    </q-card-section>
+                  </q-card-section>
                   
               </q-card>
           </q-dialog>
@@ -146,6 +160,34 @@
           </q-card-section>
 
           <q-card-section>
+            <div class="cursor-pointer">
+      {{ nickname }}
+      <q-popup-edit v-model="nickname" :validate="val => val.length > 5" v-slot="scope">
+        <q-input
+          autofocus
+          dense
+          v-model="scope.value"
+          :model-value="scope.value"
+          hint="Your nickname"
+          :rules="[
+            val => scope.validate(val) || 'More than 5 chars required'
+          ]"
+        >
+          <template v-slot:after>
+            <q-btn
+              flat dense color="negative" icon="cancel"
+              @click.stop.prevent="scope.cancel"
+            />
+
+            <q-btn
+              flat dense color="positive" icon="check_circle"
+              @click.stop.prevent="scope.set"
+              :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
+            />
+          </template>
+        </q-input>
+      </q-popup-edit>
+    </div>
             <div class="row items-center justify-between">
               <p><strong>Name:</strong> {{ Mainuser?.name }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('name')" /> -->
@@ -233,6 +275,23 @@ const showCreateServer = ref(false);
 const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
+const privateserver = ref<boolean>(false);
+const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
+
+
+let image = ref(null);
+let imageUrl = ref('');
+
+const previewImage = () => {
+  if (image.value) {
+    imageUrl.value = URL.createObjectURL(image.value[0]);
+  }
+};
+
+function halabala() {
+  imageUrl.value = uploadimglink.value;
+  previewImage();
+}
 
 const Users = ref<User[]>([
   {
