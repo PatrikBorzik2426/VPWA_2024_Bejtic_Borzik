@@ -241,6 +241,7 @@
 import { ref, computed, watch, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
+import axios from 'axios';
 
 onBeforeMount(() => {
   page.value = 'ChatApp';
@@ -436,6 +437,20 @@ function ShowAccount() {
 }
 
 function LogOut() {
+  axios.post('http://127.0.0.1:3333/auth/logout', {
+  }, {
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer')
+    }
+  })
+  .then(response => {
+    console.log("Logout: " + response.data);
+  })
+  .catch(error => {
+    console.error('Error during registration:', error.response ? error.response.data : error.message);
+  });
+
   router.push('/login');
 }
 

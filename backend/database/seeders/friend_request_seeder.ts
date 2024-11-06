@@ -7,12 +7,12 @@ export default class FriendRequestSeeder extends BaseSeeder {
       {
         senderId: 1, // Assuming user ID 1 exists
         receiverId: 2, // Assuming user ID 2 exists
-        accepted: false,
+        status: 'floating',
       },
       {
         senderId: 2, // Assuming user ID 2 exists
         receiverId: 1, // Assuming user ID 1 exists
-        accepted: true,
+        status: 'floating',
       },
     ])
   }

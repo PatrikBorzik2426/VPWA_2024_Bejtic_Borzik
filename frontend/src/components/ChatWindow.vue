@@ -107,7 +107,7 @@
               name="supervised_user_circle"
               class="cursor-pointer"
               size="1.25rem"
-              @click="showFriendRequests = true"
+              @click="getFriendRequests();showFriendRequests = true"
             >
               <div v-if="friendrequests.length > 0" class="absolute bg-red text-white q-ml-md q-mb-md"
               style="width: 0.7rem; height: 0.7rem; font-size: 1rem; border-radius: 0.3rem;"></div>
@@ -194,7 +194,7 @@
                     @click="showAddFriend = false"></q-icon>
                   </q-toolbar>
                   <q-separator color="grey-8" class="q-mb-sm"/>
-                <q-card-section >
+                <q-card-section>
                   <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm">
                     <template v-slot:append>
                       <q-btn
@@ -203,7 +203,7 @@
                         color="grey-8"
                         class="q-my-md"
                         style="border-radius: 0.8rem;"
-                        @click="AddedFriend = ''; showAddFriend = false"
+                        @click="addFriend(); showAddFriend = false"
                       />
                     </template>
                   </q-input>
@@ -360,6 +360,7 @@ import { Message } from 'src/types/Message';
 import { ref, defineProps, watch, reactive } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
+import axios from 'axios';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -382,6 +383,8 @@ const userMessage2 = ref<{ [key: number]: Message }>({});
 const dmMessageDict1 = ref<{ [key: number]: Message }>({});
 const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
+const friendrequests = ref<FriendRequest[]>([]) ;
+
 const $q = useQuasar();
 
 // Props
@@ -423,23 +426,12 @@ interface FriendRequest {
   avatar: string;
 }
 
-interface Server {
-  id: number;
-  name: string;
-  avatar: string;
-  private : boolean;
-  notifications: number;
-  channels: Array<ServerChannel>;
-}
-
 interface ServerChannel {
   id: number;
   name: string;
   notifications: number;
   messages: Message[];
 }
-
-const ServerChannels = ref<FriendRequest[]>();
 
 // Functions
 const requestNotificationPermission = () => {
@@ -469,21 +461,7 @@ const generateFriendsList = (count: number): Friend[] => {
 
 const friendsList = ref<Friend[]>(generateFriendsList(20));
 
-const generateFriendRequests = (count: number): FriendRequest[] => {
-  const friendRequests: FriendRequest[] = [];
 
-  for (let i = 1; i <= count; i++) {
-    friendRequests.push({
-      id: i,
-      name: `Friend Request ${i}`,
-      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
-    });
-  }
-
-  return friendRequests;
-};
-
-const friendrequests = ref<FriendRequest[]>(generateFriendRequests(20));
 
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
@@ -689,6 +667,57 @@ const pickCommand = (command: string) => {
     inputCli.value.focus();
   }
 };
+
+// Backend Calls
+async function addFriend(){
+  console.log('Adding friend:', AddedFriend);
+
+  axios.post('http://127.0.0.1:3333/friend/add-friend-request',{
+    receiverLogin: AddedFriend.value
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    AddedFriend.value = '';
+  }).catch(error => {
+    console.error('Error during adding friend:', error.response ? error.response.data : error.message);
+  });
+
+}
+
+const getFriendRequests = () => {
+
+friendrequests.value = [];
+
+axios.post('http://127.0.0.1:3333/friend/list-friend-requests',{},{
+  headers: {
+    'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+    'Content-Type': 'application/json'
+  }
+}).then(response => {
+  console.log(response.data.mappedRequests);
+  
+  response.data.mappedRequests.forEach((element : any) => {
+    console.log('Element:', element);
+    
+    friendrequests.value.push({
+      id: element.friendRequestId,
+      name: element.senderName,
+      avatar: `https://cdn.quasar.dev/img/avatar1.jpg`,
+    });
+
+    console.log(friendrequests.value);
+  })
+  
+}).catch(error => {
+  console.error('Error during fetching friend requests:', error.response ? error.response.data : error.message);
+});
+
+};
+
 
 // Watchers
 watch(

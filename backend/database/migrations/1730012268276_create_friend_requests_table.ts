@@ -8,7 +8,7 @@ export default class FriendRequests extends BaseSchema {
       table.increments('id').primary()
       table.integer('sender_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
       table.integer('receiver_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
-      table.boolean('accepted').defaultTo(false) // Default to 'false' indicating the request is pending
+      table.enu('status', ['accepted', 'rejected', 'floating']).defaultTo('floating').notNullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })

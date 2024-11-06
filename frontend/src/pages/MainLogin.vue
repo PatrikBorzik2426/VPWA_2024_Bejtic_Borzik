@@ -12,7 +12,7 @@
       <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
       <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
-      <p v-if="registrationError" class=" text-center q-ma-none text-red"> Incorrect password and/or registration</p>
+      <p v-if="registrationError" class=" text-center q-ma-none text-red"> Incorrect login and/or password</p>
 
       <q-btn class="button q-mx-auto" label="Submit" type="submit" color="primary"/>
       

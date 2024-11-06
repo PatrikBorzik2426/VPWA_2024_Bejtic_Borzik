@@ -31,6 +31,9 @@ export default class User extends BaseModel {
   @column()
   declare status: 'online' | 'offline' | 'DND'
 
+  @column()
+  declare avatar: Buffer | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

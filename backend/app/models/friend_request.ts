@@ -14,7 +14,7 @@ export default class FriendRequest extends BaseModel {
   declare receiverId: number
 
   @column()
-  declare accepted: boolean
+  declare status: 'accepted' | 'rejected' | 'floating'
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

@@ -1,16 +1,11 @@
 // app/Controllers/Http/AuthController.ts
 import { HttpContext } from '@adonisjs/core/http'
 import User from '../models/user.js'
-import { log } from 'console'
 
 export default class AuthController {
-    index(){
-        return 'Hello World'
-    }
 
   // Registration
   async register(ctx: HttpContext) {
-    log('Registering a new user')
 
     // Extracting required fields for registration
     const { login, password, firstName, lastName, email } = ctx.request.only([
@@ -75,6 +70,8 @@ export default class AuthController {
       await user.save()
 
       await User.accessTokens.delete(user, user.currentAccessToken.identifier)
+
+      console.log(user)
 
       return ctx.response.ok({ message: 'Logged out successfully' })
 
