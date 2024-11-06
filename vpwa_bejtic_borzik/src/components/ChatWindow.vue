@@ -13,6 +13,7 @@
           :label="'Server ' + receivedServerId"
           class="relative-position z-top full-width"
           :duration="0"
+          :icon=" 'lock'"
         >
           <q-card dark class="relative-position full-width">
             <div class="absolute full-width bg-grey-9" style="top: 0; left: 0">
@@ -35,12 +36,48 @@
         
          <div class="q-mx-md q-my-none row items-center justify-between">
         <h2 class="q-my-xs text-caption text-left color-grey">Text Channel</h2>
-        <q-icon center color="primary" name="add" class="cursor-pointer" size="1.25rem" style="padding-right: 2px;">
+        <q-icon center color="primary" name="add" class="cursor-pointer" size="1.25rem" style="padding-right: 2px;" @click="showCreateChannel = true">
           <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
-            Add Channel
+            Create Channel
           </q-tooltip>
         </q-icon>
       </div>
+
+      <q-dialog v-model="showCreateChannel">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Create Channel</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showCreateChannel = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                <q-card-section class="q-pt-none ">
+                  <div class="text-subtitle2 text-grey-6">Channel name</div>
+                  <q-input dark outlined v-model="newChannelName" style="border-radius: 10rem;" class="q-my-sm" placeholder="New Channel">
+                    <template v-slot:prepend>
+                      <q-icon name="tag" />
+                    </template>
+                  </q-input>
+                  <q-card-section class="row justify-end q-pb-none q-pt-sm q-pr-xs">
+                  <q-btn
+                        no-caps    
+                        label="Create"
+                        color="grey-8"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="newChannelName = ''; showCreateChannel = false"
+                      />
+                    </q-card-section>
+                  </q-card-section>
+                  
+              </q-card>
+          </q-dialog>
 
 
         <q-list class="full-width text-center">
@@ -161,10 +198,10 @@
                   <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm">
                     <template v-slot:append>
                       <q-btn
-                        no-caps    
+                        no-caps  
                         label="Add"
                         color="grey-8"
-                        class="q-py-md"
+                        class="q-my-md"
                         style="border-radius: 0.8rem;"
                         @click="AddedFriend = ''; showAddFriend = false"
                       />
@@ -332,6 +369,8 @@ const currentChannel = ref<string>('');
 const listOfChannels = ref(['Channel 1', 'Channel 2']);
 const mobileShowChat = ref<boolean>(false);
 const showChannels = ref<boolean>(false);
+const showCreateChannel = ref<boolean>(false);
+const newChannelName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
 const showAddFriend = ref<boolean>(false);
 const AddedFriend = ref<string>('');
