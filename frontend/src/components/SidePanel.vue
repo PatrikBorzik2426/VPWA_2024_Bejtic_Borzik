@@ -153,7 +153,7 @@
           <q-card-section class="text-center">
             <q-avatar size="5rem" class="file-avatar">
               <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" />
-              <img src="https://cdn.quasar.dev/img/avatar1.jpg" alt="Avatar" class="accavatar file-image"/>
+              <img :src="Mainuser.avatar" alt="Avatar" class="accavatar file-image"/>
               <q-icon name="edit" size="2rem" class="hover-icon" />
             </q-avatar>
           </q-card-section>
@@ -161,19 +161,19 @@
           <q-card-section>
             
             <div class="row items-center justify-between">
-              <p><strong>Name:</strong> {{ Mainuser?.name }}</p>
+              <p><strong>Name:</strong> {{ Mainuser.name }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('name')" /> -->
             </div>
             <div class="row items-center justify-between">
-              <p><strong>Surname:</strong> {{ Mainuser?.surname }}</p>
+              <p><strong>Surname:</strong> {{ Mainuser.surname }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('surname')" /> -->
             </div>
             <div class="row items-center justify-between">
-              <p><strong>Nickname:</strong> {{ Mainuser?.nickname }}</p>
+              <p><strong>Nickname:</strong> {{ Mainuser.nickname }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('nickname')" /> -->
             </div>
             <div class="row items-center justify-between">
-              <p><strong>Email:</strong> {{ Mainuser?.email }}</p>
+              <p><strong>Email:</strong> {{ Mainuser.email }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('email')" /> -->
             </div>
           </q-card-section>
@@ -210,7 +210,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeMount } from 'vue';
+import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
@@ -274,19 +274,17 @@ function halabala() {
   previewImage();
 }
 
-const Users = ref<User[]>([
-  {
-    id: 1,
-    nickname: 'Jebo',
-    name: 'Jane',
-    surname: 'Doe',
-    email: 'JaneDoe@gmail.com',
-    avatar: 'https://cdn.quasar.dev/img/avatar1.jpg',
-    status: 'Online',
-  },
-]);
+const Mainuser = reactive<User>({
+  id: 0,
+  nickname: "",
+  name: "",
+  surname: "",
+  email: "",
+  avatar: "",
+  status: ""
+});
 
-const newServerName = ref<string>(Users.value[0].name + '\'s Server');
+const newServerName = ref<string>(Mainuser.name + '\'s Server');
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
@@ -348,7 +346,7 @@ const options = [
 
 // Computed Properties
 const statusColor = computed(() => {
-  switch (Mainuser.value?.status) {
+  switch (Mainuser.status) {
     case 'Online': return 'green';
     case 'Do Not Disturb': return 'red';
     case 'Offline': return 'grey';
@@ -357,7 +355,7 @@ const statusColor = computed(() => {
 });
 
 const statusIcon = computed(() => {
-  switch (Mainuser.value?.status) {
+  switch (Mainuser.status) {
     case 'Online': return 'circle';
     case 'Do Not Disturb': return 'remove_circle';
     case 'Offline': return 'trip_origin';
@@ -371,10 +369,6 @@ const totalUnreadServers = computed(() => {
 
 const selectedServer = computed(() => {
   return serverList.value.find((server) => server.id === selectedServerId.value) || null;
-});
-
-const Mainuser = computed(() => {
-  return Users.value.find((MainUser) => MainUser.id === MainUserId.value) || null;
 });
 
 // Functions
@@ -425,6 +419,66 @@ function LogOut() {
 
   router.push('/login');
 }
+
+const getMainUser = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/user/get-main-user', {}, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const mainUserData = response.data.formattedMainUser;  
+
+    Mainuser.id = mainUserData.id;
+    Mainuser.nickname = mainUserData.nickname;
+    Mainuser.name = mainUserData.name;
+    Mainuser.surname = mainUserData.surname;
+    Mainuser.email = mainUserData.email;
+    Mainuser.avatar = mainUserData.avatar;
+    Mainuser.status = mainUserData.status;
+
+    console.log("Main User assigned:", Mainuser);
+  } catch (error) {
+    console.error('Error during fetching main user:', error.response ? error.response.data : error.message);
+  }
+};
+
+
+const updateMainUser = async () => {
+    axios.post('http://127.0.0.1:3333/user/update-main-user', {
+      name: Mainuser.name,
+      surname: Mainuser.surname,
+      nickname: Mainuser.nickname,
+      email: Mainuser.email,
+      status: Mainuser.status
+    }, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      console.log("User updated:", response.data);
+    }).catch(error => {
+    console.error('Error during updating user:', error.response ? error.response.data : error.message);
+  });
+};
+
+watch(
+  () => Mainuser, // Sledovanie celého objektu
+  (newValue, oldValue) => {
+    console.log('Mainuser changed:', newValue)
+    console.log('Previous value:', oldValue)
+
+    // Napríklad môžeš spustiť API na uloženie zmien
+    updateMainUser();
+  },
+  { deep: true } // Povinné pre sledovanie vnútorných vlastností objektu
+)
+
+
+getMainUser();
 
 </script>
 

@@ -148,6 +148,7 @@ export default class FriendsController {
         
           const mappedRequests = friendRequests.map((request) => ({
             friendRequestId: request.id,
+            senderAvatar: `https://ui-avatars.com/api/?name=${request.sender.login}`,
             senderName: request.sender.login,
           }))
 

@@ -366,11 +366,10 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User';
 import { Message } from 'src/types/Message';
-import { ref, defineProps, watch, reactive } from 'vue';
+import { ref, defineProps, watch} from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 import axios from 'axios';
-import { get } from 'http';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -470,11 +469,11 @@ const selectFriend = (id: number) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'online':
+    case 'Online':
       return 'green';
-    case 'DND':
+    case 'Do Not Disturb':
       return 'red';
-    case 'offline':
+    case 'Offline':
       return 'grey';
     default:
       return 'primary';
@@ -483,11 +482,11 @@ const getStatusColor = (status: string) => {
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'online':
+    case 'Online':
       return 'circle';
-    case 'DND':
+    case 'Do Not Disturb':
       return 'remove_circle';
-    case 'offline':
+    case 'Offline':
       return 'trip_origin';
     default:
       return 'circle';
@@ -689,6 +688,7 @@ async function acceptFriendRequest(requestId: number){
       'Content-Type': 'application/json'
     }
   }).then(response => {
+    console.log(response.data);
     deleteFriendRequest(requestId);
     getFriendsList();
   }).catch(error => {
@@ -743,7 +743,7 @@ const getFriendRequests = () => {
       friendrequests.value.push({
         id: element.friendRequestId,
         name: element.senderName,
-        avatar: `https://ui-avatars.com/api/?name={element.senderName}`,
+        avatar: element.senderAvatar,
       });
 
       console.log(friendrequests.value);

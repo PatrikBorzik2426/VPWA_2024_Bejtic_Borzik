@@ -9,9 +9,11 @@
 
 import router from '@adonisjs/core/services/router'
 import {middleware} from '#start/kernel'
+import User from '#models/user'
 
 const AuthController = () => import('#controllers/auth_controller')
 const FriendController = () => import('#controllers/friends_controller')
+const UserController = () => import('#controllers/user_controller')
 
 router.get('/csrf-secret', async ({ response, request }) => {
     const csrfToken = request.csrfToken
@@ -33,3 +35,9 @@ router.group(()=>{
     router.post('list-friends',[FriendController,'getFriendslist']).use(middleware.auth());
     router.post('remove-friend',[FriendController,'removeFriend']).use(middleware.auth());
 }).prefix('friend');
+
+
+router.group(()=>{
+    router.post('get-main-user', [UserController,'getMainUser']).use(middleware.auth());
+    router.post('update-main-user', [UserController,'updateMainUser']).use(middleware.auth());
+}).prefix('user');
