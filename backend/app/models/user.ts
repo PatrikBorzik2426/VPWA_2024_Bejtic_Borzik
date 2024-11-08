@@ -63,6 +63,11 @@ export default class User extends BaseModel {
     foreignKey: 'user1Id',
   })
   declare friends1: HasMany<typeof Friend>
+  
+  @hasMany(() => Friend, {
+    foreignKey: 'user2Id',
+  })
+  declare friends2: HasMany<typeof Friend>
 
   @beforeSave()
   public static async hashPassword(user: User) {

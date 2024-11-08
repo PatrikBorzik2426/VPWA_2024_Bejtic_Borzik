@@ -17,18 +17,18 @@
 ## 1. Fáza - 20.10.2024 (5. týždeň)
 - [ ] Dátový logický model v UML notácií @Patrik @Viktor
 - [ ] Responzívna klientská časť (prototyp) vo form Single Page Aplication - pomocou Quasar 
-    - [ ] Registračný formulár (meno, priezvisko, nick a email) @Patrik
-      - [ ] registrácia
-      - [ ] prihlásenie
-      - [ ] odhlásenia
-    - [ ] Zoznam kanálov (user musí byť člen)
+    - [x] Registračný formulár (meno, priezvisko, nick a email) @Patrik 
+      - [x] registrácia
+      - [x] prihlásenie
+      - [x] odhlásenia
+    - [ ] Zoznam kanálov (user musí byť člen) @Viktor
       - [ ] opustenie/vyhodenie kanála - vymazanie zo zoznamu
       - [ ] pri pozvaní do kanála - zvýraznenie v zozname, musí byť na vrchu
       - [ ] kanály - môcť vytvoriť, upraviť, presunúť či zrušiť
       - [ ] dva typy - súkromný/verejný
       - [ ] správca kanálu - ten kto kanál vytvoril
       - [ ] 30 dní bez aktivity - kanál prestane existovať
-    - [ ] Príkazový riadok v rámci chatu, kde má user pístup
+    - [ ] Príkazový riadok v rámci chatu, kde má user pístup @Patrik
       - [ ] **/list** vypíše zoznam používateľov v kanáli (už prvá fáza)
       - [ ] Vytvorenie kanálu cez príkazový riadok, cez ktorý sa posielajú správy
       - [ ] Vytvorenie súkromného kanálu cez **/join channelName [private]**
@@ -38,9 +38,9 @@
       - [ ] Vo verejnom kanáli user-i môžu používať **/kick nick** na vyhodenie, ak niekto obdrží kick 3x je banned - toto správca môže robiť priamo **/kick nick**
       - [ ] Nick a channelName sú unikátne
       - [ ] Správca môže kanál zatvoriť/zrušiť cez **/quit**
-    - [ ] User sa môže odpojiť pomocou **/cancel** správca zruší kanál týmto príkazom
-    - [ ] Mention pomocou **@nick**, kde sa potom danému používateľovi zvýrazní
-    - [ ] User si vie pozrieť históriu správ - **efektívny infinite scroll** (už prvá správa)
+    - [ ] User sa môže odpojiť pomocou **/cancel** správca zruší kanál týmto príkazom @Patrik
+    - [ ] Mention pomocou **@nick**, kde sa potom danému používateľovi zvýrazní @Patrik
+    - [ ] User si vie pozrieť históriu správ - **efektívny infinite scroll** (už prvá správa) @Patrik
     - [ ] Notifikácie - nové správy (už prvá fáza)
       - [ ] Zobrazujú sa ak aplikácia nie je viditeľná (Quasar doc App Visibility)
       - [ ] Notifikácia obsahuje odosielateľa a kus správy

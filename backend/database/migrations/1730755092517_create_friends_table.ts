@@ -7,13 +7,13 @@ export default class Friends extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
       table
-        .integer('user1_id')
+        .integer('user_1_id')
         .unsigned()
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
       table
-        .integer('user2_id')
+        .integer('user_2_id')
         .unsigned()
         .references('id')
         .inTable('users')

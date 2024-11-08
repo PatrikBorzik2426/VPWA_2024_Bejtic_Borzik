@@ -93,8 +93,8 @@ export default class FriendsController {
         const user2Id = Math.max(friendRequest.senderId, friendRequest.receiverId)
     
         const friend = await Friend.create({
-          user1Id,
-          user2Id,
+          user1Id : user1Id,
+          user2Id : user2Id,
         })
     
         console.log('Friendship created:', friend)
