@@ -48,6 +48,19 @@ async updateMainUser(ctx: HttpContext) {
         return ctx.response.status(404).json({ message: 'User not found' })
       }
 
+    const existingUser = await User.query()
+        .where('login', nickname)
+        .whereNot('id', user.id) // Uistime sa, že nekontrolujeme aktuálneho používateľa
+        .first();
+
+    if (existingUser) {
+      return ctx.response.status(400).json({
+        message: 'Nickname is already taken',
+      });
+    }
+
+    
+
     mainUser.login = nickname
     mainUser.firstName = name
     mainUser.lastName = surname

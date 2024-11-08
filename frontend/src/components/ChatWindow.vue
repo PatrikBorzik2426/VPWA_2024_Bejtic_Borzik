@@ -670,10 +670,23 @@ async function addFriend(){
     }
   }).then(response => {
     console.log(response.data);
-    AddedFriend.value = '';
+    $q.notify({
+        type: 'positive',
+        message: 'Friend request sent',
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+    
   }).catch(error => {
-    console.error('Error during adding friend:', error.response ? error.response.data : error.message);
-  });
+      const message = error.response?.data?.message || 'An error occurred';
+      AddedFriend.value = '';
+      $q.notify({
+        type: 'negative',
+        message: message,
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+    });
 
 }
 

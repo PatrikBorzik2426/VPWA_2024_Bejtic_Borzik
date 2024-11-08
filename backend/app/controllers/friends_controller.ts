@@ -5,52 +5,69 @@ import Friend from '../models/friend.js'
 
 export default class FriendsController {
     async addFriendRequest(ctx: HttpContext) {
-        const user = ctx.auth.user!
-
-        const receiverLogin = ctx.request.input('receiverLogin')
-
-        console.log(receiverLogin)
-
-        const receiver = await User.findByOrFail('login', receiverLogin)
-
-        console.log(receiver)
-
+        const user = ctx.auth.user!; // Aktuálne prihlásený používateľ
+      
+        const receiverLogin = ctx.request.input('receiverLogin'); // Login príjemcu žiadosti
+      
         try {
-            try{
-                const existingRequest = await FriendRequest.findByOrFail({
-                    senderId: user.id,
-                    receiverId: receiver.id,
-                })
-                
-                if (existingRequest.friendrequest_status === 'floating' || existingRequest.friendrequest_status === 'accepted') {
-                    return ctx.response.badRequest({ message: 'Friend request already sent' })
-                }else if (existingRequest.friendrequest_status === 'rejected') {
-                existingRequest.friendrequest_status = 'floating'
-                await existingRequest.save()
-                return {
-                    friendRequest: existingRequest,
-                }
-                }
-            }catch{
-                console.log('No existing request')
-            }
-
-            const friendRequest = await FriendRequest.create({
-                senderId: user.id,
-                receiverId: receiver.id,
-                friendrequest_status: 'floating',
+          // Overenie, či prijímateľ existuje
+          const receiver = await User.findBy('login', receiverLogin);
+          if (!receiver) {
+            return ctx.response.status(404).json({ message: 'User not found' });
+          }
+      
+          // Overenie, či už sú používateľ a prijímateľ priateľmi
+          const existingFriendship = await Friend.query()
+            .where(function (query) {
+              query
+                .where('user_1_id', user.id)
+                .andWhere('user_2_id', receiver.id);
             })
+            .orWhere(function (query) {
+              query
+                .where('user_1_id', receiver.id)
+                .andWhere('user_2_id', user.id);
+            })
+            .first();
 
-            console.log(friendRequest)
-
-            return {
-                friendRequest,
+            console.log(existingFriendship)
+      
+          if (existingFriendship) {
+            return ctx.response.badRequest({ message: 'You are already friends' });
+          }
+      
+          const existingRequest = await FriendRequest.query()
+            .where('sender_id', user.id)
+            .andWhere('receiver_id', receiver.id)
+            .first();
+      
+          if (existingRequest) {
+            if (existingRequest.friendrequest_status === 'rejected') {
+              existingRequest.friendrequest_status = 'floating';
+              await existingRequest.save();
+              return {
+                friendRequest: existingRequest,
+              };
             }
+          }
+      
+          const friendRequest = await FriendRequest.create({
+            senderId: user.id,
+            receiverId: receiver.id,
+            friendrequest_status: 'floating',
+          });
+      
+          return {
+            friendRequest,
+          };
         } catch (error) {
-            console.log(error)
-            return ctx.response.badRequest({ message: 'Failed to send friend request', error })
+          console.error(error);
+          return ctx.response.status(500).json({
+            message: 'Failed to send friend request',
+            error: error.message || 'An unexpected error occurred',
+          });
         }
-    }
+      }
 
     async acceptFriendRequest(ctx: HttpContext) {
         const user = ctx.auth.user!

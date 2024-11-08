@@ -581,8 +581,16 @@ const updateMainUser = async () => {
     }).then(response => {
       console.log("User updated:", response.data);
     }).catch(error => {
-    console.error('Error during updating user:', error.response ? error.response.data : error.message);
-  });
+      const message = error.response?.data?.message || 'An error occurred';
+
+      $q.notify({
+        type: 'negative',
+        message: message,
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+      getMainUser();
+    });
 };
 
 watch(
