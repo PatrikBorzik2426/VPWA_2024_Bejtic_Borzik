@@ -159,25 +159,145 @@
           </q-card-section>
 
           <q-card-section>
-            
-            <div class="row items-center justify-between">
-              <p><strong>Name:</strong> {{ Mainuser.name }}</p>
-              <!-- <q-btn icon="edit" flat @click="editField('name')" /> -->
+            <div class="column q-mt-md justify-between">
+            <div class="row">
+              <strong>Nickname:</strong>
+                <div class="q-pl-sm cursor-pointer">
+                  {{ Mainuser.nickname }}
+                  <q-popup-edit dark v-model="Mainuser.nickname" :validate="val => val.length > 0" v-slot="scope">
+                    <q-input
+                      dark
+                      autofocus
+                      dense
+                      v-model="scope.value"
+                      hint="Your nickname"
+                      :rules="[
+                        val => scope.validate(val) || 'More than 5 chars required'
+                      ]"
+                    >
+                      <template v-slot:after>
+                        <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                        />
+                      
+                        <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                          :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
+                        />
+                      </template>
+                    </q-input>
+                  </q-popup-edit>
+                  <q-tooltip anchor="center end" self="center left" class="bg-grey-8 text-caption">
+                    Change your nickname
+                  </q-tooltip>
+              </div>
             </div>
-            <div class="row items-center justify-between">
-              <p><strong>Surname:</strong> {{ Mainuser.surname }}</p>
-              <!-- <q-btn icon="edit" flat @click="editField('surname')" /> -->
+            <div class="row q-mt-sm">
+              <strong>Name:</strong>
+                <div class="q-pl-sm cursor-pointer">
+                  {{ Mainuser.name }}
+                  <q-popup-edit dark v-model="Mainuser.name" :validate="val => val.length > 0" v-slot="scope">
+                    <q-input
+                      dark
+                      autofocus
+                      dense
+                      v-model="scope.value"
+                      hint="Your name"
+                      :rules="[
+                        val => scope.validate(val) || 'More than 5 chars required'
+                      ]"
+                    >
+                      <template v-slot:after>
+                        <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                        />
+                      
+                        <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                          :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
+                        />
+                      </template>
+                    </q-input>
+                  </q-popup-edit>
+                  <q-tooltip anchor="center end" self="center left" class="bg-grey-8 text-caption">
+                    Change your name
+                  </q-tooltip>
+              </div>
             </div>
-            <div class="row items-center justify-between">
-              <p><strong>Nickname:</strong> {{ Mainuser.nickname }}</p>
-              <!-- <q-btn icon="edit" flat @click="editField('nickname')" /> -->
+            <div class="row q-mt-sm">
+              <strong>Surname:</strong>
+                <div class="q-pl-sm cursor-pointer">
+                  {{ Mainuser.surname }}
+                  <q-popup-edit dark v-model="Mainuser.surname" :validate="val => val.length > 0" v-slot="scope">
+                    <q-input
+                      dark
+                      autofocus
+                      dense
+                      v-model="scope.value"
+                      hint="Your surname"
+                      :rules="[
+                        val => scope.validate(val) || 'More than 5 chars required'
+                      ]"
+                    >
+                      <template v-slot:after>
+                        <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                        />
+                      
+                        <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                          :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
+                        />
+                      </template>
+                    </q-input>
+                  </q-popup-edit>
+                  <q-tooltip anchor="center end" self="center left" class="bg-grey-8 text-caption">
+                    Change your surname
+                  </q-tooltip>
+              </div>
             </div>
-            <div class="row items-center justify-between">
-              <p><strong>Email:</strong> {{ Mainuser.email }}</p>
-              <!-- <q-btn icon="edit" flat @click="editField('email')" /> -->
+            <div class="row q-mt-sm">
+              <strong>Email:</strong>
+                <div class="q-pl-sm cursor-pointer">
+                  {{ Mainuser.email }}
+                  <q-popup-edit dark v-model="Mainuser.email" :validate="val => val.length > 0" v-slot="scope">
+                    <q-input
+                      dark
+                      autofocus
+                      dense
+                      v-model="scope.value"
+                      hint="Your email"
+                      :rules="[
+                        val => scope.validate(val) || 'More than 5 chars required'
+                      ]"
+                    >
+                      <template v-slot:after>
+                        <q-btn
+                          flat dense color="negative" icon="cancel"
+                          @click.stop.prevent="scope.cancel"
+                        />
+                      
+                        <q-btn
+                          flat dense color="positive" icon="check_circle"
+                          @click.stop.prevent="scope.set"
+                          :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
+                        />
+                      </template>
+                    </q-input>
+                  </q-popup-edit>
+                  <q-tooltip anchor="center end" self="center left" class="bg-grey-8 text-caption">
+                    Change your email
+                  </q-tooltip>
+              </div>
             </div>
+          </div>
           </q-card-section>
-          <!-- Status Picker -->
           <q-card-section>
           <p><strong>Status:</strong></p>
           <q-select v-model="Mainuser.status" :options="options" emit-value rounded standout dark bg-color="grey-8"
