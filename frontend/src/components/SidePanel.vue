@@ -156,38 +156,10 @@
               <img src="https://cdn.quasar.dev/img/avatar1.jpg" alt="Avatar" class="accavatar file-image"/>
               <q-icon name="edit" size="2rem" class="hover-icon" />
             </q-avatar>
-            
           </q-card-section>
 
           <q-card-section>
-            <div class="cursor-pointer">
-      {{ nickname }}
-      <q-popup-edit v-model="nickname" :validate="val => val.length > 5" v-slot="scope">
-        <q-input
-          autofocus
-          dense
-          v-model="scope.value"
-          :model-value="scope.value"
-          hint="Your nickname"
-          :rules="[
-            val => scope.validate(val) || 'More than 5 chars required'
-          ]"
-        >
-          <template v-slot:after>
-            <q-btn
-              flat dense color="negative" icon="cancel"
-              @click.stop.prevent="scope.cancel"
-            />
-
-            <q-btn
-              flat dense color="positive" icon="check_circle"
-              @click.stop.prevent="scope.set"
-              :disable="scope.validate(scope.value) === false || scope.initialValue === scope.value"
-            />
-          </template>
-        </q-input>
-      </q-popup-edit>
-    </div>
+            
             <div class="row items-center justify-between">
               <p><strong>Name:</strong> {{ Mainuser?.name }}</p>
               <!-- <q-btn icon="edit" flat @click="editField('name')" /> -->
@@ -209,7 +181,7 @@
           <q-card-section>
           <p><strong>Status:</strong></p>
           <q-select v-model="Mainuser.status" :options="options" emit-value rounded standout dark bg-color="grey-8"
-          popup-content-class="bg-grey-9">
+          popup-content-class="bg-grey-9 popup-status" >
             <template v-slot:prepend>
               <q-icon :color="statusColor" :name="statusIcon" />
              </template>
@@ -540,6 +512,11 @@ function LogOut() {
 .file-avatar:hover .file-image { 
   opacity: 0.5; 
   filter: brightness(0.7); 
+}
+
+.popup-status {
+  max-width: 30px !important;
+  border-radius: 20px !important; 
 }
 
 ::-webkit-scrollbar {

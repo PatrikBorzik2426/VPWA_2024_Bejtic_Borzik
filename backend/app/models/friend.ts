@@ -13,14 +13,15 @@ export default class Friend extends BaseModel {
   @column()
   declare user2Id: number
 
-  @column()
-  declare unreadMessagesCount: number
+  @belongsTo(() => User, { 
+    foreignKey: 'user1Id' 
+  })
+  declare user1: BelongsTo<typeof User>
 
-  @belongsTo(() => User, { foreignKey: 'user1Id' })
-  declare user1: typeof User
-
-  @belongsTo(() => User, { foreignKey: 'user2Id' })
-  declare user2: typeof User
+  @belongsTo(() => User, { 
+    foreignKey: 'user2Id' 
+  })
+  declare user2: BelongsTo<typeof User>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime

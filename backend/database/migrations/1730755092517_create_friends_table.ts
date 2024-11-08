@@ -18,7 +18,6 @@ export default class Friends extends BaseSchema {
         .references('id')
         .inTable('users')
         .onDelete('CASCADE')
-      table.integer('unread_messages_count').defaultTo(0)
       table.timestamps(true)
     })
   }

@@ -1,6 +1,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import User from '../models/user.js'
 import FriendRequest from '../models/friend_request.js'
+import Friend from '../models/friend.js'
 
 export default class FriendsController {
     async addFriendRequest(ctx: HttpContext) {
@@ -70,10 +71,40 @@ export default class FriendsController {
 
         friendRequest.status = 'accepted'
 
+        const sender = await User.find(friendRequest.senderId)
+        const receiver = await User.find(friendRequest.receiverId)
+
+        if (!sender || !receiver) {
+            return ctx.response.badRequest({ message: 'Invalid sender or receiver ID'})
+        }
+    
+        // const existingFriendship = await Friend.query()
+        //   .where('user1Id', friendRequest.senderId)
+        //   .where('user2Id', friendRequest.receiverId)
+        //   .orWhere('user1Id', friendRequest.receiverId)
+        //   .where('user2Id', friendRequest.senderId)
+        //   .first()
+    
+        // if (existingFriendship) {
+        //   return ctx.response.badRequest({ message: 'Friendship already exists'})
+        // }
+    
+        const user1Id = Math.min(friendRequest.senderId, friendRequest.receiverId)
+        const user2Id = Math.max(friendRequest.senderId, friendRequest.receiverId)
+    
+        const friend = await Friend.create({
+          user1Id,
+          user2Id,
+        })
+    
+        console.log('Friendship created:', friend)
+    
+        console.log(friendRequest)
+
         await friendRequest.save()
 
         return {
-            friendRequest,
+            friend,
         }
     }
 
@@ -97,6 +128,8 @@ export default class FriendsController {
         friendRequest.status = 'rejected'
 
         await friendRequest.save()
+
+        console.log(friendRequest)
 
         return {
             friendRequest,

@@ -121,7 +121,7 @@
             </q-icon>
 
             <q-dialog no-focus v-model="showFriendRequests" position="top">
-              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 20rem; width: fit-content; max-width: 22rem;" :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-63vw' : '0'} " >
+              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 20rem; width: 22rem;" :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-63vw' : '0'} " >
                 <q-toolbar class="row justify-between items-center q-py-sm">
                   <div class="text-subtitle1" >Friend Requests</div>   
                   <q-icon
@@ -136,21 +136,23 @@
                   <q-separator color="grey-8" class="q-mb-sm"/>
                   <q-card-section class=" scroll q-px-none" style="max-height: 15.5rem;">
                 <q-list v-if="friendrequests.length > 0">
-                  <q-item v-for="request in friendrequests" :key="request.id" class="row justify-between items-center">
+                  <q-item v-for="request in friendrequests" :key="request.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
                       <q-avatar size="2.5rem">
                          <img :src="request.avatar" alt="Avatar" /> 
                       </q-avatar>
                       <q-item-label class="q-ml-sm q-mr-xl">{{ request.name }}</q-item-label>
-                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm">
+                    <div class="q-ml-auto">
+                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm" @click="acceptFriendRequest(request.id)">
                         <q-tooltip anchor="center start" self="center end" class="bg-grey-8 text-caption">
                           Accept 
                         </q-tooltip>
                       </q-btn>
-                        <q-btn round size="0.5rem" color="red-7" icon="close">
+                        <q-btn round size="0.5rem" color="red-7" icon="close" @click="rejectFriendRequest(request.id)">
                         <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-caption">
                           Reject
                         </q-tooltip>
                       </q-btn>
+                    </div>
                   </q-item>
                 </q-list>
               
@@ -181,7 +183,7 @@
         </div>
 
         <q-dialog v-model="showAddFriend" position="top">
-              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 11rem; width: 25rem; " :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-60vw' : '0'} " >
+              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 14rem; width: 25rem; " :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-60vw' : '0'} " >
                 <q-toolbar class="row justify-between items-center q-py-sm">
                   <div class="text-subtitle1" >Add Friend</div>   
                   <q-icon
@@ -196,17 +198,17 @@
                   <q-separator color="grey-8" class="q-mb-sm"/>
                 <q-card-section>
                   <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm">
-                    <template v-slot:append>
-                      <q-btn
-                        no-caps  
+                  </q-input>
+                  <q-card-section class="row justify-end q-pb-none q-pt-sm q-pr-xs">
+                  <q-btn
+                        no-caps    
                         label="Add"
                         color="grey-8"
-                        class="q-my-md"
+                        class="q-mt-sm"
                         style="border-radius: 0.8rem;"
-                        @click="addFriend(); showAddFriend = false"
+                        @click="addFriend()"
                       />
-                    </template>
-                  </q-input>
+                    </q-card-section>
                 </q-card-section>
                   
               </q-card>
@@ -687,6 +689,52 @@ async function addFriend(){
   });
 
 }
+
+async function acceptFriendRequest(requestId: number){
+  console.log('Accepting friend request:', friendrequests.value[0].name);
+
+  axios.post('http://127.0.0.1:3333/friend/accept-friend-request',{
+    friendRequestId: requestId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    deleteFriendRequest(requestId);
+  }).catch(error => {
+    console.error('Error during accepting friendrequest:', error.response ? error.response.data : error.message);
+  });
+}
+
+const deleteFriendRequest = (requestId: number) => {
+  const index = friendrequests.value.findIndex(request => request.id === requestId);
+  if (index > -1) {
+    friendrequests.value.splice(index, 1);
+  }
+};
+
+async function rejectFriendRequest(requestId: number){
+  console.log('Rejecting friend request:', friendrequests.value[0].name);
+
+  axios.post('http://127.0.0.1:3333/friend/reject-friend-request',{
+    friendRequestId: requestId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data.friend);
+    deleteFriendRequest(requestId);
+  }).catch(error => {
+    console.error('Error during rejecting friendrequest:', error.response ? error.response.data : error.message);
+  });
+
+  console.log(friendrequests.value);
+}
+
+
 
 const getFriendRequests = () => {
 

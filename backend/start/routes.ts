@@ -27,5 +27,7 @@ router.group(()=>{
 
 router.group(()=>{
     router.post('add-friend-request',[FriendController,'addFriendRequest']).use(middleware.auth());
+    router.post('accept-friend-request',[FriendController,'acceptFriendRequest']).use(middleware.auth());
+    router.post('reject-friend-request',[FriendController,'rejectFriendRequest']).use(middleware.auth());
     router.post('list-friend-requests',[FriendController,'getFriendRequests']).use(middleware.auth());
 }).prefix('friend');
