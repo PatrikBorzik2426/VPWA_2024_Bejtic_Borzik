@@ -22,10 +22,10 @@ export default class FriendsController {
                     receiverId: receiver.id,
                 })
                 
-                if (existingRequest.status === 'floating' || existingRequest.status === 'accepted') {
+                if (existingRequest.friendrequest_status === 'floating' || existingRequest.friendrequest_status === 'accepted') {
                     return ctx.response.badRequest({ message: 'Friend request already sent' })
-                }else if (existingRequest.status === 'rejected') {
-                existingRequest.status = 'floating'
+                }else if (existingRequest.friendrequest_status === 'rejected') {
+                existingRequest.friendrequest_status = 'floating'
                 await existingRequest.save()
                 return {
                     friendRequest: existingRequest,
@@ -38,7 +38,7 @@ export default class FriendsController {
             const friendRequest = await FriendRequest.create({
                 senderId: user.id,
                 receiverId: receiver.id,
-                status: 'floating',
+                friendrequest_status: 'floating',
             })
 
             console.log(friendRequest)
@@ -65,11 +65,11 @@ export default class FriendsController {
             return ctx.response.badRequest({ message: 'You are not the receiver of this request' })
         }
 
-        if (friendRequest.status === 'accepted') {
+        if (friendRequest.friendrequest_status === 'accepted') {
             return ctx.response.badRequest({ message: 'Friend request already accepted' })
         }
 
-        friendRequest.status = 'accepted'
+        friendRequest.friendrequest_status = 'accepted'
 
         const sender = await User.find(friendRequest.senderId)
         const receiver = await User.find(friendRequest.receiverId)
@@ -78,16 +78,16 @@ export default class FriendsController {
             return ctx.response.badRequest({ message: 'Invalid sender or receiver ID'})
         }
     
-        // const existingFriendship = await Friend.query()
-        //   .where('user1Id', friendRequest.senderId)
-        //   .where('user2Id', friendRequest.receiverId)
-        //   .orWhere('user1Id', friendRequest.receiverId)
-        //   .where('user2Id', friendRequest.senderId)
-        //   .first()
+        const existingFriendship = await Friend.query()
+          .where('user1Id', friendRequest.senderId)
+          .where('user2Id', friendRequest.receiverId)
+          .orWhere('user1Id', friendRequest.receiverId)
+          .where('user2Id', friendRequest.senderId)
+          .first()
     
-        // if (existingFriendship) {
-        //   return ctx.response.badRequest({ message: 'Friendship already exists'})
-        // }
+        if (existingFriendship) {
+          return ctx.response.badRequest({ message: 'Friendship already exists'})
+        }
     
         const user1Id = Math.min(friendRequest.senderId, friendRequest.receiverId)
         const user2Id = Math.max(friendRequest.senderId, friendRequest.receiverId)
@@ -121,11 +121,11 @@ export default class FriendsController {
             return ctx.response.badRequest({ message: 'You are not the receiver of this request' })
         }
 
-        if (friendRequest.status === 'rejected') {
+        if (friendRequest.friendrequest_status === 'rejected') {
             return ctx.response.badRequest({ message: 'Friend request already rejected' })
         }
 
-        friendRequest.status = 'rejected'
+        friendRequest.friendrequest_status = 'rejected'
 
         await friendRequest.save()
 
@@ -142,7 +142,7 @@ export default class FriendsController {
         // Fetch friend requests and preload sender and receiver user information
         const friendRequests = await FriendRequest.query()
           .where('receiverId', user.id)
-          .where('status', 'floating')
+          .where('friendrequest_status', 'floating')
           .preload('sender')
           .preload('receiver')
         
@@ -157,4 +157,46 @@ export default class FriendsController {
           mappedRequests,
         }
       }
+
+    async getFriendslist(ctx: HttpContext) {
+        const user = ctx.auth.user!
+
+        const friends = await Friend.query()
+          .where('user1Id', user.id)
+          .orWhere('user2Id', user.id)
+          .preload('user1')
+          .preload('user2')
+        
+        const mappedFriends = friends.map((friend) => ({
+            friendId: friend.id,
+            //friendAvatar: friend.user1.id === user.id ? friend.user2.avatar : friend.user1.avatar,
+            friendName: friend.user1.id === user.id ? friend.user2.login : friend.user1.login,
+            friendAvatar: `https://ui-avatars.com/api/?name=${friend.user1.id === user.id ? friend.user2.login : friend.user1.login}`,
+            friendStatus: friend.user1.id === user.id ? friend.user2.user_status : friend.user1.user_status,
+            friendUnreadMessages: Math.floor(Math.random() * 100),
+        }))
+    
+        return {
+          mappedFriends,
+        }
+    }
+
+    async removeFriend(ctx: HttpContext) {
+        const user = ctx.auth.user!
+    
+        const friendId = ctx.request.input('friendId')
+    
+        const friend = await Friend.findOrFail(friendId)
+    
+        if (friend.user1Id !== user.id && friend.user2Id !== user.id) {
+          return ctx.response.badRequest({ message: 'You are not a part of this friendship'})
+        }
+    
+        await friend.delete()
+    
+        return {
+          message: 'Friendship deleted',
+        }
+      }
+    
 }

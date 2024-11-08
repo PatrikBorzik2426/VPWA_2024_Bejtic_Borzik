@@ -29,7 +29,7 @@ export default class User extends BaseModel {
   declare email: string
 
   @column()
-  declare status: 'online' | 'offline' | 'DND'
+  declare user_status: 'online' | 'offline' | 'DND'
 
   @column()
   declare avatar: Buffer | null

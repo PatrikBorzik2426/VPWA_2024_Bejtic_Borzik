@@ -229,6 +229,13 @@
                 class="q-pl-sm full-width row justify-center"
                 style="border-radius: 0.7rem"
               >
+              <q-menu touch-position context-menu auto-close class="bg-red text-white" style="border-radius: 1rem">
+                <q-list>
+                  <q-item class="q-px-sm" v-close-popup clickable @click="removeFriend(friend.id)">
+                    <q-item-section>Remove Friend</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
                 <div
                   class="row justify-start items-center full-width"
                   style="max-width: 80%"
@@ -363,6 +370,7 @@ import { ref, defineProps, watch, reactive } from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 import axios from 'axios';
+import { get } from 'http';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -385,7 +393,8 @@ const userMessage2 = ref<{ [key: number]: Message }>({});
 const dmMessageDict1 = ref<{ [key: number]: Message }>({});
 const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
-const friendrequests = ref<FriendRequest[]>([]) ;
+const friendrequests = ref<FriendRequest[]>([]); 
+const friendsList = ref<Friend[]>([]);
 
 const $q = useQuasar();
 
@@ -444,27 +453,6 @@ const requestNotificationPermission = () => {
 
 requestNotificationPermission();
 
-const generateFriendsList = (count: number): Friend[] => {
-  const friendsList: Friend[] = [];
-  const statuses = ['Online', 'Offline', 'Do Not Disturb']; // Possible statuses
-
-  for (let i = 1; i <= count; i++) {
-    friendsList.push({
-      id: i,
-      name: `Friend ${i}`,
-      notifications: Math.floor(Math.random() * 100),
-      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
-      status: statuses[Math.floor(Math.random() * statuses.length)],
-    });
-  }
-
-  return friendsList;
-};
-
-const friendsList = ref<Friend[]>(generateFriendsList(20));
-
-
-
 const selectFriend = (id: number) => {
   friendsList.value = friendsList.value.map((friend) => {
     console.log('Prop friend: ', props.receivedShowFriends);
@@ -482,11 +470,11 @@ const selectFriend = (id: number) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Online':
+    case 'online':
       return 'green';
-    case 'Do Not Disturb':
+    case 'DND':
       return 'red';
-    case 'Offline':
+    case 'offline':
       return 'grey';
     default:
       return 'primary';
@@ -495,11 +483,11 @@ const getStatusColor = (status: string) => {
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'Online':
+    case 'online':
       return 'circle';
-    case 'Do Not Disturb':
+    case 'DND':
       return 'remove_circle';
-    case 'Offline':
+    case 'offline':
       return 'trip_origin';
     default:
       return 'circle';
@@ -702,6 +690,7 @@ async function acceptFriendRequest(requestId: number){
     }
   }).then(response => {
     deleteFriendRequest(requestId);
+    getFriendsList();
   }).catch(error => {
     console.error('Error during accepting friendrequest:', error.response ? error.response.data : error.message);
   });
@@ -738,33 +727,88 @@ async function rejectFriendRequest(requestId: number){
 
 const getFriendRequests = () => {
 
-friendrequests.value = [];
+  friendrequests.value = [];
 
-axios.post('http://127.0.0.1:3333/friend/list-friend-requests',{},{
-  headers: {
-    'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-    'Content-Type': 'application/json'
-  }
-}).then(response => {
-  console.log(response.data.mappedRequests);
-  
-  response.data.mappedRequests.forEach((element : any) => {
-    console.log('Element:', element);
-    
-    friendrequests.value.push({
-      id: element.friendRequestId,
-      name: element.senderName,
-      avatar: `https://cdn.quasar.dev/img/avatar1.jpg`,
-    });
+  axios.post('http://127.0.0.1:3333/friend/list-friend-requests',{},{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data.mappedRequests);
 
-    console.log(friendrequests.value);
-  })
-  
-}).catch(error => {
-  console.error('Error during fetching friend requests:', error.response ? error.response.data : error.message);
-});
+    response.data.mappedRequests.forEach((element : any) => {
+      console.log('Element:', element);
+
+      friendrequests.value.push({
+        id: element.friendRequestId,
+        name: element.senderName,
+        avatar: `https://ui-avatars.com/api/?name={element.senderName}`,
+      });
+
+      console.log(friendrequests.value);
+    })
+
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
 
 };
+
+const getFriendsList = () => {
+
+  axios.post('http://127.0.0.1:3333/friend/list-friends',{},{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data.mappedFriends);
+
+    console.log('daco to urobilo');
+
+    friendsList.value = [];
+
+    response.data.mappedFriends.forEach((friend : any) => {
+      console.log('Friend:', friend);
+
+      friendsList.value.push({
+        id: friend.friendId,
+        name: friend.friendName,
+        avatar: friend.friendAvatar,
+        status: friend.friendStatus,
+        notifications: friend.friendUnreadMessages,
+      });
+
+      console.log(friendsList.value);
+    })
+
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
+
+}
+
+
+const removeFriend = (friendId: number) => {
+  console.log('Removing friend:', friendId);
+
+  axios.post('http://127.0.0.1:3333/friend/remove-friend',{
+    friendId: friendId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getFriendsList();
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
+
+}
+
 
 
 // Watchers
@@ -791,6 +835,7 @@ watch(
   (newVal) => {
     if (newVal !== undefined) {
       showChannels.value = false;
+      getFriendsList();
     }
 
     loadChannel(currentChannel.value);
@@ -824,7 +869,8 @@ watch(
 )
 
 // Initial load
-loadChannel(friendsList.value[0].name);
+// loadChannel(friendsList.value[0].name);
+getFriendsList()
 </script>
 
 

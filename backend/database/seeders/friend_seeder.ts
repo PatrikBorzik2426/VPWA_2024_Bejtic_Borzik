@@ -14,9 +14,10 @@ export default class extends BaseSeeder {
         user2Id: 3,
       },
       {
-        user1Id: 2,
-        user2Id: 3,
+        user1Id: 1,
+        user2Id: 4,
       },
+
     ])
   }
 }

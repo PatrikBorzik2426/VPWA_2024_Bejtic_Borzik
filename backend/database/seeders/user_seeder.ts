@@ -10,7 +10,7 @@ export default class UserSeeder extends BaseSeeder {
         firstName: 'John',
         lastName: 'Doe',
         email: 'john@example.com',
-        status: 'online',
+        user_status: 'online',
       },
       {
         login: 'jane_smith',
@@ -18,8 +18,24 @@ export default class UserSeeder extends BaseSeeder {
         firstName: 'Jane',
         lastName: 'Smith',
         email: 'jane@example.com',
-        status: 'offline',
+        user_status: 'offline',
       },
+      {
+        login: 'joe_bloggs',
+        password: 'password789',
+        firstName: 'Joe',
+        lastName: 'Bloggs',
+        email: 'joe_bloggs@example.com',
+        user_status: 'DND',
+      },
+      {
+        login: 'jane_doe',
+        password : 'password123',
+        firstName: 'Jane',
+        lastName: 'Doe',
+        email: 'janedoe@example.com',
+        user_status: 'online',
+      }
     ])
   }
 }
