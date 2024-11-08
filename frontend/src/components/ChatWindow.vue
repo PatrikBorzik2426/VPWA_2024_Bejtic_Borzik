@@ -670,6 +670,7 @@ async function addFriend(){
     }
   }).then(response => {
     console.log(response.data);
+    AddedFriend.value = '';
     $q.notify({
         type: 'positive',
         message: 'Friend request sent',
