@@ -50,7 +50,7 @@ async updateMainUser(ctx: HttpContext) {
 
     const existingUser = await User.query()
         .where('login', nickname)
-        .whereNot('id', user.id) // Uistime sa, že nekontrolujeme aktuálneho používateľa
+        .whereNot('id', user.id) 
         .first();
 
     if (existingUser) {

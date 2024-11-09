@@ -43,9 +43,13 @@ export default class User extends BaseModel {
   declare messages: HasMany<typeof ChannelMessage>
 
   @manyToMany(() => Server, {
+    pivotTimestamps: true,
     pivotTable: 'server_user',
+    localKey: 'id',
     pivotForeignKey: 'user_id',
-    relatedKey: 'server_id',
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'server_id',
+    pivotColumns: ['kick_counter', 'ban', 'role', 'position'], 
   })
   declare servers: ManyToMany<typeof Server>
 

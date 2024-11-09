@@ -370,6 +370,7 @@ import { ref, defineProps, watch} from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 import axios from 'axios';
+import { get } from 'http';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -885,6 +886,7 @@ watch(
 // Initial load
 // loadChannel(friendsList.value[0].name);
 getFriendsList()
+getFriendRequests();
 </script>
 
 

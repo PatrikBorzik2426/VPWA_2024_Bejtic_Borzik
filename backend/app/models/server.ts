@@ -14,25 +14,20 @@ export default class Server extends BaseModel {
   @column()
   declare privacy: boolean
 
-  @column()
-  declare creatorId: number
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
 
-  @belongsTo(() => User, {
-    foreignKey: 'creatorId',
-  })
-  declare creator: BelongsTo<typeof User>
-
   @manyToMany(() => User, {
+    pivotTimestamps: true,
     pivotTable: 'server_user',
+    localKey: 'id',
     pivotForeignKey: 'server_id',
-    relatedKey: 'user_id',
-    pivotColumns: ['kick_counter', 'ban'], 
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'user_id',
+    pivotColumns: ['kick_counter', 'ban', 'role', 'position'], 
   })
   declare users: ManyToMany<typeof User>
 

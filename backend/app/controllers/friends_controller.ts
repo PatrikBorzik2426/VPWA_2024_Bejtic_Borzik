@@ -5,18 +5,16 @@ import Friend from '../models/friend.js'
 
 export default class FriendsController {
     async addFriendRequest(ctx: HttpContext) {
-        const user = ctx.auth.user!; // Aktuálne prihlásený používateľ
+        const user = ctx.auth.user!; 
       
-        const receiverLogin = ctx.request.input('receiverLogin'); // Login príjemcu žiadosti
+        const receiverLogin = ctx.request.input('receiverLogin'); 
       
         try {
-          // Overenie, či prijímateľ existuje
           const receiver = await User.findBy('login', receiverLogin);
           if (!receiver) {
             return ctx.response.status(404).json({ message: 'User not found' });
           }
       
-          // Overenie, či už sú používateľ a prijímateľ priateľmi
           const existingFriendship = await Friend.query()
             .where(function (query) {
               query
@@ -156,7 +154,6 @@ export default class FriendsController {
     async getFriendRequests(ctx: HttpContext) {
         const user = ctx.auth.user!
     
-        // Fetch friend requests and preload sender and receiver user information
         const friendRequests = await FriendRequest.query()
           .where('receiverId', user.id)
           .where('friendrequest_status', 'floating')

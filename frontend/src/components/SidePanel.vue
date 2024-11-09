@@ -104,7 +104,7 @@
                         color="grey-8"
                         class="q-mt-sm"
                         style="border-radius: 0.8rem;"
-                        @click="newServerName = ''"
+                        @click="CreateServer(), showCreateServer = false"
                       />
                     </q-card-section>
                   </q-card-section>
@@ -361,13 +361,17 @@ interface Server {
   id: number;
   name: string;
   avatar: string;
+  privacy: boolean;
   notifications: number;
+  role: string;
+  position: number;
 }
 
 // Refs and State
 const page = ref('');
-const MainUserId = ref(1);
 const filesImages = ref<File[]>([]);
+const serverList = ref<Server[]>([]);
+const serverName = ref<string>('')
 const unreadFriends = ref(4);
 const showservers = ref(false);
 const showfriends = ref(true);
@@ -404,7 +408,14 @@ const Mainuser = reactive<User>({
   status: ""
 });
 
-const newServerName = ref<string>(Mainuser.name + '\'s Server');
+const newServerName = computed({
+  get() {
+    return serverName.value || `${Mainuser.name}'s Server`
+  },
+  set(value: string) {
+    serverName.value = value
+  },
+})
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
@@ -423,23 +434,7 @@ watch(
     showMobileChat.value = props.receivedShowMobileChat;
   }
 );
-
-// Server List Generator
-const generateServerList = (count: number): Server[] => {
-  const serverList: Server[] = [];
-  for (let i = 1; i <= count; i++) {
-    serverList.push({
-      id: i,
-      name: `Server ${i}`,
-      avatar: `https://cdn.quasar.dev/img/avatar${i}.jpg`,
-      notifications: Math.floor(Math.random() * 100),
-    });
-  }
-  return serverList;
-};
-
 // Data
-const serverList = ref<Server[]>(generateServerList(20));
 
 const options = [
   {
@@ -506,6 +501,9 @@ function selectServer(serverId: number) {
 
 function ShowServers() {
   showservers.value = !showservers.value;
+  if(showservers.value){
+    getServerList();
+  }
 }
 
 function ShowFriends() {
@@ -593,20 +591,76 @@ const updateMainUser = async () => {
     });
 };
 
+const getServerList = async () => {
+  serverList.value = [];
+
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/server/get-server-list',{},{
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json',
+      },
+    })
+
+    response.data.servers.forEach((server: any) => {
+      console.log('Server:', server)
+
+      serverList.value.push({
+        id: server.id,
+        name: server.name,
+        avatar: server.avatar,
+        privacy: server.privacy,
+        notifications: server.notifications || 0,
+        role: server.role,
+        position: server.position,
+      })
+
+      console.log('Server List:', serverList)
+    })
+    serverList.value.sort((a, b) => a.position - b.position)
+    console.log('Sorted Server List:', serverList)
+  } catch (error) {
+    console.error('Error fetching server list:', error.response?.data || error.message)
+  }
+}
+
+
+const CreateServer = async () => {
+  axios.post('http://127.0.0.1:3333/server/create-server',{
+    name: serverName.value,
+    privacy: privateserver.value,
+    position: serverList.value.length + 1,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getServerList();
+    selectServer(response.data.server.id);
+    serverName.value = '';
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
+
+}
+
+
 watch(
-  () => Mainuser, // Sledovanie celého objektu
+  () => Mainuser, 
   (newValue, oldValue) => {
     console.log('Mainuser changed:', newValue)
     console.log('Previous value:', oldValue)
 
-    // Napríklad môžeš spustiť API na uloženie zmien
     updateMainUser();
   },
-  { deep: true } // Povinné pre sledovanie vnútorných vlastností objektu
+  { deep: true } 
 )
 
 
 getMainUser();
+getServerList();
 
 </script>
 
