@@ -112,7 +112,38 @@
               </q-card>
           </q-dialog>
 
-          <q-item v-for="server in serverList" :key="server.id">
+          <draggable 
+            v-model="serverList" 
+            item-key="id" 
+            @end="UpdateServerPositions">
+            <template #item="{ element }">
+              <q-item>
+                <q-btn round elevated @click="selectServer(element.id)">
+                  <div v-if="selectedServerId === element.id && showselectedserver" class="server-dot"></div>
+                  <q-avatar size="2.6rem">
+                    <img :src="element.avatar" alt="Server Avatar" />
+                  </q-avatar>
+                  <q-badge
+                    v-if="element.notifications > 0"
+                    color="red"
+                    floating
+                    rounded
+                  >
+                    {{ element.notifications }}
+                  </q-badge>
+                  <q-tooltip
+                    anchor="center end"
+                    self="center start"
+                    class="bg-grey-8 text-body2"
+                  >
+                    {{ element.name }}
+                  </q-tooltip>
+                </q-btn>
+              </q-item>
+            </template>
+          </draggable>
+
+          <!-- <q-item v-for="server in serverList" :key="server.id">
             <q-btn round elevated @click="selectServer(server.id)">
               <div v-if="selectedServerId === server.id && showselectedserver" class="server-dot"></div>
               <q-avatar size="2.6rem">
@@ -123,11 +154,10 @@
                 {{ server.name }}
               </q-tooltip>
             </q-btn>
-          </q-item>
+          </q-item> -->
         </q-list>
     </div>
   
-
     <div v-else-if="selectedServer != null && !showservers && showselectedserver">
       <q-item>
         <q-btn round elevated @click="selectServer(selectedServer.id)">
@@ -334,6 +364,7 @@ import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
+import draggable from "vuedraggable";
 
 onBeforeMount(() => {
   page.value = 'ChatApp';
@@ -381,6 +412,7 @@ const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
+const isDragging = ref(false);
 const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
 
 
@@ -603,7 +635,7 @@ const getServerList = async () => {
     })
 
     response.data.servers.forEach((server: any) => {
-      console.log('Server:', server)
+      // console.log('Server:', server)
 
       serverList.value.push({
         id: server.id,
@@ -615,10 +647,10 @@ const getServerList = async () => {
         position: server.position,
       })
 
-      console.log('Server List:', serverList)
+      // console.log('Server List:', serverList)
     })
     serverList.value.sort((a, b) => a.position - b.position)
-    console.log('Sorted Server List:', serverList)
+    // console.log('Sorted Server List:', serverList)
   } catch (error) {
     console.error('Error fetching server list:', error.response?.data || error.message)
   }
@@ -629,7 +661,6 @@ const CreateServer = async () => {
   axios.post('http://127.0.0.1:3333/server/create-server',{
     name: serverName.value,
     privacy: privateserver.value,
-    position: serverList.value.length + 1,
   },{
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
@@ -646,6 +677,32 @@ const CreateServer = async () => {
 
 }
 
+const UpdateServerPositions = async () => {
+  const serverPositions = serverList.value.map((server, index) => {
+    return {
+      id: server.id,
+      position: index + 1
+    }
+  })
+
+  console.log('jeborit');
+
+  console.log('Server Positions:', serverPositions);
+
+  axios.post('http://127.0.0.1:3333/server/update-server-positions',{
+    servers: serverPositions,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    // getServerList();
+  }).catch(error => {
+    console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
+  });
+}
 
 watch(
   () => Mainuser, 
@@ -686,6 +743,11 @@ getServerList();
   height: 15px;
   background-color: var(--q-primary);
   border-radius: 25%;
+}
+
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
 }
 
 .popup {
