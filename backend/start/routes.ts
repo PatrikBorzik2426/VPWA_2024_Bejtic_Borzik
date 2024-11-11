@@ -44,6 +44,7 @@ router.group(()=>{
 
 router.group(()=>{
     router.post('get-server-list', [ServersController,'getServerList']).use(middleware.auth());
+    router.post('get-active-server', [ServersController,'getActiveServer']).use(middleware.auth());
     router.post('create-server', [ServersController,'createServer']).use(middleware.auth());
     router.post('update-server-positions', [ServersController,'updateServerPositons']).use(middleware.auth());
 }).prefix('server');

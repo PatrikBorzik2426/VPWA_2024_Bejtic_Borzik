@@ -6,37 +6,46 @@
       :style="{ width: $q.screen.gt.sm ? '18%' : '99.5%' }"
     >
       <div v-if="showChannels">
-        <q-expansion-item
-          dark
-          header-class="server-name"
-          expand-separator
-          :label="'Server ' + receivedServerId"
-          class="relative-position z-top full-width"
-          :duration="0"
-          :icon=" 'lock'"
-        >
-          <q-card dark class="relative-position full-width">
-            <div class="absolute full-width bg-grey-9" style="top: 0; left: 0">
-              <q-card-section
-                v-for="(value, key, index) in options"
-                :key="key"
-                class="cursor-pointer setting-row"
-                :class="{ 'last-item-style': index === listOfChannels.length }"
-              >
-                <div
-                  class="row full-height full-width items-center setting-row"
-                >
-                  <q-icon :name="key" color="" size="1.5rem" class="q-mr-sm" />
-                  <p class="q-ma-none">{{ value }}</p>
-                </div>
-              </q-card-section>
-            </div>
-          </q-card>
-        </q-expansion-item>
+        <q-btn flat push align="between" class="full-width">
+          <div class="row items-center">
+            <q-icon :name="activeServer.private ? 'lock' : 'public'" color="primary" size="1rem" />
+            <p class="q-ma-sm text-subtitle1" style="text-transform: none;"> {{ activeServer.name }}</p>
+          </div>
+          <q-icon :name="true ? 'keyboard_arrow_down' : 'keyboard_arrow_up'" color="primary" size="1rem q-mr-xs"/>
+        <q-menu dark fit auto-close class="bg-grey-9">
+          <q-list style="min-width: 100px">
+            <q-separator dark/>
+            <q-item v-if="activeServer.role !== 'member'" clickable>
+              <q-item-section avatar class="q-ma-auto">
+                <q-icon name="settings" color="primary" size="1.3rem"/>
+              </q-item-section>
+              <q-item-section>Server Settings</q-item-section>
+            </q-item>
+            <q-item clickable>
+              <q-item-section avatar>
+                <q-icon name="person_add" color="primary" size="1.3rem"/>
+              </q-item-section>
+              <q-item-section>Invite Friends</q-item-section>
+            </q-item>
+            <q-item clickable>
+              <q-item-section avatar class="q-ma-auto">
+                <q-icon name="groups" color="primary" size="1.3rem"/>
+              </q-item-section>
+              <q-item-section>Member List</q-item-section>
+            </q-item>
+            <q-item v-if="activeServer.role !== 'creator'" clickable color="red-9" text-color="white">
+              <q-item-section avatar >
+                <q-icon name="reply" color="primary" size="1.3rem"/>
+              </q-item-section>
+              <q-item-section>Leave Server</q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
         
          <div class="q-mx-md q-my-none row items-center justify-between">
-        <h2 class="q-my-xs text-caption text-left color-grey">Text Channel</h2>
-        <q-icon center color="primary" name="add" class="cursor-pointer" size="1.25rem" style="padding-right: 2px;" @click="showCreateChannel = true">
+        <h2 class="q-my-xs text-caption text-left color-grey">Text Channels</h2>
+        <q-icon v-if="activeServer.role !== 'member'" center color="primary" name="add" class="cursor-pointer" size="1.25rem" style="padding-right: 2px;" @click="showCreateChannel = true">
           <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
             Create Channel
           </q-tooltip>
@@ -366,7 +375,7 @@
 import SingleMessage from './SingleMessage.vue';
 import { User } from 'src/types/User';
 import { Message } from 'src/types/Message';
-import { ref, defineProps, watch} from 'vue';
+import { ref, defineProps, watch, reactive} from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 import axios from 'axios';
@@ -443,6 +452,20 @@ interface ServerChannel {
   notifications: number;
   messages: Message[];
 }
+
+interface Server {
+  id: number;
+  name: string;
+  private: boolean;
+  role: string;
+}
+
+const activeServer = reactive<Server>({
+  id: 0,
+  name: "",
+  private: false,
+  role: "",
+});
 
 // Functions
 const requestNotificationPermission = () => {
@@ -824,6 +847,30 @@ const removeFriend = (friendId: number) => {
 
 }
 
+const getActiveServer = async (serverId: number) => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/server/get-active-server', {
+      serverId: serverId
+    }, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const activeServerData = response.data.formattedActiveServer;  
+
+    activeServer.id = activeServerData.id;
+    activeServer.name = activeServerData.name;
+    activeServer.private = activeServerData.private;
+    activeServer.role = activeServerData.role;
+
+    console.log("Active server assigned:", activeServer);
+  } catch (error) {
+    console.error('Error during fetching active server:', error.response ? error.response.data : error.message);
+  }
+};
+
 
 
 // Watchers
@@ -832,6 +879,7 @@ watch(
   ([newId]) => {
     console.log('receivedServerId value:', newId);
     if (newId !== undefined && newId !== null) {
+      getActiveServer(props.receivedServerId);
       showChannels.value = true;
       currentChannel.value = 'Channel ' + props.receivedServerId.toString();
 

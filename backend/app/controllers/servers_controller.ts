@@ -137,8 +137,46 @@ export default class ServersController {
       }    
 
 
+    async getActiveServer(ctx: HttpContext) {
+        const user = ctx.auth.user!
 
+        const server_id = ctx.request.input('serverId')
+        
+        if (!server_id || typeof server_id !== 'number') {
+            return ctx.response.status(400).json({ message: 'Invalid server ID' });
+        }
+        
+        const activeServer = await Server.findByOrFail('id', server_id)
+        
+        if (!activeServer) {
+            return ctx.response.status(404).json({ message: 'Server not found' });
+        }
+    
+        const userServerPivot = await user.related('servers')
+            .query()
+            .where('server_id', server_id)
+            .first();
 
+        if (!userServerPivot) {
+            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
+        }
+        
+        if (userServerPivot.$extras.pivot_ban) {
+            return ctx.response.status(403).json({ message: 'You are banned from this server' });
+        }
+
+        const formattedActiveServer = {
+            id: activeServer.id,
+            name: activeServer.name,
+            avatar: `https://ui-avatars.com/api/?name=${activeServer.name}`,
+            privacy: activeServer.privacy,
+            role: userServerPivot.$extras.pivot_role,
+        }
+    
+        return {
+            formattedActiveServer,
+        }
+    }
 
 
 

@@ -139,6 +139,13 @@
                     {{ element.name }}
                   </q-tooltip>
                 </q-btn>
+                <q-menu touch-position context-menu auto-close class="bg-red text-white" style="border-radius: 1rem">
+                <q-list>
+                  <q-item class="q-px-sm" v-close-popup clickable >
+                    <q-item-section>Remove Friend</q-item-section>
+                  </q-item>
+                </q-list>
+              </q-menu>
               </q-item>
             </template>
           </draggable>
