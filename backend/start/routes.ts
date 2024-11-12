@@ -55,4 +55,8 @@ router.group(()=>{
     router.post('delete-channel', [ServersController,'deleteChannel']).use(middleware.auth());
     router.post('get-server-channels', [ServersController,'getServerChannels']).use(middleware.auth());
     router.post('update-channel-positions', [ServersController,'updateChannelPositons']).use(middleware.auth());
+    router.post('get-member-list', [ServersController,'getMemberList']).use(middleware.auth());
+    router.post('add-server-member', [ServersController,'addServerMember']).use(middleware.auth());
+    router.post('kick-server-member', [ServersController,'kickServerMember']).use(middleware.auth());
+    router.post('ban-server-member', [ServersController,'banServerMember']).use(middleware.auth());
 }).prefix('server');

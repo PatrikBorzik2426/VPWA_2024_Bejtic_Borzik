@@ -183,7 +183,8 @@ export default class FriendsController {
           .preload('user2')
         
         const mappedFriends = friends.map((friend) => ({
-            friendId: friend.id,
+            id : friend.id,
+            friendId: friend.user1.id === user.id ? friend.user2.id : friend.user1.id,
             //friendAvatar: friend.user1.id === user.id ? friend.user2.avatar : friend.user1.avatar,
             friendName: friend.user1.id === user.id ? friend.user2.login : friend.user1.login,
             friendAvatar: `https://ui-avatars.com/api/?name=${friend.user1.id === user.id ? friend.user2.login : friend.user1.login}`,
@@ -201,13 +202,18 @@ export default class FriendsController {
     
         const friendId = ctx.request.input('friendId')
     
-        const friend = await Friend.findOrFail(friendId)
-    
-        if (friend.user1Id !== user.id && friend.user2Id !== user.id) {
-          return ctx.response.badRequest({ message: 'You are not a part of this friendship'})
+        const friendship = await Friend.query()
+          .where('user1Id', user.id)
+          .where('user2Id', friendId)
+          .orWhere('user1Id', user.id)
+          .where('user2Id', friendId)
+          .first()
+
+        if (!friendship) {
+          return ctx.response.status(404).json({ message: 'Friendship not found' });
         }
     
-        await friend.delete()
+        await friendship.delete()
     
         return {
           message: 'Friendship deleted',
