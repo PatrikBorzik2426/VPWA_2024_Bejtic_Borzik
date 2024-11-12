@@ -14,6 +14,12 @@ export default class Channel extends BaseModel {
   @column()
   declare name: string
 
+  @column()
+  declare position: number
+
+  @column.dateTime()
+  declare lastActivity: DateTime
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

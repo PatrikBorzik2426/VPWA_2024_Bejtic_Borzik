@@ -91,11 +91,12 @@
                   <q-card-section class=" row items-center justify-between q-pb-none q-pt-sm q-pl-xs">
                   <q-toggle
                   dark
+                  keep-color
                   v-model="privateserver"
                   checked-icon="lock"
                   color="red"
-                  label="Private Server"
-                  unchecked-icon="clear"
+                  unchecked-icon="public"
+                  :label="privateserver ? 'Private Server' : 'Public Server'"
                   class="q-mt-sm"
                   />
                   <q-btn
@@ -139,29 +140,9 @@
                     {{ element.name }}
                   </q-tooltip>
                 </q-btn>
-                <q-menu touch-position context-menu auto-close class="bg-red text-white" style="border-radius: 1rem">
-                <q-list>
-                  <q-item class="q-px-sm" v-close-popup clickable >
-                    <q-item-section>Remove Friend</q-item-section>
-                  </q-item>
-                </q-list>
-              </q-menu>
               </q-item>
             </template>
           </draggable>
-
-          <!-- <q-item v-for="server in serverList" :key="server.id">
-            <q-btn round elevated @click="selectServer(server.id)">
-              <div v-if="selectedServerId === server.id && showselectedserver" class="server-dot"></div>
-              <q-avatar size="2.6rem">
-                <img :src="server.avatar" alt="Server Avatar" />
-              </q-avatar>
-              <q-badge v-if="server.notifications > 0" color="red" floating rounded>{{ server.notifications }}</q-badge>
-              <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
-                {{ server.name }}
-              </q-tooltip>
-            </q-btn>
-          </q-item> -->
         </q-list>
     </div>
   
@@ -409,7 +390,6 @@ interface Server {
 const page = ref('');
 const filesImages = ref<File[]>([]);
 const serverList = ref<Server[]>([]);
-const serverName = ref<string>('')
 const unreadFriends = ref(4);
 const showservers = ref(false);
 const showfriends = ref(true);
@@ -419,7 +399,6 @@ const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
-const isDragging = ref(false);
 const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
 
 
@@ -446,6 +425,8 @@ const Mainuser = reactive<User>({
   avatar: "",
   status: ""
 });
+
+const serverName = ref<string>(Mainuser.name);
 
 const newServerName = computed({
   get() {
