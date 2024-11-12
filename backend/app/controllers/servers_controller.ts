@@ -2,6 +2,7 @@ import { HttpContext } from '@adonisjs/core/http'
 import Server from '../models/server.js'
 import User from '../models/user.js'
 import Channel from '../models/channel.js'
+import Friend from '../models/friend.js'
 
 
 export default class ServersController {
@@ -317,20 +318,263 @@ export default class ServersController {
             return ctx.response.status(403).json({ message: 'You are banned from this server' });
         }
 
-        const members = await activeServer.related('users')
+        const members = await activeServer
+            .related('users')
             .query()
-            .wherePivot('ban', false)
-            // .preload('user')
+            .wherePivot('ban', false) 
+        
+            const friendships = await Friend.query()
+            .whereIn('user_1_id', [user.id])
+            .whereIn('user_2_id', members.map((m) => m.id))
+            .orWhereIn('user_1_id', members.map((m) => m.id))
+            .whereIn('user_2_id', [user.id]);
+          
+          const friendIds = new Set(
+            friendships.map((friend) =>
+              friend.user1Id === user.id ? friend.user2Id : friend.user1Id
+            )
+          );
         
         const formattedMembers = members.map((member) => ({
             id: member.id,
-            // username: member.username,
-            // avatar: `https://ui-avatars.com/api/?name=${member.username}`,
+            username: member.login,
+            avatar: `https://ui-avatars.com/api/?name=${member.login}`,
+            status: member.user_status,
             role: member.$extras.pivot_role,
+            isFriend: friendIds.has(member.id),
         }))
+        console.log('debilko')
+        console.log(formattedMembers)
     
         return {
             members: formattedMembers,
+        }
+    }
+
+    async addServerMember(ctx: HttpContext) {
+        const user = ctx.auth.user!
+        const { serverId, userId } = ctx.request.only(['serverId', 'userId'])
+
+        const server = await Server.findByOrFail('id', serverId)
+
+        if (!server) {
+            return ctx.response.status(404).json({ message: 'Server not found' });
+        }
+
+        const userServerPivot = await user.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userServerPivot) {
+            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
+        }
+
+        if (userServerPivot.$extras.pivot_ban) {
+            return ctx.response.status(403).json({ message: 'You are banned from this server' });
+        }
+
+        const userToAdd = await User.findByOrFail('id', userId)
+
+        if (!userToAdd) {
+            return ctx.response.status(404).json({ message: 'User not found' });
+        }
+
+        const userToAddServerPivot = await userToAdd.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (userToAddServerPivot) {
+            return ctx.response.status(400).json({ message: 'User is already a member of this server' });
+        }
+
+        const serverCount = await userToAdd
+        .related('servers') 
+        .query()
+        .count('* as total') 
+        .first();
+
+        const pos = Number(serverCount?.$extras?.total || 0) + 1;
+
+        try {
+            await server.related('users').attach({
+                [userToAdd.id]: {
+                    role: 'member',
+                    position: pos,
+                    ban: false,
+                    kick_counter: 0,
+                }
+            })
+
+            return {
+                message: 'User added to server successfully'
+            }
+        } catch (error) {
+            console.error(error)
+            return ctx.response.status(500).json({
+                message: 'Failed to add user to server',
+            })
+        }
+    }
+
+    async kickServerMember(ctx: HttpContext) {
+        const user = ctx.auth.user!
+        const { serverId, memberId } = ctx.request.only(['serverId', 'memberId'])
+
+        const server = await Server.findByOrFail('id', serverId)
+
+        if (!server) {
+            return ctx.response.status(404).json({ message: 'Server not found' });
+        }
+
+        const userServerPivot = await user.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userServerPivot) {
+            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
+        }
+
+        if (userServerPivot.$extras.pivot_ban) {
+            return ctx.response.status(403).json({ message: 'You are banned from this server' });
+        }
+
+        if (userServerPivot.$extras.pivot_role === 'member') {
+            return ctx.response.status(403).json({ message: 'You are not the creator/admin of this server' });
+        }
+
+        const userToKick = await User.findByOrFail('id', memberId)
+
+        if (!userToKick) {
+            return ctx.response.status(404).json({ message: 'User not found' });
+        }
+
+        const userToKickServerPivot = await userToKick.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userToKickServerPivot) {
+            return ctx.response.status(400).json({ message: 'User is not a member of this server' });
+        }
+
+        try {
+            await server.related('users')
+            .query()
+            .where('user_id', userToKick.id)
+            .update({ kick_counter: userToKickServerPivot.$extras.pivot_kick_counter + 1 })
+            
+            if (userToKickServerPivot.$extras.pivot_kick_counter + 1 >= 3) {
+                console.log(`User ${userToKick.id} is being banned from the server.`);
+            
+                await server
+                  .related('users')
+                  .query()
+                  .where('user_id', userToKick.id)
+                  .update({ ban: true });
+            }
+
+            await server.related('users').detach([userToKick.id])
+
+            const userServers = await userToKick
+              .related('servers')
+              .query()
+              .wherePivot('ban', false) 
+              .orderBy('pivot_position');
+                
+            let position = 1;
+            for (const userServer of userServers) {
+              await userToKick
+                .related('servers')
+                .query()
+                .wherePivot('server_id', userServer.id)
+                .update({ position: position++ });
+            }
+
+            return {
+                message: 'User kicked from server successfully'
+            }
+        } catch (error) {
+            console.error(error)
+            return ctx.response.status(500).json({
+                message: 'Failed to kick user from server',
+            })
+        }
+    }
+
+    async banServerMember(ctx: HttpContext) {
+        const user = ctx.auth.user!
+        const { serverId, memberId } = ctx.request.only(['serverId', 'memberId'])
+
+        const server = await Server.findByOrFail('id', serverId)
+
+        if (!server) {
+            return ctx.response.status(404).json({ message: 'Server not found' });
+        }
+
+        const userServerPivot = await user.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userServerPivot) {
+            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
+        }
+
+        if (userServerPivot.$extras.pivot_ban) {
+            return ctx.response.status(403).json({ message: 'You are banned from this server' });
+        }
+
+        if (userServerPivot.$extras.pivot_role === 'member') {
+            return ctx.response.status(403).json({ message: 'You are not the creator/admin of this server' });
+        }
+
+        const userToBan = await User.findByOrFail('id', memberId)
+
+        if (!userToBan) {
+            return ctx.response.status(404).json({ message: 'User not found' });
+        }
+
+        const userToBanServerPivot = await userToBan.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userToBanServerPivot) {
+            return ctx.response.status(400).json({ message: 'User is not a member of this server' });
+        }
+
+        try {
+            await server.related('users')
+            .query()
+            .where('user_id', userToBan.id)
+            .update({ ban: true })
+
+            const userServers = await userToBan
+              .related('servers')
+              .query()
+              .wherePivot('ban', false) 
+              .orderBy('pivot_position');
+                
+            let position = 1;
+            for (const userServer of userServers) {
+              await userToBan
+                .related('servers')
+                .query()
+                .wherePivot('server_id', userServer.id)
+                .update({ position: position++ });
+            }
+
+            return {
+                message: 'User banned from server successfully'
+            }
+        } catch (error) {
+            console.error(error)
+            return ctx.response.status(500).json({
+                message: 'Failed to ban user from server',
+            })
         }
     }
 

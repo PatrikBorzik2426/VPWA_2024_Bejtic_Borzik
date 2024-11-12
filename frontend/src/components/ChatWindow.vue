@@ -155,14 +155,12 @@
                   <q-separator color="grey-8" class="q-mb-sm"/>
                   <q-list>
                     <q-card-section class=" scroll q-px-none" style="max-height: 25.5rem;">
-                      <div v-for="role in ['creator', 'admin', 'member']" :key="role" class="q-mx-md">
-                        <div class="text-subtitle2 text-grey-6 q-mt-sm">{{ role.toUpperCase() }}</div>
+                      <div v-for="{ role, members } in membersByRole" :key="role" class="q-mx-md">
+                        <div class="text-subtitle2 text-grey-6 q-mt-sm">{{ roleDisplayNames[role] }}</div>
                         <q-item
-                          v-for="member in filteredMembersByRole(role)"
+                          v-for="member in members"
                           :key="member.id"
-                          class="q-mt-xs row items-center"
-                          clickable
-                          rounded
+                          class="q-mt-xs q-px-xs row items-center"
                         >
                         <q-avatar size="2rem" class="q-mr-sm">
                           <img :src="member.avatar" alt="Friend Avatar" />
@@ -181,10 +179,11 @@
                             <q-btn
                               v-if="activeServer.role !== 'member' && role !== 'creator' && member.id !== activeServer.userid"
                               flat
-                              push
+                              rounded
                               icon="logout"
                               color="orange"
-                              @click="kickMember(member)"
+                              class="q-px-sm"
+                              @click="kickMember(member.id)"
                               size="sm"
                             ><q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
                               Kick Member
@@ -192,10 +191,11 @@
                             <q-btn
                               v-if="activeServer.role !== 'member' && role !== 'creator' && member.id !== activeServer.userid"
                               flat
-                              push
+                              rounded
                               icon="block"
                               color="red"
-                              @click="banMember(member)"
+                              class="q-px-sm"
+                              @click="banMember(member.id)"
                               size="sm"
                             ><q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
                               Ban Member
@@ -203,10 +203,11 @@
                             <q-btn
                               v-if="!member.isFriend && member.id !== activeServer.userid"
                               flat
-                              push
+                              rounded
                               icon="person_add"
+                              class="q-px-sm"
                               color="primary"
-                              @click="addFriend(member)"
+                              @click="AddedFriend = member.name, addFriend()"
                               size="sm"
                             >
                             <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
@@ -215,9 +216,10 @@
                             <q-btn
                               v-else-if="member.id !== activeServer.userid"
                               flat
-                              push
+                              rounded
                               icon="person_remove"
                               color="primary"
+                              class="q-px-sm"
                               @click="removeFriend(member.id)"
                               size="sm"
                             >
@@ -226,33 +228,6 @@
                             </q-tooltip></q-btn>
                         </q-item>
                       </div>
-                  <!-- <q-item v-for="request in friendrequests" :key="request.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
-                      <q-avatar size="1.7rem" class="q-mr-sm">
-                        <img :src="member.avatar" alt="Friend Avatar" />
-                      <q-badge rounded floating color="grey-9" class="q-pa-none">
-                      <q-icon
-                        :color="getStatusColor(member.status)"
-                        :name="getStatusIcon(member.status)"
-                        size="0.8rem"
-                      />
-                    </q-badge>
-                    <q-img />
-                  </q-avatar>
-                  <p class="q-ma-none">{{ member.name }}</p>
-                      <q-item-label class="q-ml-sm q-mr-xl">{{ request.name }}</q-item-label>
-                    <div class="q-ml-auto">
-                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm" @click="acceptFriendRequest(request.id)">
-                        <q-tooltip anchor="center start" self="center end" class="bg-grey-8 text-caption">
-                          Accept 
-                        </q-tooltip>
-                      </q-btn>
-                        <q-btn round size="0.5rem" color="red-7" icon="close" @click="rejectFriendRequest(request.id)">
-                        <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-caption">
-                          Reject
-                        </q-tooltip>
-                      </q-btn>
-                    </div>
-                  </q-item> -->
                   </q-card-section>
                 </q-list>
               </q-card>
@@ -646,7 +621,9 @@
 
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
-import { ref, defineProps, watch, reactive} from 'vue';
+import { User } from 'src/types/User';
+import { Message } from 'src/types/Message';
+import { ref, defineProps, watch, reactive, computed} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
@@ -677,43 +654,9 @@ const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
 const friendrequests = ref<FriendRequest[]>([]); 
 const friendsList = ref<Friend[]>([]);
+const memberList = ref<ServerMember[]>([]);
 const filesImages = ref<File[]>([]);
 const friendshipId = ref<number>(0);
-
-const members = reactive([
-  {
-    id: 1,
-    name: 'John Doe',
-    avatar: 'https://cdn.quasar.dev/img/avatar1.jpg',
-    role: 'creator',
-    status: 'Online',
-    isFriend: true,
-  },
-  {
-    id: 2,
-    name: 'Jane Smith',
-    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg',
-    role: 'admin',
-    status: 'Do Not Disturb',
-    isFriend: false,
-  },
-  {
-    id: 3,
-    name: 'Joe Bloggs',
-    avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
-    role: 'member',
-    status: 'Offline',
-    isFriend: false,
-  },
-  {
-    id: 4,
-    name: 'Joe Bloggs',
-    avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
-    role: 'member',
-    status: 'Offline',
-    isFriend: false,
-  },
-]);
 
 const $q = useQuasar();
 
@@ -733,6 +676,18 @@ const commands = {
   '/join': 'Join an existing channel',
   '/leave': 'Leave a channel',
   '/delete': 'Delete a channel',
+};
+
+const options = {
+  settings: 'Settings',
+  person_add: 'Invite friend',
+  logout: 'Leave server',
+};
+
+const roleDisplayNames: Record<string, string> = {
+  creator: 'Creator',
+  admin: 'Admins',
+  member: 'Members',
 };
 
 // Interfaces
@@ -804,9 +759,15 @@ const selectedChannelSettings = reactive<ServerChannel>({
 
 // Functions
 
-const filteredMembersByRole = (role: string) => {
-  return members.filter((member) => member.role === role);
-};
+const membersByRole = computed(() => {
+  const roles = ['creator', 'admin', 'member'];
+  return roles
+    .map((role) => ({
+      role,
+      members: memberList.value.filter((member) => member.role === role),
+    }))
+    .filter((entry) => entry.members.length > 0); // Exclude empty roles
+});
 
 const openChannelSettings = (channel: ServerChannel) => {
   Object.assign(selectedChannelSettings, channel); 
@@ -1139,8 +1100,12 @@ const removeFriend = (friendId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
-    getFriendsList();
+    console.log(response.data);
+    if(showChannels.value){
+      getMemberList();
+    } else {
+      getFriendsList();
+    }
   }).catch(error => {
     console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
   });
@@ -1258,14 +1223,81 @@ const deleteServer = async () => {
   });
 }
 
+const getMemberList = async () => {
+  showMemberList.value = true;
+  memberList.value = [];
+  axios.post('http://127.0.0.1:3333/server/get-member-list',{
+    serverId: activeServer.id,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data.members);
+
+    response.data.members.forEach((member : any) => {
+      console.log('Member:', member);
+
+      memberList.value.push({
+        id: member.id,
+        name: member.username,
+        avatar: member.avatar,
+        status: member.status,
+        role: member.role,
+        isFriend: member.isFriend,
+      });
+
+      console.log(memberList.value);
+    })
+
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
+
+}
+
+const kickMember = async (memberId: number) => {
+  axios.post('http://127.0.0.1:3333/server/kick-server-member',{
+    memberId: memberId,
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getMemberList();
+  }).catch(error => {
+    console.error('Error creating channel:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const banMember = async (memberId: number) => {
+  console.log('Banning member:', memberId);
+  axios.post('http://127.0.0.1:3333/server/ban-server-member',{
+    serverId: activeServer.id,
+    memberId: memberId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getMemberList();
+  }).catch(error => {
+    console.error('Error creating channel:', error.response ? error.response.data :  error.message);
+  });
+}
+
+
+
+
 const inviteFriend = async () => {
   axios.post('http://')
 }
-
-const getMemberList = async () => {
-  showMemberList.value = true;
-}
-
 
 const createChannel = async () => {
   axios.post('http://127.0.0.1:3333/server/create-channel',{

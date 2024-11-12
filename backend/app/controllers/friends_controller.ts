@@ -202,13 +202,18 @@ export default class FriendsController {
     
         const friendId = ctx.request.input('friendId')
     
-        const friend = await Friend.findOrFail(friendId)
-    
-        if (friend.user1Id !== user.id && friend.user2Id !== user.id) {
-          return ctx.response.badRequest({ message: 'You are not a part of this friendship'})
+        const friendship = await Friend.query()
+          .where('user1Id', user.id)
+          .where('user2Id', friendId)
+          .orWhere('user1Id', user.id)
+          .where('user2Id', friendId)
+          .first()
+
+        if (!friendship) {
+          return ctx.response.status(404).json({ message: 'Friendship not found' });
         }
     
-        await friend.delete()
+        await friendship.delete()
     
         return {
           message: 'Friendship deleted',
