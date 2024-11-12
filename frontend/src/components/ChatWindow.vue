@@ -15,25 +15,25 @@
         <q-menu dark fit auto-close class="bg-grey-9">
           <q-list style="min-width: 100px">
             <q-separator dark/>
-            <q-item v-if="activeServer.role !== 'member'" clickable>
+            <q-item v-if="activeServer.role !== 'member'" clickable @click="cloneServer(), showServerSettings = true">
               <q-item-section avatar class="q-ma-auto">
                 <q-icon name="settings" color="primary" size="1.3rem"/>
               </q-item-section>
               <q-item-section>Server Settings</q-item-section>
             </q-item>
-            <q-item clickable>
+            <q-item clickable @click="showInviteFriend = true">
               <q-item-section avatar>
                 <q-icon name="person_add" color="primary" size="1.3rem"/>
               </q-item-section>
               <q-item-section>Invite Friends</q-item-section>
             </q-item>
-            <q-item clickable>
+            <q-item clickable @click="getMemberList">
               <q-item-section avatar class="q-ma-auto">
                 <q-icon name="groups" color="primary" size="1.3rem"/>
               </q-item-section>
               <q-item-section>Member List</q-item-section>
             </q-item>
-            <q-item v-if="activeServer.role !== 'creator'" clickable color="red-9" text-color="white">
+            <q-item v-if="activeServer.role !== 'creator'" clickable color="red-9" text-color="white" @click="leaveServer()">
               <q-item-section avatar >
                 <q-icon name="reply" color="primary" size="1.3rem"/>
               </q-item-section>
@@ -42,6 +42,223 @@
           </q-list>
         </q-menu>
       </q-btn>
+
+      <q-dialog v-model="showServerSettings">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Server Settings</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showServerSettings = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                  <q-card-section class="text-center">
+                    <q-avatar size="5rem" class="file-avatar">
+                      <q-file v-model="filesImages" class="file-circle file-input" filled rounded single        accept=".jpg, image/*" />
+                      <img :src="activeServer.avatar" alt="Avatar" class="accavatar file-image"/>
+                      <q-icon name="edit" size="2rem" class="hover-icon" />
+                    </q-avatar>
+                  </q-card-section>
+                <q-card-section class="q-pt-none ">
+                  
+
+                  <div class="text-subtitle2 text-grey-6">Server name</div>
+                  <q-input dark outlined v-model="editingServer.name" style="border-radius: 10rem;" class="q-my-sm">
+                  </q-input>
+                  <q-card-section class=" row items-center justify-between q-pb-none q-pt-sm q-px-xs">
+                  <q-toggle
+                  dark
+                  keep-color
+                  v-model="editingServer.private"
+                  checked-icon="lock"
+                  color="red"
+                  unchecked-icon="public"
+                  :label="editingServer.private ? 'Private Server' : 'Public Server'"
+                  class="q-mt-sm"
+                  />
+                  <q-card-section class=" row items-center q-pa-none">
+                  <q-btn
+                        no-caps    
+                        label="Delete"
+                        color="red"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="deleteServer(), showServerSettings = false"
+                      />
+                  <q-btn
+                        no-caps    
+                        label="Update"
+                        color="grey-8"
+                        class="q-mt-sm q-ml-md"
+                        style="border-radius: 0.8rem;"
+                        @click="updateServer(), showServerSettings = false"
+                      />
+                  </q-card-section>
+                    </q-card-section>
+                  </q-card-section>
+              </q-card>
+          </q-dialog>
+
+      <q-dialog v-model="showInviteFriend">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Invite Friend</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showInviteFriend = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                <q-card-section class="q-pt-none ">
+                  <div class="text-subtitle2 text-grey-6">Friends name</div>
+                  <q-input dark outlined v-model="invitedFriendsName" style="border-radius: 10rem;" class="q-my-sm" placeholder="Nickname">
+                    <template v-slot:prepend>
+                      <q-icon name="tag" />
+                    </template>
+                  </q-input>
+                  <q-card-section class="row justify-end q-pb-none q-pt-sm q-pr-xs">
+                  <q-btn
+                        no-caps    
+                        label="Invite"
+                        color="grey-8"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="inviteFriend(); showInviteFriend = false"
+                      />
+                    </q-card-section>
+                  </q-card-section>
+              </q-card>
+          </q-dialog>
+
+          <q-dialog v-model="showMemberList">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Member List</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showMemberList = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                  <q-list>
+                    <q-card-section class=" scroll q-px-none" style="max-height: 25.5rem;">
+                      <div v-for="role in ['creator', 'admin', 'member']" :key="role" class="q-mx-md">
+                        <div class="text-subtitle2 text-grey-6 q-mt-sm">{{ role.toUpperCase() }}</div>
+                        <q-item
+                          v-for="member in filteredMembersByRole(role)"
+                          :key="member.id"
+                          class="q-mt-xs row items-center"
+                          clickable
+                          rounded
+                        >
+                        <q-avatar size="2rem" class="q-mr-sm">
+                          <img :src="member.avatar" alt="Friend Avatar" />
+                          <q-badge rounded floating color="grey-9" class="q-pa-none">
+                            <q-icon
+                              :color="getStatusColor(member.status)"
+                              :name="getStatusIcon(member.status)"
+                              size="0.8rem"
+                            />
+                          </q-badge>
+                          <q-img />
+                        </q-avatar>
+                          <q-item-section>
+                            <q-item-label>{{ member.name }}</q-item-label>
+                          </q-item-section >
+                            <q-btn
+                              v-if="activeServer.role !== 'member' && role !== 'creator' && member.id !== activeServer.userid"
+                              flat
+                              push
+                              icon="logout"
+                              color="orange"
+                              @click="kickMember(member)"
+                              size="sm"
+                            ><q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                              Kick Member
+                            </q-tooltip></q-btn>
+                            <q-btn
+                              v-if="activeServer.role !== 'member' && role !== 'creator' && member.id !== activeServer.userid"
+                              flat
+                              push
+                              icon="block"
+                              color="red"
+                              @click="banMember(member)"
+                              size="sm"
+                            ><q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                              Ban Member
+                            </q-tooltip></q-btn>
+                            <q-btn
+                              v-if="!member.isFriend && member.id !== activeServer.userid"
+                              flat
+                              push
+                              icon="person_add"
+                              color="primary"
+                              @click="addFriend(member)"
+                              size="sm"
+                            >
+                            <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                              Add Friend
+                            </q-tooltip></q-btn>
+                            <q-btn
+                              v-else-if="member.id !== activeServer.userid"
+                              flat
+                              push
+                              icon="person_remove"
+                              color="primary"
+                              @click="removeFriend(member.id)"
+                              size="sm"
+                            >
+                            <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                              Remove Friend
+                            </q-tooltip></q-btn>
+                        </q-item>
+                      </div>
+                  <!-- <q-item v-for="request in friendrequests" :key="request.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
+                      <q-avatar size="1.7rem" class="q-mr-sm">
+                        <img :src="member.avatar" alt="Friend Avatar" />
+                      <q-badge rounded floating color="grey-9" class="q-pa-none">
+                      <q-icon
+                        :color="getStatusColor(member.status)"
+                        :name="getStatusIcon(member.status)"
+                        size="0.8rem"
+                      />
+                    </q-badge>
+                    <q-img />
+                  </q-avatar>
+                  <p class="q-ma-none">{{ member.name }}</p>
+                      <q-item-label class="q-ml-sm q-mr-xl">{{ request.name }}</q-item-label>
+                    <div class="q-ml-auto">
+                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm" @click="acceptFriendRequest(request.id)">
+                        <q-tooltip anchor="center start" self="center end" class="bg-grey-8 text-caption">
+                          Accept 
+                        </q-tooltip>
+                      </q-btn>
+                        <q-btn round size="0.5rem" color="red-7" icon="close" @click="rejectFriendRequest(request.id)">
+                        <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-caption">
+                          Reject
+                        </q-tooltip>
+                      </q-btn>
+                    </div>
+                  </q-item> -->
+                  </q-card-section>
+                </q-list>
+              </q-card>
+          </q-dialog>
+
+
         
          <div class="q-mx-md q-my-none row items-center justify-between">
         <h2 class="q-my-xs text-caption text-left color-grey">Text Channels</h2>
@@ -80,7 +297,80 @@
                         color="grey-8"
                         class="q-mt-sm"
                         style="border-radius: 0.8rem;"
-                        @click="newChannelName = ''; showCreateChannel = false"
+                        @click="createChannel(); showCreateChannel = false"
+                      />
+                    </q-card-section>
+                  </q-card-section>
+              </q-card>
+          </q-dialog>
+
+          <draggable
+            v-model="channelList"
+            item-key="id"
+            class="full-width"
+            :disabled="activeServer.role === 'member'"
+            @end="updateChannelposition"
+          >
+            <template #item="{ element }">
+              <q-item class="q-px-xs q-py-xs">
+                <q-btn
+                  rounded
+                  flat
+                  @click="mobileShowChat = true; loadChannel(element.name);"
+                  align="between"
+                  class="full-width"
+                  style="border-radius: 0.7rem">
+                  <div class="row items-center ">
+                    <q-icon name="tag" color="primary" size="1.2rem"/>
+                    <p class="q-mx-sm q-my-none text-subtitle2" style="text-transform: none;"> {{ element.name }}</p>
+                  </div>
+                  <q-icon v-if="activeServer.role !== 'member'" name="settings" color="primary" size="1rem" class="cursor-pointer" @click.stop="openChannelSettings(element)">
+                    <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
+                      Channel Settings
+                    </q-tooltip>
+                  </q-icon>
+              </q-btn>
+              </q-item>
+            </template>
+          </draggable>
+
+          <q-dialog v-model="showChannelSettings">
+            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-h6">Channel Settings</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.3rem"
+                    @click="showChannelSettings = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                <q-card-section class="q-pt-none ">
+                  <div class="text-subtitle2 text-grey-6">Channel name</div>
+                  <q-input dark outlined v-model="selectedChannelSettings.name" style="border-radius: 10rem;" class="q-my-sm" placeholder="Channel name">
+                    <template v-slot:prepend>
+                      <q-icon name="tag" />
+                    </template>
+                  </q-input>
+                  <q-card-section class="row justify-between q-pb-none q-pt-sm q-px-xs">
+                    <q-btn
+                        no-caps    
+                        label="Delete"
+                        color="red-8"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="deleteChannel(); showChannelSettings = false"
+                      />
+                    <q-btn
+                        no-caps    
+                        label="Update"
+                        color="grey-8"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="updateChannel(); showChannelSettings = false"
                       />
                     </q-card-section>
                   </q-card-section>
@@ -88,22 +378,6 @@
               </q-card>
           </q-dialog>
 
-
-        <q-list class="full-width text-center">
-          <q-item
-            class="hover-fill"
-            v-for="(channel, index) in listOfChannels"
-            :key="index"
-            :class="{ 'selected-channel': currentChannel === channel }"
-          >
-            <q-item-section
-              @click="mobileShowChat = true;loadChannel(channel);"
-              class="cursor-pointer"
-            >
-              <q-item-label># {{ channel }}</q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
       </div>
       <div v-else>
         <div class="q-mx-md row items-center">
@@ -143,7 +417,7 @@
                     @click="showFriendRequests = false"></q-icon>
                   </q-toolbar>
                   <q-separator color="grey-8" class="q-mb-sm"/>
-                  <q-card-section class=" scroll q-px-none" style="max-height: 15.5rem;">
+                  <q-card-section class=" scroll q-pa-none" style="max-height: 15.5rem;">
                 <q-list v-if="friendrequests.length > 0">
                   <q-item v-for="request in friendrequests" :key="request.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
                       <q-avatar size="2.5rem">
@@ -379,18 +653,25 @@ import { ref, defineProps, watch, reactive} from 'vue';
 import { useQuasar } from 'quasar';
 import dayjs from 'dayjs';
 import axios from 'axios';
-import { get } from 'http';
+import draggable from "vuedraggable";
+import { server } from 'typescript';
 
 // Refs and State
 const inputValue = ref<string>('');
 const inputCli = ref<null | any>(null);
 const showComponent = ref<boolean>(false);
 const currentChannel = ref<string>('');
-const listOfChannels = ref(['Channel 1', 'Channel 2']);
+const channelList = ref<ServerChannel[]>([]);
 const mobileShowChat = ref<boolean>(false);
 const showChannels = ref<boolean>(false);
 const showCreateChannel = ref<boolean>(false);
+const showChannelSettings = ref<boolean>(false);
+const showMemberList = ref<boolean>(false);
+const showServerSettings = ref<boolean>(false);
+const showInviteFriend = ref<boolean>(false);
+const showServerInvites = ref<boolean>(false);
 const newChannelName = ref<string>('');
+const invitedFriendsName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
 const showAddFriend = ref<boolean>(false);
 const AddedFriend = ref<string>('');
@@ -404,6 +685,43 @@ const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
 const friendrequests = ref<FriendRequest[]>([]); 
 const friendsList = ref<Friend[]>([]);
+const serverMembers = ref<ServerMember[]>([]);
+const filesImages = ref<File[]>([]);
+
+const members = reactive([
+  {
+    id: 1,
+    name: 'John Doe',
+    avatar: 'https://cdn.quasar.dev/img/avatar1.jpg',
+    role: 'creator',
+    status: 'Online',
+    isFriend: true,
+  },
+  {
+    id: 2,
+    name: 'Jane Smith',
+    avatar: 'https://cdn.quasar.dev/img/avatar2.jpg',
+    role: 'admin',
+    status: 'Do Not Disturb',
+    isFriend: false,
+  },
+  {
+    id: 3,
+    name: 'Joe Bloggs',
+    avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
+    role: 'member',
+    status: 'Offline',
+    isFriend: false,
+  },
+  {
+    id: 4,
+    name: 'Joe Bloggs',
+    avatar: 'https://cdn.quasar.dev/img/avatar3.jpg',
+    role: 'member',
+    status: 'Offline',
+    isFriend: false,
+  },
+]);
 
 const $q = useQuasar();
 
@@ -450,29 +768,78 @@ interface ServerChannel {
   id: number;
   name: string;
   notifications: number;
-  messages: Message[];
+  position: number;
 }
 
 interface Server {
   id: number;
   name: string;
+  avatar: string;
   private: boolean;
   role: string;
+  userid: number;
+}
+
+interface ServerMember {
+  id: number;
+  name: string;
+  avatar: string;
+  status: string;
+  role: string;
+  isFriend: boolean;
 }
 
 const activeServer = reactive<Server>({
   id: 0,
   name: "",
+  avatar: "",
   private: false,
   role: "",
+  userid: 0,
+
+});
+
+const editingServer = reactive<Server>({
+  id: 0,
+  name: "",
+  avatar: "",
+  private: false,
+  role: "",
+  userid: 0,
+});
+
+const selectedChannelSettings = reactive<ServerChannel>({
+  id: 0,
+  name: '',
+  notifications: 0,
+  position: 0,
 });
 
 // Functions
+
+const filteredMembersByRole = (role: string) => {
+  return members.filter((member) => member.role === role);
+};
+
+const openChannelSettings = (channel: ServerChannel) => {
+  Object.assign(selectedChannelSettings, channel); 
+  showChannelSettings.value = true;
+};
+
 const requestNotificationPermission = () => {
   if (Notification.permission === 'default') {
     Notification.requestPermission();
   }
 };
+
+function cloneServer(){
+  editingServer.id = activeServer.id;
+  editingServer.name = activeServer.name;
+  editingServer.avatar = activeServer.avatar;
+  editingServer.private = activeServer.private;
+  editingServer.role = activeServer.role;
+  editingServer.userid = activeServer.userid;
+}
 
 requestNotificationPermission();
 
@@ -862,8 +1229,10 @@ const getActiveServer = async (serverId: number) => {
 
     activeServer.id = activeServerData.id;
     activeServer.name = activeServerData.name;
-    activeServer.private = activeServerData.private;
+    activeServer.avatar = activeServerData.avatar;
+    activeServer.private = activeServerData.privacy;
     activeServer.role = activeServerData.role;
+    activeServer.userid = activeServerData.userid;
 
     console.log("Active server assigned:", activeServer);
   } catch (error) {
@@ -871,7 +1240,177 @@ const getActiveServer = async (serverId: number) => {
   }
 };
 
+const getServerChannels = async (serverId: number) => {
+  channelList.value = [];
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/server/get-server-channels',{
+      serverId: serverId
+    },{
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json',
+      },
+    })
 
+    response.data.serverChannels.forEach((channel: any) => {
+      console.log('channel:', channel)
+
+      channelList.value.push({
+        id: channel.id,
+        name: channel.name,
+        notifications: channel.notifications || 0,
+        position: channel.position,
+      })
+
+      console.log('channel List:', channelList)
+    })
+    channelList.value.sort((a, b) => a.position - b.position)
+    // console.log('Sorted Server List:', serverList)
+  } catch (error) {
+    console.error('Error fetching channel list:', error.response?.data || error.message)
+  }
+}
+
+const leaveServer = async () => {
+  axios.post('http://127.0.0.1:3333/server/leave-server',{
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getFriendsList();
+    showChannels.value = false;
+    loadChannel(friendsList.value[0].name);
+  }).catch(error => {
+    console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const updateServer = async () => {
+  axios.post('http://127.0.0.1:3333/server/update-server',{
+    serverId: activeServer.id,
+    name: editingServer.name,
+    privacy: editingServer.private,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getActiveServer(activeServer.id);
+  }).catch(error => {
+    console.error('Error during leaving server:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const deleteServer = async () => {
+  axios.post('http://127.0.0.1:3333/server/delete-server',{
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getFriendsList();
+    showChannels.value = false;
+    loadChannel(friendsList.value[0].name);
+  }).catch(error => {
+    console.error('Error during deleting server:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const inviteFriend = async () => {
+  axios.post('http://')
+}
+
+const getMemberList = async () => {
+  showMemberList.value = true;
+}
+
+
+const createChannel = async () => {
+  axios.post('http://127.0.0.1:3333/server/create-channel',{
+    name: newChannelName.value,
+    serverId: activeServer.id,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getServerChannels(activeServer.id);
+    currentChannel.value = newChannelName.value;
+    newChannelName.value = '';
+  }).catch(error => {
+    console.error('Error creating channel:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const updateChannelposition = async () => {
+  const channelPositions = channelList.value.map((channel, index) => {
+    return {
+      id: channel.id,
+      position: index + 1
+    }
+  })
+
+  axios.post('http://127.0.0.1:3333/server/update-channel-positions',{
+    channels: channelPositions,
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    // getServerList();
+  }).catch(error => {
+    console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const updateChannel = async () => {
+  axios.post('http://127.0.0.1:3333/server/update-channel',{
+    channelId: selectedChannelSettings.id,
+    name: selectedChannelSettings.name,
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getServerChannels(activeServer.id);
+  }).catch(error => {
+    console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
+  });
+}
+
+const deleteChannel = async () => {
+  axios.post('http://127.0.0.1:3333/server/delete-channel',{
+    channelId: selectedChannelSettings.id,
+    serverId: activeServer.id
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getServerChannels(activeServer.id);
+  }).catch(error => {
+    console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
+  });
+}
 
 // Watchers
 watch(
@@ -880,8 +1419,11 @@ watch(
     console.log('receivedServerId value:', newId);
     if (newId !== undefined && newId !== null) {
       getActiveServer(props.receivedServerId);
+      getServerChannels(props.receivedServerId);
       showChannels.value = true;
-      currentChannel.value = 'Channel ' + props.receivedServerId.toString();
+      if (channelList.value.length > 0) {
+        currentChannel.value = channelList.value[0].name;
+      }
 
       if (newId !== -1) {
         friendChatStatus.value = false;
@@ -939,6 +1481,45 @@ getFriendRequests();
 
 
 <style>
+
+.file-avatar {
+  position: relative;
+  border-radius: 50%; 
+  overflow: hidden;   
+}
+
+.file-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0; 
+  z-index: 3; 
+  cursor: pointer;
+}
+
+.file-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;       
+}
+
+.hover-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); 
+  opacity: 0; 
+  z-index: 2; 
+  color: white;
+  transition: opacity 0.3s ease; 
+}
+
 .chat-window,
 .channel-rooms {
   /* border: var(--grey) 3px solid; */
