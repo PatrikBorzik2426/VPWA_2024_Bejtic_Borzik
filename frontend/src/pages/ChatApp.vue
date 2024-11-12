@@ -30,7 +30,7 @@ onBeforeMount(() => {
   }
   }).then(response => {
     console.log(response.data);
-  }).catch(error => {
+  }).catch(() => {
     router.push('/login');
   });
 });

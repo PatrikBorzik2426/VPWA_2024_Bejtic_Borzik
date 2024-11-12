@@ -371,7 +371,7 @@ import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
-import draggable from "vuedraggable";
+import draggable from 'vuedraggable';
 
 onBeforeMount(() => {
   page.value = 'ChatApp';
@@ -597,7 +597,7 @@ const getMainUser = async () => {
     Mainuser.status = mainUserData.status;
 
     console.log("Main User assigned:", Mainuser);
-  } catch (error) {
+  } catch (error : any) {
     console.error('Error during fetching main user:', error.response ? error.response.data : error.message);
   }
 };
@@ -658,7 +658,7 @@ const getServerList = async () => {
     })
     serverList.value.sort((a, b) => a.position - b.position)
     // console.log('Sorted Server List:', serverList)
-  } catch (error) {
+  } catch (error : any) {
     console.error('Error fetching server list:', error.response?.data || error.message)
   }
 }

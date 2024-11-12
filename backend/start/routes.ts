@@ -9,16 +9,41 @@
 
 import router from '@adonisjs/core/services/router'
 import {middleware} from '#start/kernel'
+import transmit from '@adonisjs/transmit/services/main'
+import { HttpContext } from '@adonisjs/core/http'
 
 const AuthController = () => import('#controllers/auth_controller')
 const FriendController = () => import('#controllers/friends_controller')
 const UserController = () => import('#controllers/user_controller')
 const ServersController = () => import('#controllers/servers_controller')
+const MessagesController = () => import('#controllers/messages_controller')
+
+// transmits
+
+// Register WebSocket routes
+transmit.registerRoutes()
+
+transmit.authorize<{ friendshipId: string }>('friendship:friendshipId', async (ctx: HttpContext, { friendshipId }) => {
+    const userId = ctx.auth.user?.id;
+
+    console.log("Authorizing friendshipId", friendshipId, "for user", userId);
+
+    if (!userId) {
+      return false;
+    }else{
+        return true;
+    }
+  
+  });
+
+// routes
 
 router.get('/csrf-secret', async ({ response, request }) => {
     const csrfToken = request.csrfToken
     return response.json({ csrfToken })
 })
+
+router.get
 
 router.group(()=>{
     router.post('register',[AuthController,'register']);
@@ -34,6 +59,7 @@ router.group(()=>{
     router.post('list-friend-requests',[FriendController,'getFriendRequests']).use(middleware.auth());
     router.post('list-friends',[FriendController,'getFriendslist']).use(middleware.auth());
     router.post('remove-friend',[FriendController,'removeFriend']).use(middleware.auth());
+    router.post('get-friendship-id',[FriendController,'getFriendshipId']).use(middleware.auth());
 }).prefix('friend');
 
 
@@ -48,3 +74,10 @@ router.group(()=>{
     router.post('create-server', [ServersController,'createServer']).use(middleware.auth());
     router.post('update-server-positions', [ServersController,'updateServerPositons']).use(middleware.auth());
 }).prefix('server');
+
+
+router.group(()=>{
+    router.post('get-personal-messages', [MessagesController,'getPersonalMessages']).use(middleware.auth());
+    router.post('get-server-messages', [MessagesController,'getServerMessages']).use(middleware.auth());
+    router.post('add-personal-message', [MessagesController,'addPersonalMessage']).use(middleware.auth());
+}).prefix('messages');

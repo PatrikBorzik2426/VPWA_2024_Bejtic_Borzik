@@ -94,5 +94,4 @@ export default class AuthController {
       return ctx.response.ok({ user })
     }
   }
-
 }

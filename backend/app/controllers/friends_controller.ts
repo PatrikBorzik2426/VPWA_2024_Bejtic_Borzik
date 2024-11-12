@@ -183,7 +183,8 @@ export default class FriendsController {
           .preload('user2')
         
         const mappedFriends = friends.map((friend) => ({
-            friendId: friend.id,
+            id : friend.id,
+            friendId: friend.user1.id === user.id ? friend.user2.id : friend.user1.id,
             //friendAvatar: friend.user1.id === user.id ? friend.user2.avatar : friend.user1.avatar,
             friendName: friend.user1.id === user.id ? friend.user2.login : friend.user1.login,
             friendAvatar: `https://ui-avatars.com/api/?name=${friend.user1.id === user.id ? friend.user2.login : friend.user1.login}`,
@@ -214,4 +215,30 @@ export default class FriendsController {
         }
       }
     
+    async getFriendshipId(ctx: HttpContext) {
+        const user = ctx.auth.user!
+    
+        const friendId = ctx.request.input('friendId')
+    
+        const friend = await Friend.query()
+        .select('id')
+        .where((query) => {
+          query
+          .where(function (query) {
+            query
+              .where('user_1_id', user.id)
+              .andWhere('user_2_id', friendId);
+          })
+          .orWhere(function (query) {
+            query
+              .where('user_1_id', friendId)
+              .andWhere('user_2_id', user.id);
+          })
+          
+        }).first()
+
+        return{
+          'friendshipId': friend?.id
+        }
+  }
 }

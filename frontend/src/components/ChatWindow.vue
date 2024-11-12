@@ -97,7 +97,7 @@
             :class="{ 'selected-channel': currentChannel === channel }"
           >
             <q-item-section
-              @click="mobileShowChat = true;loadChannel(channel);"
+              @click="mobileShowChat = true;loadChannel(channel,index);"
               class="cursor-pointer"
             >
               <q-item-label># {{ channel }}</q-item-label>
@@ -234,9 +234,9 @@
               <q-btn
                 rounded
                 flat
-                @click="selectFriend(friend.id)"
                 class="q-pl-sm full-width row justify-center"
                 style="border-radius: 0.7rem"
+                @click="selectFriend(friend.id)"
               >
               <q-menu touch-position context-menu auto-close class="bg-red text-white" style="border-radius: 1rem">
                 <q-list>
@@ -301,11 +301,14 @@
       <div >
           <SingleMessage
             class=" overflow-auto"
-            :message1="userMessage1"
-            :message2="userMessage2"
+            :receiverId="receiverId"
+            :friendship-id="friendshipId"
             v-if="!friendChatStatus"
           />
-          <SingleMessage :message1="dmMessageDict1" :message2="{}" v-else />
+          <SingleMessage 
+          :receiverId="receiverId"
+          :friendship-id="friendshipId"
+          v-else />
       </div>
 
       <div class="q-mt-auto" style="height: fit-content;">
@@ -373,13 +376,9 @@
 
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
-import { User } from 'src/types/User';
-import { Message } from 'src/types/Message';
 import { ref, defineProps, watch, reactive} from 'vue';
 import { useQuasar } from 'quasar';
-import dayjs from 'dayjs';
 import axios from 'axios';
-import { get } from 'http';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -397,13 +396,12 @@ const AddedFriend = ref<string>('');
 const messageBeingTyped = ref<string>('Someone is typing ...');
 const someIsTypingBool = ref<boolean>(false);
 const filteredCommands = ref({});
-const userMessage1 = ref<{ [key: number]: Message }>({});
-const userMessage2 = ref<{ [key: number]: Message }>({});
-const dmMessageDict1 = ref<{ [key: number]: Message }>({});
+const receiverId = ref<number>(0);
 const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
 const friendrequests = ref<FriendRequest[]>([]); 
 const friendsList = ref<Friend[]>([]);
+const friendshipId = ref<number>(0);
 
 const $q = useQuasar();
 
@@ -425,15 +423,10 @@ const commands = {
   '/delete': 'Delete a channel',
 };
 
-const options = {
-  settings: 'Settings',
-  person_add: 'Invite friend',
-  logout: 'Leave server',
-};
-
 // Interfaces
 interface Friend {
   id: number;
+  friendId: number;
   name: string;
   notifications: number;
   avatar: string;
@@ -444,13 +437,6 @@ interface FriendRequest {
   id: number;
   name: string;
   avatar: string;
-}
-
-interface ServerChannel {
-  id: number;
-  name: string;
-  notifications: number;
-  messages: Message[];
 }
 
 interface Server {
@@ -477,15 +463,17 @@ const requestNotificationPermission = () => {
 requestNotificationPermission();
 
 const selectFriend = (id: number) => {
+  console.log('Selected friend:', id);  
+
   friendsList.value = friendsList.value.map((friend) => {
-    console.log('Prop friend: ', props.receivedShowFriends);
+    // console.log('Prop friend: ', props.receivedShowFriends);
     mobileShowChat.value = true;
 
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friend.notifications = 0;
       friendChatStatus.value = props.receivedShowFriends;
-      loadChannel(friendsList.value[id - 1].name);
+      loadMessages(id);
     }
     return friend;
   });
@@ -517,93 +505,28 @@ const getStatusIcon = (status: string) => {
   }
 };
 
-const loadMessages = () => {
-  console.log('loading messages ', friendChatStatus.value);
-
-  userMessage1.value = {};
-  userMessage2.value = {};
-  dmMessageDict1.value = {};
-
-  for (let i = 0; i < 100; i++) {
-    const user1: User = {
-      id: i,
-      login: 'User ' + i,
-      password: 'password',
-      email: 'user' + i + '@gmail.com',
-    };
-
-    const user2: User = {
-      id: i + 100,
-      login: 'User ' + (i + 100),
-      password: 'password',
-      email: 'user' + (i + 100) + '@gmail.com',
-    };
-
-    const message1: Message = {
-      id: i,
-      text: 'Message ' + i,
-      user: user1,
-      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
-    };
-
-    const message2: Message = {
-      id: i + 100,
-      text: 'Message ' + (i + 100),
-      user: user2,
-      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
-    };
-
-    const dmMessage1: Message = {
-      id: i,
-      text: 'Message ' + i,
-      user: {
-        id: 0,
-        login: 'Someone',
-        password: 'password',
-        email: '',
-      },
-      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
-    };
-
-    const dmMessage2: Message = {
-      id: i,
-      text: 'Message ' + i,
-      user: {
-        id: 0,
-        login: 'myDm',
-        password: 'password',
-        email: '',
-      },
-      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
-    };
-
-    userMessage1.value[i] = message1;
-    userMessage2.value[i + 100] = message2;
-
-    const dictLen = Object.keys(dmMessageDict1.value).length;
-
-    dmMessageDict1.value[dictLen] = dmMessage1;
-    dmMessageDict1.value[dictLen + 1] = dmMessage2;
-  }
+async function loadMessages (messagePullId : number){
+  receiverId.value = messagePullId;
+  console.log('Loading messages for:', messagePullId);
+  await getFriendshipId(messagePullId);
 };
 
 const sendMessage = () => {
   if (inputValue.value.length > 0) {
+    console.log('Sending message:', inputValue.value);
+
+    axios.post('http://127.0.0.1:3333/messages/add-personal-message',{
+      receiverId: receiverId.value,
+      content: inputValue.value,
+      friendshipId: friendshipId.value
+    },{
+      headers:{
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    })
+
     showNotification(inputValue.value, currentChannel.value);
-
-    const message: Message = {
-      id: Object.keys(userMessage1.value).length,
-      text: inputValue.value,
-      user: {
-        id: 0,
-        login: 'Someone',
-        password: 'password',
-        email: 'someone@poop.com',
-      },
-      timestamp: dayjs(new Date()).format('DD.MM.YYYY HH:mm'),
-    };
-
-    userMessage1.value[Object.keys(userMessage1.value).length] = message;
   }
 
   inputValue.value = '';
@@ -612,7 +535,7 @@ const sendMessage = () => {
 
 const showNotification = (text: string, currentChannel: string) => {
   setTimeout(() => {
-    console.log('App visible:', $q.appVisible);
+    // console.log('App visible:', $q.appVisible);
 
     if (!$q.appVisible) {
       if (Notification.permission === 'granted') {
@@ -664,12 +587,12 @@ const checkCommand = () => {
     someIsTypingBool.value = false;
   }
 
-  console.log(someIsTypingBool.value);
+  // console.log(someIsTypingBool.value);
 };
 
-const loadChannel = (channelName: string) => {
+const loadChannel = (channelName: string, messagePullId: number) => {
   currentChannel.value = channelName;
-  loadMessages();
+  loadMessages(messagePullId);
 };
 
 const pickCommand = (command: string) => {
@@ -683,7 +606,7 @@ const pickCommand = (command: string) => {
 
 // Backend Calls
 async function addFriend(){
-  console.log('Adding friend:', AddedFriend);
+  // console.log('Adding friend:', AddedFriend);
 
   axios.post('http://127.0.0.1:3333/friend/add-friend-request',{
     receiverLogin: AddedFriend.value
@@ -693,7 +616,7 @@ async function addFriend(){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
+    // console.log(response.data);
     AddedFriend.value = '';
     $q.notify({
         type: 'positive',
@@ -716,7 +639,7 @@ async function addFriend(){
 }
 
 async function acceptFriendRequest(requestId: number){
-  console.log('Accepting friend request:', friendrequests.value[0].name);
+  // console.log('Accepting friend request:', friendrequests.value[0].name);
 
   axios.post('http://127.0.0.1:3333/friend/accept-friend-request',{
     friendRequestId: requestId
@@ -726,7 +649,7 @@ async function acceptFriendRequest(requestId: number){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
+    // console.log(response.data);
     deleteFriendRequest(requestId);
     getFriendsList();
   }).catch(error => {
@@ -742,7 +665,7 @@ const deleteFriendRequest = (requestId: number) => {
 };
 
 async function rejectFriendRequest(requestId: number){
-  console.log('Rejecting friend request:', friendrequests.value[0].name);
+  // console.log('Rejecting friend request:', friendrequests.value[0].name);
 
   axios.post('http://127.0.0.1:3333/friend/reject-friend-request',{
     friendRequestId: requestId
@@ -752,16 +675,14 @@ async function rejectFriendRequest(requestId: number){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data.friend);
+    // console.log(response.data.friend);
     deleteFriendRequest(requestId);
   }).catch(error => {
     console.error('Error during rejecting friendrequest:', error.response ? error.response.data : error.message);
   });
 
-  console.log(friendrequests.value);
+  // console.log(friendrequests.value);
 }
-
-
 
 const getFriendRequests = () => {
 
@@ -773,10 +694,10 @@ const getFriendRequests = () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data.mappedRequests);
+    // console.log(response.data.mappedRequests);
 
     response.data.mappedRequests.forEach((element : any) => {
-      console.log('Element:', element);
+      // console.log('Element:', element);
 
       friendrequests.value.push({
         id: element.friendRequestId,
@@ -784,7 +705,7 @@ const getFriendRequests = () => {
         avatar: element.senderAvatar,
       });
 
-      console.log(friendrequests.value);
+      // console.log(friendrequests.value);
     })
 
   }).catch(error => {
@@ -801,9 +722,9 @@ const getFriendsList = () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data.mappedFriends);
+    // console.log(response.data.mappedFriends);
 
-    console.log('daco to urobilo');
+    // console.log('daco to urobilo');
 
     friendsList.value = [];
 
@@ -812,13 +733,14 @@ const getFriendsList = () => {
 
       friendsList.value.push({
         id: friend.friendId,
+        friendId: friend.id,
         name: friend.friendName,
         avatar: friend.friendAvatar,
         status: friend.friendStatus,
         notifications: friend.friendUnreadMessages,
       });
 
-      console.log(friendsList.value);
+      // console.log(friendsList.value);
     })
 
   }).catch(error => {
@@ -829,7 +751,7 @@ const getFriendsList = () => {
 
 
 const removeFriend = (friendId: number) => {
-  console.log('Removing friend:', friendId);
+  // console.log('Removing friend:', friendId);
 
   axios.post('http://127.0.0.1:3333/friend/remove-friend',{
     friendId: friendId
@@ -839,7 +761,7 @@ const removeFriend = (friendId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
+    // console.log(response.data);
     getFriendsList();
   }).catch(error => {
     console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
@@ -865,19 +787,37 @@ const getActiveServer = async (serverId: number) => {
     activeServer.private = activeServerData.private;
     activeServer.role = activeServerData.role;
 
-    console.log("Active server assigned:", activeServer);
-  } catch (error) {
+    // console.log("Active server assigned:", activeServer);
+  } catch (error : any) {
     console.error('Error during fetching active server:', error.response ? error.response.data : error.message);
   }
 };
 
+const getFriendshipId = async (friendId: number) => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/friend/get-friendship-id', {
+      friendId: friendId
+    }, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    });
 
+    friendshipId.value = response.data.friendshipId;
+
+    console.log("New friendship ID assigned:", friendshipId.value); 
+    
+  } catch (error : any) {
+    console.error('Error during fetching friendship ID:', error.response ? error.response.data : error.message);
+  }
+}
 
 // Watchers
 watch(
   () => [props.receivedServerId, props.lastUpdate],
   ([newId]) => {
-    console.log('receivedServerId value:', newId);
+    // console.log('receivedServerId value:', newId);
     if (newId !== undefined && newId !== null) {
       getActiveServer(props.receivedServerId);
       showChannels.value = true;
@@ -887,10 +827,10 @@ watch(
         friendChatStatus.value = false;
       }
 
-      console.log('Server ID checked (same value too):', newId);
+      // console.log('Server ID checked (same value too):', newId);
     }
   },
-  { immediate: true }
+  { immediate: false }
 );
 
 watch(

@@ -50,6 +50,9 @@ function handleSubmit(){
   })
   .then(response => {
     const token = response.data.token;
+    const login = response.data.user.login;
+
+    localStorage.setItem('login', login);
     localStorage.setItem('bearer', token.token);
 
     if (token){
@@ -63,10 +66,6 @@ function handleSubmit(){
     console.error('Error during registration:', error.response ? error.response.data : error.message);
     registrationError.value = true;
   });
-}
-
-function LoginUser(){
-  router.push('/chatapp');
 }
 
 defineOptions({
