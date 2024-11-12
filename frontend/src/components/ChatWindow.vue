@@ -316,7 +316,7 @@
                 <q-btn
                   rounded
                   flat
-                  @click="mobileShowChat = true; loadChannel(element.name);"
+                  @click="mobileShowChat = true; loadChannel(element.name,element.id);"
                   align="between"
                   class="full-width"
                   style="border-radius: 0.7rem">
@@ -577,12 +577,8 @@
             class=" overflow-auto"
             :receiverId="receiverId"
             :friendship-id="friendshipId"
-            v-if="!friendChatStatus"
+            :serverId="activeServer.id"
           />
-          <SingleMessage 
-          :receiverId="receiverId"
-          :friendship-id="friendshipId"
-          v-else />
       </div>
 
       <div class="q-mt-auto" style="height: fit-content;">
@@ -654,7 +650,6 @@ import { ref, defineProps, watch, reactive} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
-import { server } from 'typescript';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -669,7 +664,6 @@ const showChannelSettings = ref<boolean>(false);
 const showMemberList = ref<boolean>(false);
 const showServerSettings = ref<boolean>(false);
 const showInviteFriend = ref<boolean>(false);
-const showServerInvites = ref<boolean>(false);
 const newChannelName = ref<string>('');
 const invitedFriendsName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
@@ -683,8 +677,8 @@ const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
 const friendrequests = ref<FriendRequest[]>([]); 
 const friendsList = ref<Friend[]>([]);
-const serverMembers = ref<ServerMember[]>([]);
 const filesImages = ref<File[]>([]);
+const friendshipId = ref<number>(0);
 
 const members = reactive([
   {
@@ -783,7 +777,7 @@ interface ServerMember {
 }
 
 const activeServer = reactive<Server>({
-  id: 0,
+  id: -1,
   name: "",
   avatar: "",
   private: false,
@@ -793,7 +787,7 @@ const activeServer = reactive<Server>({
 });
 
 const editingServer = reactive<Server>({
-  id: 0,
+  id: -1,
   name: "",
   avatar: "",
   private: false,
@@ -802,7 +796,7 @@ const editingServer = reactive<Server>({
 });
 
 const selectedChannelSettings = reactive<ServerChannel>({
-  id: 0,
+  id: -1,
   name: '',
   notifications: 0,
   position: 0,
@@ -837,7 +831,8 @@ function cloneServer(){
 requestNotificationPermission();
 
 const selectFriend = (id: number) => {
-  console.log('Selected friend:', id);  
+  console.log('Selected friend:', id);
+  activeServer.id = -1;
 
   friendsList.value = friendsList.value.map((friend) => {
     // console.log('Prop friend: ', props.receivedShowFriends);
@@ -888,8 +883,17 @@ async function loadMessages (messagePullId : number){
 const sendMessage = () => {
   if (inputValue.value.length > 0) {
     console.log('Sending message:', inputValue.value);
+    let endpoint = ''
 
-    axios.post('http://127.0.0.1:3333/messages/add-personal-message',{
+    if (activeServer.id != -1){
+      endpoint = 'http://127.0.0.1:3333/messages/add-server-message';
+    }else{
+      endpoint = 'http://127.0.0.1:3333/messages/add-personal-message'
+    }
+
+    console.log("The sending endpoint is: ",endpoint)
+
+    axios.post(endpoint,{
       receiverId: receiverId.value,
       content: inputValue.value,
       friendshipId: friendshipId.value
@@ -1163,7 +1167,7 @@ const getActiveServer = async (serverId: number) => {
     activeServer.role = activeServerData.role;
     activeServer.userid = activeServerData.userid;
 
-    // console.log("Active server assigned:", activeServer);
+    console.log("Active server assigned:", activeServer);
   } catch (error : any) {
     console.error('Error during fetching active server:', error.response ? error.response.data : error.message);
   }
@@ -1339,6 +1343,24 @@ const deleteChannel = async () => {
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
+}
+
+const getFriendshipId = async (friendId: number) => {
+  try {
+    await axios.post('http://127.0.0.1:3333/friend/get-friendship-id', {
+      friendId: friendId
+    }, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      friendshipId.value = response.data.friendshipId;
+    });
+  }
+    catch (error : any) {
+      console.error('Error during fetching friendship id:', error.response ? error.response.data : error.message);
+    }
 }
 
 // Watchers

@@ -531,6 +531,7 @@ function ShowFriends() {
     emit('emit-friends', true);
     selectedServerId.value = -1;
   }
+  emit('emit-server-id', -1);
   showfriends.value = true;
   showaccount.value = false;
   showselectedserver.value = false;

@@ -88,4 +88,5 @@ router.group(()=>{
     router.post('get-personal-messages', [MessagesController,'getPersonalMessages']).use(middleware.auth());
     router.post('get-server-messages', [MessagesController,'getServerMessages']).use(middleware.auth());
     router.post('add-personal-message', [MessagesController,'addPersonalMessage']).use(middleware.auth());
+    router.post('add-server-message', [MessagesController,'addServerMessage']).use(middleware.auth());
 }).prefix('messages');

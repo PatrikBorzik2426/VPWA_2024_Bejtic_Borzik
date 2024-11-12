@@ -47,7 +47,11 @@ const messageList = ref<HTMLElement | null>(null);
 
 let stopListening : any;
 
-const props = defineProps<{ receiverId: number, friendshipId : number }>();
+const props = defineProps<{ 
+  receiverId: number, 
+  friendshipId : number,
+  serverId: number
+ }>();
 
 function scrollBottom(){
   setTimeout(() => {
@@ -65,8 +69,15 @@ function isMentioned(content: string) {
 
 async function subscribeToMessages() {
   console.log('Subscribing to messages:', props.friendshipId);
+  let broadcast=''
 
-  const activeSubscription = transmit.subscription(`friendship:${props.friendshipId}`); // Create a subscription to the channel
+  if (props.serverId != -1){
+    broadcast = `channel:${props.receiverId}`;
+  }else{
+    broadcast = `friendship:${props.friendshipId}`;
+  }
+
+  const activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
 
   await activeSubscription.create()
    
@@ -87,15 +98,23 @@ async function subscribeToMessages() {
 watch(
   () => props.receiverId,
   async (newId) => {
-    console.log(stopListening);
+    console.log(props.receiverId, props.friendshipId, props.serverId);
 
     if (stopListening !== undefined) {
       stopListening();
     }
 
     console.log('Receiver ID changed:', newId);
+
+    let endpoint = '';
+
+    if (props.serverId != -1){
+      endpoint = 'http://127.0.0.1:3333/messages/get-server-messages';
+    }else{
+      endpoint = 'http://127.0.0.1:3333/messages/get-personal-messages';
+    }
     
-    await axios.post('http://127.0.0.1:3333/messages/get-personal-messages', {
+    await axios.post(endpoint, {
       receiverId: newId
     }, {
       headers: {

@@ -1,6 +1,7 @@
 import { HttpContext } from "@adonisjs/core/http"
 import DirectMessage from "../models/direct_message.js"
 import transmit from "@adonisjs/transmit/services/main"
+import ChannelMessage from "../models/channel_message.js"
 
 export default class MessagesController {
 
@@ -42,9 +43,27 @@ export default class MessagesController {
           return ctx.response.ok({ messages: messageData })
     }
 
-    async getServerMessages({ request, response }: HttpContext) {
-        const { server_id } = request.all()
-        return response.json({ message: 'getServerMessages', server_id })
+    async getServerMessages(ctx: HttpContext) {
+      const user = ctx.auth.user!
+
+      const { receiverId } = ctx.request.all()
+
+      const channelId: number = receiverId
+
+      const messages = await ChannelMessage.query()
+      .where('channel_id', channelId)
+      .orderBy('created_at', 'asc')
+      .preload('user')
+
+      const messageData = messages.map(message => ({
+          messageId: message.id,
+          messageContent: message.message,   // Example field
+          senderName: message.user?.login,  // Accessing preloaded sender data
+          receiverName: message.user?.login, // Accessing preloaded receiver data
+          createdAt: message.timeSent, // Example: formatting timestamp
+        }))
+    
+        return ctx.response.ok({ messages: messageData })
     }
 
     async addPersonalMessage(ctx: HttpContext) {
@@ -52,7 +71,7 @@ export default class MessagesController {
 
         const { receiverId, content, friendshipId } = ctx.request.all()
 
-        console.log('receiver_id', receiverId, 'message', content, 'friendshipId', friendshipId)
+        console.log('receiver_id', receiverId, 'user_id', user.id, 'message', content, 'friendshipId', friendshipId)
 
         const newMsg = await DirectMessage.create({
             senderUserId: user.id,
@@ -76,8 +95,28 @@ export default class MessagesController {
 
     }
 
-    async addServerMessage({ request, response }: HttpContext) {
-        const { server_id, message } = request.all()
-        return response.json({ message: 'addServerMessage', server_id, message })
+    async addServerMessage(ctx : HttpContext) {
+      const user = ctx.auth.user!
+
+      const { receiverId, content } = ctx.request.all()
+
+      const newMsg = await ChannelMessage.create({
+          userId: user.id,
+          channelId: receiverId,
+          message: content
+      })
+
+      const Msg = await (await ChannelMessage.findByOrFail('id', newMsg.id))
+
+      // Authorization middleware example (ensure it’s applied correctly)
+      transmit.broadcast(`channel:${receiverId}`, {
+          message: {
+            id: Msg.id,
+            senderId: Msg.userId,
+            content: Msg.message,
+            login: user.login,
+            createdAt: Msg.timeSent.toString(),
+          },
+        }); 
     }
 }
