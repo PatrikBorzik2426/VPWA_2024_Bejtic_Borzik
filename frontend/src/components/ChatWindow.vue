@@ -1475,6 +1475,8 @@ const getServerInvites = () => {
         invitedby: invite.invitedBy
       });
 
+      serverinvites.value.sort((a, b) => b.id - a.id);
+
       console.log(serverinvites.value);
     })
 
