@@ -22,7 +22,7 @@
     <q-input dark v-model="lastName" :rules="[requiredRule]" :error="!!loginError" :error-message="lastNameError" type="text" label="Last Name" placeholder="example: Doe" class="no-margin"/>
     <q-input dark v-model="email" :rules="[requiredRule,emailRule]" :error="!!loginError" :error-message="emailError" type="text" label="E-mail" placeholder="example: joe.deo@domain.eu" class="no-margin"/>
     <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
-    <q-input dark v-model="password" :rules="[requiredRule,passwordRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword@" class="no-margin"/>
+    <q-input dark v-model="password" :rules="[requiredRule,passwordRule]" :error="!!loginError" :error-message="passwordError" type="password" label="Password" placeholder="example: YourPassword@" class="no-margin"/>
 
     <q-btn class="button q-mx-auto" label="Register" type="submit" color="primary"/>
 

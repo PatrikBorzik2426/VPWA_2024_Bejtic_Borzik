@@ -10,7 +10,7 @@
       <h1 class=" text-h4 q-ml-none q-mt-none q-mb-lg" style="font-size: clamp(1.5rem, 3vw, 2rem)">Login Form</h1>
 
       <q-input dark v-model="login" :rules="[requiredRule]" :error="!!loginError" :error-message="loginError" type="text" label="Login" placeholder="example: YourLogin" class="no-margin"/>
-      <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="text" label="Password" placeholder="example: YourPassword" class="no-margin"/>
+      <q-input dark v-model="password" :rules="[requiredRule]" :error="!!loginError" :error-message="passwordError" type="password" label="Password" placeholder="example: YourPassword" class="no-margin"/>
     
       <p v-if="registrationError" class=" text-center q-ma-none text-red"> Incorrect login and/or password</p>
 

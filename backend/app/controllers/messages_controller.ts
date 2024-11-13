@@ -8,7 +8,7 @@ export default class MessagesController {
     async getPersonalMessages(ctx: HttpContext) {
         const user = ctx.auth.user!
 
-        const { receiverId } = ctx.request.all()
+        const { receiverId, additionalMsgs } = ctx.request.all()
 
         const user2_id: number = receiverId
 
@@ -28,9 +28,27 @@ export default class MessagesController {
               .andWhere('receiver_user_id', user.id);
           })
         })
-        .orderBy('created_at', 'asc')
+        .orderBy('created_at', 'desc')
         .preload('sender')
         .preload('receiver')
+        .limit(8+additionalMsgs)
+
+        const totalMessagesCount = await DirectMessage.query()
+        .where(function (query) {
+          query
+            .where('sender_user_id', user.id)
+            .andWhere('receiver_user_id', user2_id);
+        })
+        .orWhere(function (query) {
+          query
+            .where('sender_user_id', user2_id)
+            .andWhere('receiver_user_id', user.id);
+        })
+        .count('* as total');
+
+        const count = Number(totalMessagesCount[0]?.$extras?.total)
+
+        console.log('10+additionalMsgs', 10+additionalMsgs,'totalMessagesCount', count)
 
         const messageData = messages.map(message => ({
             messageId: message.id,
@@ -40,7 +58,7 @@ export default class MessagesController {
             createdAt: message.timeSent, // Example: formatting timestamp
           }))
       
-          return ctx.response.ok({ messages: messageData })
+        return ctx.response.ok({ messages: messageData, totalMessagesCount: count })
     }
 
     async getServerMessages(ctx: HttpContext) {

@@ -2,10 +2,10 @@
   <div class="overflow-auto q-pr-md" ref="messageList"
     :style = "{maxHeight: $q.screen.gt.sm ? '82.5vh' : '70vh'}"
   >
-  <q-infinite-scroll :offset="250" reverse >
+  <q-infinite-scroll :offset="250" reverse @load="addMessages">
     <template v-slot:loading>
         <div class="row justify-center" >
-          <q-spinner-dots color="primary" size="40px"/>
+          <q-spinner-dots color="primary" size="40px" />
           <!-- <p v-else>No more messages ... You have found the beginning!</p> -->
         </div>
     </template>
@@ -28,7 +28,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, defineProps, watch } from 'vue';
+import { ref, defineProps, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Transmit } from '@adonisjs/transmit-client';
 import axios from 'axios';
 
@@ -44,6 +44,11 @@ const transmit = new Transmit({
   });
 const wholeMessage = ref<Member[]>([]);
 const messageList = ref<HTMLElement | null>(null);
+const additionalMsgs = 5;
+const maximumMsgs = ref<number>(0);
+let currentAdditionalMsgs = ref<number>(0);
+const scrollTop = ref(0);
+
 
 let stopListening : any;
 
@@ -59,6 +64,25 @@ function scrollBottom(){
       messageList.value.scrollTop = messageList.value.scrollHeight;
     }
   }, 100);
+}
+
+function handleScroll() {
+  if (messageList.value) {
+    scrollTop.value = messageList.value.scrollTop;
+    if (scrollTop.value === 0 && currentAdditionalMsgs.value+5 < maximumMsgs.value) {
+      addMessages();
+    }else{
+      console.log("ScrollTop: ", scrollTop.value, "CurrentAdditional: ", currentAdditionalMsgs.value+5, "Maximum Msg:", maximumMsgs.value)
+    }
+  }
+}
+
+async function addMessages(){
+  currentAdditionalMsgs.value = currentAdditionalMsgs.value + additionalMsgs;
+
+  setTimeout(async () => {
+    await loadMessages(props.receiverId);
+  }, 1500);
 }
 
 function isMentioned(content: string) {
@@ -90,17 +114,14 @@ async function subscribeToMessages() {
           content: message.message.content,
           timestamp: message.message.createdAt
         });
+
+        scrollBottom();
   });
 
 }
 
-// Watch for changes in `receiverId` to update the messages
-watch(
-  () => props.receiverId,
-  async (newId) => {
-    console.log(props.receiverId, props.friendshipId, props.serverId);
-
-    if (stopListening !== undefined) {
+const loadMessages = async (newId : number) =>{
+  if (stopListening !== undefined) {
       stopListening();
     }
 
@@ -115,7 +136,8 @@ watch(
     }
     
     await axios.post(endpoint, {
-      receiverId: newId
+      receiverId: newId,
+      additionalMsgs: currentAdditionalMsgs.value
     }, {
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
@@ -124,7 +146,9 @@ watch(
     }).then(async response => {
       wholeMessage.value = [];  
 
-      response.data.messages.forEach((element:any) => {
+      const dataList = response.data.messages.reverse()
+
+      dataList.forEach((element:any) => {
 
         wholeMessage.value.push({
           id: element.messageId,
@@ -134,16 +158,42 @@ watch(
         });
       });
 
+      maximumMsgs.value = response.data.totalMessagesCount;
+
+      console.log('Maximum messages:', maximumMsgs.value);
+
       stopListening = await subscribeToMessages();
     });
+}
+
+//Event listeners for scrolling
+onMounted(() => {
+  if (messageList.value) {
+    messageList.value.addEventListener('scroll', handleScroll);
+  }
+});
+
+onBeforeUnmount(() => {
+  if (messageList.value) {
+    messageList.value.removeEventListener('scroll', handleScroll);
+  }
+});
+
+// Watch for changes in `receiverId` to update the messages
+watch(
+  () => props.receiverId,
+  async (newId) => {
+    console.log(props.receiverId, props.friendshipId, props.serverId);
+    loadMessages(newId);
+    scrollBottom();
   },
   { immediate: true },
 );
 
-watch(wholeMessage, () => {
-  scrollBottom();
-},
-{ immediate: true, deep: true });
+// watch(wholeMessage, () => {
+// },
+// { immediate: true, deep: true });
+
 
 </script>
 

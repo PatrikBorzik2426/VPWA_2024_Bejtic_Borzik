@@ -621,8 +621,7 @@
 
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
-import { User } from 'src/types/User';
-import { Message } from 'src/types/Message';
+import {commandHandler, showMemberListExternal} from '../services/commandHandler';
 import { ref, defineProps, watch, reactive, computed} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
@@ -672,10 +671,8 @@ const emit = defineEmits(['emit-mobileShowChat']);
 
 // Commands and Options
 const commands = {
-  '/create': 'Create a new channel',
-  '/join': 'Join an existing channel',
-  '/leave': 'Leave a channel',
-  '/delete': 'Delete a channel',
+  '/cancel' : 'Leave the server (if you are creator delete the server)',
+  '/list' : 'List all the server users',
 };
 
 const options = {
@@ -841,8 +838,22 @@ async function loadMessages (messagePullId : number){
   await getFriendshipId(messagePullId);
 };
 
-const sendMessage = () => {
-  if (inputValue.value.length > 0) {
+const sendMessage = async () => {
+  const isItCommand = await commandHandler(inputValue.value, activeServer);
+
+  console.log('Is it a command:', isItCommand);
+
+  if (isItCommand){
+    const showMemberListBoolean = showMemberListExternal(inputValue.value)
+
+    console.log('Is it a showMemberListBoolean:', showMemberListBoolean);
+
+    if (showMemberListBoolean){
+      getMemberList();
+    }
+  }
+
+  if (inputValue.value.length > 0 && !isItCommand) {
     console.log('Sending message:', inputValue.value);
     let endpoint = ''
 
@@ -1426,7 +1437,7 @@ watch(
       getFriendsList();
     }
 
-    loadChannel(currentChannel.value);
+    // loadChannel(currentChannel.value);
   },
   {
     immediate: true,

@@ -74,7 +74,7 @@ router.group(()=>{
     router.post('create-server', [ServersController,'createServer']).use(middleware.auth());
     router.post('leave-server', [ServersController,'leaveServer']).use(middleware.auth());
     router.post('update-server', [ServersController,'updateServer']).use(middleware.auth());
-    router.post('detele-server', [ServersController,'deleteServer']).use(middleware.auth());
+    router.post('delete-server', [ServersController,'deleteServer']).use(middleware.auth());
     router.post('update-server-positions', [ServersController,'updateServerPositons']).use(middleware.auth());
     router.post('create-channel', [ServersController,'createChannel']).use(middleware.auth());
     router.post('update-channel', [ServersController,'updateChannel']).use(middleware.auth());
