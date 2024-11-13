@@ -198,7 +198,7 @@
                       color="grey-8"
                       class="q-mt-sm"
                       style="border-radius: 0.8rem;"
-                      @click="JoinServer(servertojoin), showCreateServer = false"
+                      @click="JoinServer(), showCreateServer = false"
                     />
                   </q-card-section>
                 </q-tab-panel>
@@ -764,7 +764,7 @@ const CreateServer = async () => {
 
 const JoinServer = async () => {
   axios.post('http://127.0.0.1:3333/server/join-server',{
-    name: servertojoin.value,
+    servername: servertojoin.value,
   },{
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
@@ -775,10 +775,23 @@ const JoinServer = async () => {
     getServerList();
     selectServer(response.data.serverId);
     servertojoin.value = '';
+    $q.notify({
+        type: 'positive',
+        message: 'Server joined successfully',
+        timeout: 5000, 
+        position: 'bottom' 
+      });
   }).catch(error => {
     console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+    servertojoin.value = '';
+    const message = error.response?.data?.message || 'An error occurred';
+    $q.notify({
+        type: 'negative',
+        message: message,
+        timeout: 5000, 
+        position: 'bottom' 
+      });
   });
-
 }
 
 const UpdateServerPositions = async () => {

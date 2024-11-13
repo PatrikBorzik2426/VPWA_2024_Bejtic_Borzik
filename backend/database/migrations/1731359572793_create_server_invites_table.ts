@@ -9,7 +9,7 @@ export default class ServerInvites extends BaseSchema {
       table.integer('server_id').unsigned().references('id').inTable('servers').onDelete('CASCADE')
       table.integer('invited_by_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.integer('invited_user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
-      table.enu('server_invites_status', ['accepted', 'rejected', 'floating']).defaultTo('floating').notNullable()
+      table.enu('serverinvite_status', ['accepted', 'rejected', 'floating']).defaultTo('floating').notNullable()
       table.timestamps(true)
     })
   }

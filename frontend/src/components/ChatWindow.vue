@@ -1401,7 +1401,7 @@ const inviteFriend = async () => {
     invitedFriendsName.value = '';
     $q.notify({
         type: 'positive',
-        message: 'Friend request sent',
+        message: 'Server Invite sent',
         timeout: 5000, 
         position: 'bottom' 
       });

@@ -49,7 +49,7 @@ export default class User extends BaseModel {
     pivotForeignKey: 'user_id',
     relatedKey: 'id',
     pivotRelatedForeignKey: 'server_id',
-    pivotColumns: ['kick_counter', 'ban', 'role', 'position'], 
+    pivotColumns: ['kick_counter', 'ban', 'inServer', 'role', 'position'], 
   })
   declare servers: ManyToMany<typeof Server>
 

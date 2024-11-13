@@ -17,6 +17,7 @@ export default class ServerUser extends BaseSchema {
       table.integer('position').notNullable().defaultTo(0)
       table.integer('kick_counter').defaultTo(0) 
       table.boolean('ban').defaultTo(false) 
+      table.boolean('inServer').defaultTo(true) 
 
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
