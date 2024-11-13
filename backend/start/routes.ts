@@ -17,6 +17,7 @@ const FriendController = () => import('#controllers/friends_controller')
 const UserController = () => import('#controllers/user_controller')
 const ServersController = () => import('#controllers/servers_controller')
 const MessagesController = () => import('#controllers/messages_controller')
+const ServerInvitesController = () => import('#controllers/server_invites_controller')
 
 // transmits
 
@@ -72,9 +73,10 @@ router.group(()=>{
     router.post('get-server-list', [ServersController,'getServerList']).use(middleware.auth());
     router.post('get-active-server', [ServersController,'getActiveServer']).use(middleware.auth());
     router.post('create-server', [ServersController,'createServer']).use(middleware.auth());
+    router.post('join-server', [ServersController,'joinServer']).use(middleware.auth());
     router.post('leave-server', [ServersController,'leaveServer']).use(middleware.auth());
     router.post('update-server', [ServersController,'updateServer']).use(middleware.auth());
-    router.post('detele-server', [ServersController,'deleteServer']).use(middleware.auth());
+    router.post('delete-server', [ServersController,'deleteServer']).use(middleware.auth());
     router.post('update-server-positions', [ServersController,'updateServerPositons']).use(middleware.auth());
     router.post('create-channel', [ServersController,'createChannel']).use(middleware.auth());
     router.post('update-channel', [ServersController,'updateChannel']).use(middleware.auth());
@@ -94,3 +96,10 @@ router.group(()=>{
     router.post('add-personal-message', [MessagesController,'addPersonalMessage']).use(middleware.auth());
     router.post('add-server-message', [MessagesController,'addServerMessage']).use(middleware.auth());
 }).prefix('messages');
+
+router.group(()=>{
+    router.post('create-server-invite',[ServerInvitesController,'createServerInvite']).use(middleware.auth());
+    router.post('accept-server-invite',[ServerInvitesController,'acceptServerInvite']).use(middleware.auth());
+    router.post('reject-server-invite',[ServerInvitesController,'rejectServerInvite']).use(middleware.auth());
+    router.post('get-server-invites',[ServerInvitesController,'getServerInvites']).use(middleware.auth());
+}).prefix('server-invite');

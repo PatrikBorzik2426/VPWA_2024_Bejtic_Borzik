@@ -362,6 +362,78 @@
             <q-icon
               center
               color="primary"
+              name="playlist_add_circle"
+              class="cursor-pointer"
+              size="1.25rem"
+              @click="getServerInvites(); showServerInvites = true"
+            >
+              <div v-if="serverinvites.length > 0" class="absolute bg-red text-white q-ml-md q-mb-md"
+              style="width: 0.7rem; height: 0.7rem; font-size: 1rem; border-radius: 0.3rem;"></div>
+              <q-tooltip
+                anchor="bottom middle"
+                self="top middle"
+                class="bg-grey-8 text-caption"
+              >
+                Server Invites
+              </q-tooltip>
+            </q-icon>
+            <q-dialog v-model="showServerInvites" position="top">
+              <q-card dark class="bg-grey-9" style="border-radius: 1.1rem; height: 20rem; width: 22rem;" :style="{marginTop: $q.screen.gt.sm ? '4rem' : '10rem', marginLeft: $q.screen.gt.sm ? '-66vw' : '0'} " >
+                <q-toolbar class="row justify-between items-center q-py-sm">
+                  <div class="text-subtitle1" >Server Invites</div>   
+                  <q-icon
+                    flat
+                    round
+                    class="cursor-pointer"
+                    name="close"
+                    color="primary"
+                    size="1.1rem"
+                    @click="showServerInvites = false"></q-icon>
+                  </q-toolbar>
+                  <q-separator color="grey-8" class="q-mb-sm"/>
+                  <q-card-section class=" scroll q-pa-none" style="max-height: 15.5rem;">
+                <q-list v-if="serverinvites.length > 0">
+                  <q-item v-for="invite in serverinvites" :key="invite.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
+                      <q-avatar size="2.5rem">
+                         <img :src="invite.avatar" alt="Avatar" /> 
+                         <q-badge rounded floating color="grey-9" class="q-pa-none">
+                            <q-icon
+                              color="primary"
+                              :name="invite.private ? 'lock' : 'public'"
+                              size="1.1rem"
+                            />
+                          </q-badge>
+                      </q-avatar>
+                      <div class="q-ml-sm">
+                        <q-item-label>{{ invite.name }}</q-item-label>
+                        <q-item-label caption class="text-grey-6">
+                          Invited by: {{ invite.invitedby }}
+                        </q-item-label>
+                      </div>
+                    <div class="q-ml-auto">
+                        <q-btn round size="0.5rem" color="green-7" icon="done" class="q-mr-sm" @click="acceptServerInvite(invite.id)">
+                        <q-tooltip anchor="center start" self="center end" class="bg-grey-8 text-caption">
+                          Accept 
+                        </q-tooltip>
+                      </q-btn>
+                        <q-btn round size="0.5rem" color="red-7" icon="close" @click="rejectServerInvite(invite.id)">
+                        <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-caption">
+                          Reject
+                        </q-tooltip>
+                      </q-btn>
+                    </div>
+                  </q-item>
+                </q-list>
+              
+                <q-card-section v-else style="margin-top: 4rem;">
+                  <div class="text-subtitle2 text-center text-grey-6">Oooops... Looks like nobody wants to be in their server</div>
+                </q-card-section>
+              </q-card-section>
+              </q-card>
+            </q-dialog>
+            <q-icon
+              center
+              color="primary"
               name="supervised_user_circle"
               class="cursor-pointer"
               size="1.25rem"
@@ -499,7 +571,7 @@
                   style="max-width: 80%"
                 >
                   <q-avatar size="1.7rem" class="q-mr-sm">
-                    <img :src="friend.avatar" alt="Friend Avatar" />
+                    <q-img :src="friend.avatar" alt="Friend Avatar" />
                     <q-badge rounded floating color="grey-9" class="q-pa-none">
                       <q-icon
                         :color="getStatusColor(friend.status)"
@@ -507,7 +579,6 @@
                         size="0.8rem"
                       />
                     </q-badge>
-                    <q-img />
                   </q-avatar>
                   <p class="q-ma-none">{{ friend.name }}</p>
 
@@ -620,9 +691,8 @@
 </template>
 
 <script setup lang="ts">
-import SingleMessage from './SingleMessage.vue';
-import { User } from 'src/types/User';
-import { Message } from 'src/types/Message';
+// import SingleMessage from './SingleMessage.vue';
+// import {commandHandler, showMemberListExternal} from '../services/commandHandler';
 import { ref, defineProps, watch, reactive, computed} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
@@ -641,6 +711,7 @@ const showChannelSettings = ref<boolean>(false);
 const showMemberList = ref<boolean>(false);
 const showServerSettings = ref<boolean>(false);
 const showInviteFriend = ref<boolean>(false);
+const showServerInvites = ref<boolean>(false);
 const newChannelName = ref<string>('');
 const invitedFriendsName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
@@ -653,6 +724,7 @@ const receiverId = ref<number>(0);
 const friendChatStatus = ref<boolean>(true);
 const seeMessagePresent = ref<boolean>(false);
 const friendrequests = ref<FriendRequest[]>([]); 
+const serverinvites = ref<ServerInvite[]>([]); 
 const friendsList = ref<Friend[]>([]);
 const memberList = ref<ServerMember[]>([]);
 const filesImages = ref<File[]>([]);
@@ -672,10 +744,8 @@ const emit = defineEmits(['emit-mobileShowChat']);
 
 // Commands and Options
 const commands = {
-  '/create': 'Create a new channel',
-  '/join': 'Join an existing channel',
-  '/leave': 'Leave a channel',
-  '/delete': 'Delete a channel',
+  '/cancel' : 'Leave the server (if you are creator delete the server)',
+  '/list' : 'List all the server users',
 };
 
 const options = {
@@ -704,6 +774,14 @@ interface FriendRequest {
   id: number;
   name: string;
   avatar: string;
+}
+
+interface ServerInvite {
+  id: number;
+  name: string;
+  avatar: string;
+  private: boolean;
+  invitedby: string;
 }
 
 interface ServerChannel {
@@ -841,8 +919,22 @@ async function loadMessages (messagePullId : number){
   await getFriendshipId(messagePullId);
 };
 
-const sendMessage = () => {
-  if (inputValue.value.length > 0) {
+const sendMessage = async () => {
+  const isItCommand = await commandHandler(inputValue.value, activeServer);
+
+  console.log('Is it a command:', isItCommand);
+
+  if (isItCommand){
+    const showMemberListBoolean = showMemberListExternal(inputValue.value)
+
+    console.log('Is it a showMemberListBoolean:', showMemberListBoolean);
+
+    if (showMemberListBoolean){
+      getMemberList();
+    }
+  }
+
+  if (inputValue.value.length > 0 && !isItCommand) {
     console.log('Sending message:', inputValue.value);
     let endpoint = ''
 
@@ -1296,8 +1388,101 @@ const banMember = async (memberId: number) => {
 
 
 const inviteFriend = async () => {
-  axios.post('http://')
+  axios.post('http://127.0.0.1:3333/server-invite/create-server-invite',{
+    serverId: activeServer.id,
+    invitedusername: invitedFriendsName.value
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    // console.log(response.data);
+    invitedFriendsName.value = '';
+    $q.notify({
+        type: 'positive',
+        message: 'Friend request sent',
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+    
+  }).catch(error => {
+      const message = error.response?.data?.message || 'An error occurred';
+      AddedFriend.value = '';
+      $q.notify({
+        type: 'negative',
+        message: message,
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+    });
 }
+
+const acceptServerInvite = async (inviteId: number) => {
+  axios.post('http://127.0.0.1:3333/server-invite/accept-server-invite',{
+    serverInviteId: inviteId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    // console.log(response.data);
+    getServerInvites();
+  }).catch(error => {
+    console.error('Error during accepting friendrequest:', error.response ? error.response.data : error.message);
+  });
+}
+
+const rejectServerInvite = async (inviteId: number) => {
+  axios.post('http://127.0.0.1:3333/server-invite/reject-server-invite',{
+    serverInviteId: inviteId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    // console.log(response.data.friend);
+    getServerInvites();
+  }).catch(error => {
+    console.error('Error during rejecting friendrequest:', error.response ? error.response.data : error.message);
+  });
+
+  // console.log(friendrequests.value);
+}
+
+const getServerInvites = () => {
+
+  serverinvites.value = [];
+
+  axios.post('http://127.0.0.1:3333/server-invite/get-server-invites',{},{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data.serverinvites);
+
+    response.data.mappedInvites.forEach((invite: any) => {
+      // console.log('Element:', element);
+
+      serverinvites.value.push({
+        id: invite.id,
+        name: invite.servername,
+        avatar: invite.serveravatar,
+        private: invite.serverprivacy,
+        invitedby: invite.invitedBy
+      });
+
+      console.log(serverinvites.value);
+    })
+
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+  });
+
+};
 
 const createChannel = async () => {
   axios.post('http://127.0.0.1:3333/server/create-channel',{
@@ -1426,7 +1611,7 @@ watch(
       getFriendsList();
     }
 
-    loadChannel(currentChannel.value);
+    // loadChannel(currentChannel.value);
   },
   {
     immediate: true,
@@ -1460,6 +1645,7 @@ watch(
 // loadChannel(friendsList.value[0].name);
 getFriendsList()
 getFriendRequests();
+getServerInvites();
 </script>
 
 
