@@ -4,7 +4,7 @@ import FriendRequest from '../models/friend_request.js'
 import Friend from '../models/friend.js'
 
 export default class FriendsController {
-    async addFriendRequest(ctx: HttpContext) {
+    async createFriendRequest(ctx: HttpContext) {
         const user = ctx.auth.user!; 
       
         const receiverLogin = ctx.request.input('receiverLogin'); 

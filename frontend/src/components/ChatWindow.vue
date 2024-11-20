@@ -294,7 +294,8 @@
                   @click="mobileShowChat = true; loadChannel(element.name,element.id);"
                   align="between"
                   class="full-width"
-                  style="border-radius: 0.7rem">
+                  style="border-radius: 0.7rem"
+                  :class="{ 'selected-channel': currentChannel === element.name }">
                   <div class="row items-center ">
                     <q-icon name="tag" color="primary" size="1.2rem"/>
                     <p class="q-mx-sm q-my-none text-subtitle2" style="text-transform: none;"> {{ element.name }}</p>
@@ -426,7 +427,7 @@
                 </q-list>
               
                 <q-card-section v-else style="margin-top: 4rem;">
-                  <div class="text-subtitle2 text-center text-grey-6">Oooops... Looks like nobody wants to be in their server</div>
+                  <div class="text-subtitle2 text-center text-grey-6">Oooops... Looks like nobody wants you to be in their server</div>
                 </q-card-section>
               </q-card-section>
               </q-card>
@@ -545,19 +546,20 @@
             </q-dialog>
 
         <div class="scrollable">
-          <q-list class="q-pt-sm">
+          <q-list v-if="friendsList.length > 0" class="q-pt-sm">
             <q-item
               v-for="friend in friendsList"
               :key="friend.id"
-              class="q-pa-none hover-fill"
-              :class="{ 'selected-channel': currentChannel === friend.name }"
+              class="q-px-xs q-py-xs"
             >
               <q-btn
                 rounded
                 flat
-                class="q-pl-sm full-width row justify-center"
+                align="left"
+                class="full-width q-py-sm"
                 style="border-radius: 0.7rem"
                 @click="selectFriend(friend.id)"
+                :class="{ 'selected-channel': currentChannel === friend.name }"
               >
               <q-menu touch-position context-menu auto-close class="bg-red text-white" style="border-radius: 1rem">
                 <q-list>
@@ -567,10 +569,10 @@
                 </q-list>
               </q-menu>
                 <div
-                  class="row justify-start items-center full-width"
+                  class="row justify-in-between items-center full-width q-pl-sm"
                   style="max-width: 80%"
                 >
-                  <q-avatar size="1.7rem" class="q-mr-sm">
+                  <q-avatar size="1.7rem" class="q-mr-sm q-ml-sm">
                     <q-img :src="friend.avatar" alt="Friend Avatar" />
                     <q-badge rounded floating color="grey-9" class="q-pa-none">
                       <q-icon
@@ -580,21 +582,27 @@
                       />
                     </q-badge>
                   </q-avatar>
-                  <p class="q-ma-none">{{ friend.name }}</p>
-
+                  <p class="q-ma-none" style="text-transform: none">{{ friend.name }}</p>
+                </div>
                   <q-badge
                     v-if="friend.notifications > 0"
                     color="red"
                     floating
                     rounded
-                    class="relative-position q-ml-auto"
+                    class="relative-position q-ml-auto q-mr-md"
                     style="top: 0"
                     >{{ friend.notifications }}
                   </q-badge>
-                </div>
+                
               </q-btn>
             </q-item>
           </q-list>
+          <div v-else class="text-subtitle2 text-center text-grey-6 q-pa-md">You don't have any friends yet. 
+            <br>
+            <span class="text-primary cursor-pointer" @click="showAddFriend = true">
+              Try Adding a friend
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -1039,7 +1047,7 @@ const pickCommand = (command: string) => {
 async function addFriend(){
   // console.log('Adding friend:', AddedFriend);
 
-  axios.post('http://127.0.0.1:3333/friend/add-friend-request',{
+  axios.post('http://127.0.0.1:3333/friend/create-friend-request',{
     receiverLogin: AddedFriend.value
   },{
     headers: {
@@ -1733,8 +1741,7 @@ getServerInvites();
 }
 
 .selected-channel {
-  background-color: var(--q-primary);
-  border-radius: 0.35rem;
+  background-color: rgba(247, 182, 2, 0.2);
 }
 
 .server-name {

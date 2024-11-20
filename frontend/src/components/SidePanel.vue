@@ -263,7 +263,7 @@
         <q-card elevated dark class="account-card bg-grey-9 ">
           <q-card-section class="text-center">
             <q-avatar size="5rem" class="file-avatar">
-              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" />
+              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" @update:model-value="onFileChange"/>
               <img :src="Mainuser.avatar" alt="Avatar" class="accavatar file-image"/>
               <q-icon name="edit" size="2rem" class="hover-icon" />
             </q-avatar>
@@ -446,6 +446,7 @@ import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from 'vuedraggable';
+import { debounce } from 'lodash';
 
 onBeforeMount(() => {
   page.value = 'ChatApp';
@@ -481,7 +482,7 @@ interface Server {
 
 // Refs and State
 const page = ref('');
-const filesImages = ref<File[]>([]);
+const filesImages = ref<File | null>(null);
 const serverList = ref<Server[]>([]);
 const servertojoin = ref<string>('');
 const unreadFriends = ref(4);
@@ -521,6 +522,10 @@ const Mainuser = reactive<User>({
   status: ""
 });
 
+const onFileChange = () => {
+  console.log('Selected file:', filesImages.value);
+};
+
 const serverName = ref<string>(Mainuser.name);
 
 const newServerName = computed({
@@ -549,6 +554,17 @@ watch(
     console.log('watch', props.receivedShowMobileChat);
     showMobileChat.value = props.receivedShowMobileChat;
   }
+);
+
+watch(
+  () => Mainuser, 
+  (newValue, oldValue) => {
+    console.log('Mainuser changed:', newValue)
+    console.log('Previous value:', oldValue)
+
+    debouncedUpdateMainUser();
+  },
+  { deep: true } 
 );
 // Data
 
@@ -603,6 +619,11 @@ const selectedServer = computed(() => {
 });
 
 // Functions
+const debouncedUpdateMainUser = debounce(() => {
+  console.log('Debounced updateMainUser called');
+  updateMainUser();
+}, 300);
+
 function selectServer(serverId: number) {
   console.log(selectedServerId.value, serverId, showfriends.value);
   if (selectedServerId.value != serverId) {
@@ -625,12 +646,9 @@ function ShowServers() {
 function ShowFriends() {
   if (!showfriends.value) {
     emit('emit-friends', true);
+    showfriends.value = true;
     selectedServerId.value = -1;
   }
-  emit('emit-server-id', -1);
-  showfriends.value = true;
-  showaccount.value = false;
-  showselectedserver.value = false;
 }
 
 function ShowAccount() {
@@ -820,17 +838,6 @@ const UpdateServerPositions = async () => {
     console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
   });
 }
-
-watch(
-  () => Mainuser, 
-  (newValue, oldValue) => {
-    console.log('Mainuser changed:', newValue)
-    console.log('Previous value:', oldValue)
-
-    updateMainUser();
-  },
-  { deep: true } 
-)
 
 
 getMainUser();

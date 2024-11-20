@@ -7,7 +7,8 @@ export default class Servers extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id').primary()
       table.string('name', 64).notNullable()
-      table.boolean('privacy').defaultTo(false) // Assuming 'false' means public
+      table.boolean('privacy').defaultTo(false) 
+      table.string('avatar').nullable()
       table.timestamp('last_activity', { useTz: true }).defaultTo(this.now())
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())

@@ -11,7 +11,7 @@ export default class Users extends BaseSchema {
       table.string('first_name', 35).notNullable()
       table.string('last_name', 35).notNullable()
       table.string('email', 254).notNullable().unique()
-      table.binary('avatar').nullable()
+      table.string('avatar').nullable()
       table.enu('user_status', ['Online', 'Offline', 'Do Not Disturb']).defaultTo('online').notNullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
 

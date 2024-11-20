@@ -15,6 +15,9 @@ export default class Server extends BaseModel {
   @column()
   declare privacy: boolean
 
+  @column()
+  declare avatar: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
