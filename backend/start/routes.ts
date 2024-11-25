@@ -17,6 +17,7 @@ const FriendController = () => import('#controllers/friends_controller')
 const UserController = () => import('#controllers/user_controller')
 const ServersController = () => import('#controllers/servers_controller')
 const MessagesController = () => import('#controllers/messages_controller')
+const ServerInvitesController = () => import('#controllers/server_invites_controller')
 
 // transmits
 
@@ -53,7 +54,7 @@ router.group(()=>{
 }).prefix('auth')
 
 router.group(()=>{
-    router.post('add-friend-request',[FriendController,'addFriendRequest']).use(middleware.auth());
+    router.post('create-friend-request',[FriendController,'createFriendRequest']).use(middleware.auth());
     router.post('accept-friend-request',[FriendController,'acceptFriendRequest']).use(middleware.auth());
     router.post('reject-friend-request',[FriendController,'rejectFriendRequest']).use(middleware.auth());
     router.post('list-friend-requests',[FriendController,'getFriendRequests']).use(middleware.auth());
@@ -72,6 +73,7 @@ router.group(()=>{
     router.post('get-server-list', [ServersController,'getServerList']).use(middleware.auth());
     router.post('get-active-server', [ServersController,'getActiveServer']).use(middleware.auth());
     router.post('create-server', [ServersController,'createServer']).use(middleware.auth());
+    router.post('join-server', [ServersController,'joinServer']).use(middleware.auth());
     router.post('leave-server', [ServersController,'leaveServer']).use(middleware.auth());
     router.post('update-server', [ServersController,'updateServer']).use(middleware.auth());
     router.post('delete-server', [ServersController,'deleteServer']).use(middleware.auth());
@@ -82,7 +84,6 @@ router.group(()=>{
     router.post('get-server-channels', [ServersController,'getServerChannels']).use(middleware.auth());
     router.post('update-channel-positions', [ServersController,'updateChannelPositons']).use(middleware.auth());
     router.post('get-member-list', [ServersController,'getMemberList']).use(middleware.auth());
-    router.post('add-server-member', [ServersController,'addServerMember']).use(middleware.auth());
     router.post('kick-server-member', [ServersController,'kickServerMember']).use(middleware.auth());
     router.post('ban-server-member', [ServersController,'banServerMember']).use(middleware.auth());
 }).prefix('server');
@@ -94,3 +95,10 @@ router.group(()=>{
     router.post('add-personal-message', [MessagesController,'addPersonalMessage']).use(middleware.auth());
     router.post('add-server-message', [MessagesController,'addServerMessage']).use(middleware.auth());
 }).prefix('messages');
+
+router.group(()=>{
+    router.post('create-server-invite',[ServerInvitesController,'createServerInvite']).use(middleware.auth());
+    router.post('accept-server-invite',[ServerInvitesController,'acceptServerInvite']).use(middleware.auth());
+    router.post('reject-server-invite',[ServerInvitesController,'rejectServerInvite']).use(middleware.auth());
+    router.post('get-server-invites',[ServerInvitesController,'getServerInvites']).use(middleware.auth());
+}).prefix('server-invite');

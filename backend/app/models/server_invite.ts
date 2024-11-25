@@ -26,6 +26,9 @@ export default class ServerInvite extends BaseModel {
   @belongsTo(() => User, { foreignKey: 'invitedUserId' })
   declare invitedUser: BelongsTo<typeof User>
 
+  @column()
+  declare serverinvite_status: 'accepted' | 'rejected' | 'floating'
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

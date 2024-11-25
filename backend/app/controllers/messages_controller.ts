@@ -62,8 +62,6 @@ export default class MessagesController {
     }
 
     async getServerMessages(ctx: HttpContext) {
-      const user = ctx.auth.user!
-
       const { receiverId } = ctx.request.all()
 
       const channelId: number = receiverId

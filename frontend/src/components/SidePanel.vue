@@ -57,7 +57,7 @@
             </q-btn>
           </q-item>
 
-          <q-dialog v-model="showCreateServer">
+          <!-- <q-dialog v-model="showCreateServer">
             <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
                 <q-toolbar class="row justify-between items-center q-py-sm">
                   <div class="text-h6">Create Server</div>   
@@ -108,9 +108,102 @@
                         @click="CreateServer(), showCreateServer = false"
                       />
                     </q-card-section>
-                  </q-card-section>
-                  
+                  </q-card-section> 
               </q-card>
+          </q-dialog> -->
+
+          <q-dialog v-model="showCreateServer">
+            <q-card dark class="bg-grey-9" style="border-radius: 0.3rem; width: 27rem;">
+              <q-toolbar class="row justify-between items-center q-py-sm">
+                <div class="text-h6">Create/Join Server</div>
+                <q-icon
+                  flat
+                  round
+                  class="cursor-pointer"
+                  name="close"
+                  color="primary"
+                  size="1.3rem"
+                  @click="showCreateServer = false"
+                ></q-icon>
+              </q-toolbar>
+              <q-separator color="grey-8" class="q-mb-sm" />
+              <q-tabs v-model="selectedTab" dense class="text-primary">
+                <q-tab name="create" label="Create Server" />
+                <q-tab name="join" label="Join Server" />
+              </q-tabs>
+              <q-separator color="grey-8" />
+            
+              <q-tab-panels dark v-model="selectedTab" animated>
+                <!-- Create Server Tab -->
+                <q-tab-panel class="bg-grey-9" name="create">
+                  <q-card-section>
+                    <div class="text-subtitle2 text-center text-grey-6">
+                      Give your new server a personality with a name and an icon. You can always change it          later.
+                    </div>
+                  </q-card-section>
+                  <q-card-section class="text-center">
+                    <q-avatar size="5rem" class="file-avatar">
+                      <q-file
+                        v-model="image"
+                        class="file-circle file-input"
+                        filled
+                        rounded
+                        multiple
+                        accept=".jpg, image/*"
+                        @update:model-value="previewImage"
+                      />
+                      <img :src="uploadimglink" alt="Avatar" class="accavatar file-image" />
+                      <q-icon name="edit" size="2rem" class="hover-icon" />
+                    </q-avatar>
+                  </q-card-section>
+                  <q-card-section class="q-pt-none">
+                    <div class="text-subtitle2 text-grey-6">Server name</div>
+                    <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;"          class="q-my-sm" />
+                    <q-card-section class="row items-center justify-between q-pb-none q-pt-sm q-pl-xs">
+                      <q-toggle
+                        dark
+                        keep-color
+                        v-model="privateserver"
+                        checked-icon="lock"
+                        color="red"
+                        unchecked-icon="public"
+                        :label="privateserver ? 'Private Server' : 'Public Server'"
+                        class="q-mt-sm"
+                      />
+                      <q-btn
+                        no-caps
+                        label="Create"
+                        color="grey-8"
+                        class="q-mt-sm"
+                        style="border-radius: 0.8rem;"
+                        @click="CreateServer(), showCreateServer = false"
+                      />
+                    </q-card-section>
+                  </q-card-section>
+                </q-tab-panel>
+              
+                <!-- Join Server Tab -->
+                <q-tab-panel class="bg-grey-9" name="join">
+                  <q-card-section>
+                    <div class="text-subtitle2 text-center text-grey-6 q-mb-xl q-mt-md">
+                      Enter the server name to join an existing public server.
+                    </div>
+                    <div class="text-subtitle2 text-grey-6">
+                      Server Name
+                    </div>
+                    <q-input dark outlined v-model="servertojoin" style="border-radius: 10rem;"           class="q-my-sm" placeholder="Enter server name" />
+                    <q-btn
+                      no-caps
+                      label="Join"
+                      color="grey-8"
+                      class="q-mt-sm"
+                      style="border-radius: 0.8rem;"
+                      @click="JoinServer(), showCreateServer = false"
+                    />
+                  </q-card-section>
+                </q-tab-panel>
+              </q-tab-panels>
+            </q-card>
           </q-dialog>
 
           <draggable 
@@ -170,7 +263,7 @@
         <q-card elevated dark class="account-card bg-grey-9 ">
           <q-card-section class="text-center">
             <q-avatar size="5rem" class="file-avatar">
-              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" />
+              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" @update:model-value="onFileChange"/>
               <img :src="Mainuser.avatar" alt="Avatar" class="accavatar file-image"/>
               <q-icon name="edit" size="2rem" class="hover-icon" />
             </q-avatar>
@@ -353,6 +446,7 @@ import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from 'vuedraggable';
+import { debounce } from 'lodash';
 
 onBeforeMount(() => {
   page.value = 'ChatApp';
@@ -388,8 +482,9 @@ interface Server {
 
 // Refs and State
 const page = ref('');
-const filesImages = ref<File[]>([]);
+const filesImages = ref<File | null>(null);
 const serverList = ref<Server[]>([]);
+const servertojoin = ref<string>('');
 const unreadFriends = ref(4);
 const showservers = ref(false);
 const showfriends = ref(true);
@@ -399,6 +494,7 @@ const showselectedserver = ref(false);
 const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
+const selectedTab = ref<'create' | 'join'>('create');
 const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
 
 
@@ -426,6 +522,10 @@ const Mainuser = reactive<User>({
   status: ""
 });
 
+const onFileChange = () => {
+  console.log('Selected file:', filesImages.value);
+};
+
 const serverName = ref<string>(Mainuser.name);
 
 const newServerName = computed({
@@ -439,6 +539,7 @@ const newServerName = computed({
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
+
 emit('emit-friends', true);
 
 // Props
@@ -453,6 +554,17 @@ watch(
     console.log('watch', props.receivedShowMobileChat);
     showMobileChat.value = props.receivedShowMobileChat;
   }
+);
+
+watch(
+  () => Mainuser, 
+  (newValue, oldValue) => {
+    console.log('Mainuser changed:', newValue)
+    console.log('Previous value:', oldValue)
+
+    debouncedUpdateMainUser();
+  },
+  { deep: true } 
 );
 // Data
 
@@ -507,6 +619,11 @@ const selectedServer = computed(() => {
 });
 
 // Functions
+const debouncedUpdateMainUser = debounce(() => {
+  console.log('Debounced updateMainUser called');
+  updateMainUser();
+}, 300);
+
 function selectServer(serverId: number) {
   console.log(selectedServerId.value, serverId, showfriends.value);
   if (selectedServerId.value != serverId) {
@@ -529,12 +646,9 @@ function ShowServers() {
 function ShowFriends() {
   if (!showfriends.value) {
     emit('emit-friends', true);
+    showfriends.value = true;
     selectedServerId.value = -1;
   }
-  emit('emit-server-id', -1);
-  showfriends.value = true;
-  showaccount.value = false;
-  showselectedserver.value = false;
 }
 
 function ShowAccount() {
@@ -666,6 +780,38 @@ const CreateServer = async () => {
 
 }
 
+const JoinServer = async () => {
+  axios.post('http://127.0.0.1:3333/server/join-server',{
+    servername: servertojoin.value,
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    console.log(response.data);
+    getServerList();
+    selectServer(response.data.serverId);
+    servertojoin.value = '';
+    $q.notify({
+        type: 'positive',
+        message: 'Server joined successfully',
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+  }).catch(error => {
+    console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
+    servertojoin.value = '';
+    const message = error.response?.data?.message || 'An error occurred';
+    $q.notify({
+        type: 'negative',
+        message: message,
+        timeout: 5000, 
+        position: 'bottom' 
+      });
+  });
+}
+
 const UpdateServerPositions = async () => {
   const serverPositions = serverList.value.map((server, index) => {
     return {
@@ -692,17 +838,6 @@ const UpdateServerPositions = async () => {
     console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
   });
 }
-
-watch(
-  () => Mainuser, 
-  (newValue, oldValue) => {
-    console.log('Mainuser changed:', newValue)
-    console.log('Previous value:', oldValue)
-
-    updateMainUser();
-  },
-  { deep: true } 
-)
 
 
 getMainUser();

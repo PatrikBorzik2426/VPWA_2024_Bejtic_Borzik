@@ -15,6 +15,9 @@ export default class Server extends BaseModel {
   @column()
   declare privacy: boolean
 
+  @column()
+  declare avatar: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -31,7 +34,7 @@ export default class Server extends BaseModel {
     pivotForeignKey: 'server_id',
     relatedKey: 'id',
     pivotRelatedForeignKey: 'user_id',
-    pivotColumns: ['kick_counter', 'ban', 'role', 'position'], 
+    pivotColumns: ['kick_counter', 'ban','inServer', 'role', 'position'], 
   })
   declare users: ManyToMany<typeof User>
 

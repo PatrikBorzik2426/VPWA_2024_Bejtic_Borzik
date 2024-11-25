@@ -12,6 +12,7 @@ export default class ServersController {
         const servers = await user.related('servers')
             .query()
             .wherePivot('ban', false) 
+            .andWhere('inServer', true)
         
         console.log(servers)
 
@@ -56,6 +57,7 @@ export default class ServersController {
           .where('id', user.id) 
           .withCount('servers', (query) => {
             query.wherePivot('ban', false) 
+                 .andWhere('inServer', true)
           })
           .firstOrFail()
         
@@ -66,6 +68,7 @@ export default class ServersController {
               role: 'creator', 
               position: position + 1, 
               ban: false, 
+              inServer: true,
               kick_counter: 0, 
             },
           }/*, trx*/)
@@ -112,7 +115,9 @@ export default class ServersController {
     
         try {
             await user.related('servers')
-                .detach([server_id])
+                .query()
+                .where('server_id', server_id)
+                .update({ inServer: false });
     
             return ctx.response.status(200).json({ message: 'Left server successfully' })
         } catch (error) {
@@ -223,7 +228,7 @@ export default class ServersController {
               return ctx.response.status(403).json({ message: `User does not have access to server with ID ${id}` })
             }
 
-            const isBanned = pivot.$extras.pivot_ban;
+            const isBanned = pivot.$extras.pivot_ban || !pivot.$extras.pivot_inServer;
 
             if (isBanned) {
                 console.log(`User is banned from server with ID ${id}. Exiting loop.`);
@@ -322,6 +327,7 @@ export default class ServersController {
             .related('users')
             .query()
             .wherePivot('ban', false) 
+            .andWhere('inServer', true)
         
             const friendships = await Friend.query()
             .whereIn('user_1_id', [user.id])
@@ -351,19 +357,21 @@ export default class ServersController {
         }
     }
 
-    async addServerMember(ctx: HttpContext) {
+    async joinServer(ctx: HttpContext) {
         const user = ctx.auth.user!
-        const { serverId, userId } = ctx.request.only(['serverId', 'userId'])
+        const servername = ctx.request.input('servername')
 
-        const server = await Server.findByOrFail('id', serverId)
+        console.log(servername)
 
-        if (!server) {
-            return ctx.response.status(404).json({ message: 'Server not found' });
+        const server = await Server.findBy('name', servername)
+
+        if (!server || server.privacy) {
+            return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
         }
 
         const userServerPivot = await user.related('servers')
             .query()
-            .where('server_id', serverId)
+            .where('server_id', server.id)
             .first();
 
         if (!userServerPivot) {
@@ -371,41 +379,56 @@ export default class ServersController {
         }
 
         if (userServerPivot.$extras.pivot_ban) {
-            return ctx.response.status(403).json({ message: 'You are banned from this server' });
+            return ctx.response.status(403).json({ message: `You are banned from "${servername}"` });
         }
 
-        const userToAdd = await User.findByOrFail('id', userId)
-
-        if (!userToAdd) {
-            return ctx.response.status(404).json({ message: 'User not found' });
-        }
-
-        const userToAddServerPivot = await userToAdd.related('servers')
+        const userServer = await user.related('servers')
             .query()
-            .where('server_id', serverId)
+            .where('server_id', server.id)
+            .andWhere('inServer', true)
             .first();
 
-        if (userToAddServerPivot) {
-            return ctx.response.status(400).json({ message: 'User is already a member of this server' });
+        if (userServer) {
+            return ctx.response.status(400).json({ message: `You are already a member of "${servername}"` });
         }
 
-        const serverCount = await userToAdd
+        const wasInServer = await server.related('users')
+            .query()
+            .where('user_id', user.id)
+            .where('inServer', false)
+            .first()
+
+        const serverCount = await user
         .related('servers') 
         .query()
+        .wherePivot('ban', false)
+        .andWhere('inServer', true)
         .count('* as total') 
         .first();
 
         const pos = Number(serverCount?.$extras?.total || 0) + 1;
 
         try {
-            await server.related('users').attach({
-                [userToAdd.id]: {
-                    role: 'member',
-                    position: pos,
-                    ban: false,
-                    kick_counter: 0,
-                }
-            })
+            if (wasInServer) {
+                await server.related('users')
+                    .query()
+                    .where('user_id', user.id)
+                    .update({
+                        inServer: true,
+                        position: pos,
+                    })
+            }else {
+                await server.related('users')
+                    .attach({
+                        [user.id]: {
+                            role: 'member',
+                            position: pos,
+                            ban: false,
+                            inServer: true,
+                            kick_counter: 0,
+                        }
+                    })
+            }
 
             return {
                 message: 'User added to server successfully'
@@ -476,7 +499,11 @@ export default class ServersController {
                   .update({ ban: true });
             }
 
-            await server.related('users').detach([userToKick.id])
+            await server
+                  .related('users')
+                  .query()
+                  .where('user_id', userToKick.id)
+                  .update({ inServer: false });
 
             const userServers = await userToKick
               .related('servers')
@@ -550,7 +577,7 @@ export default class ServersController {
             await server.related('users')
             .query()
             .where('user_id', userToBan.id)
-            .update({ ban: true })
+            .update({ ban: true , inServer: false})
 
             const userServers = await userToBan
               .related('servers')
@@ -574,6 +601,57 @@ export default class ServersController {
             console.error(error)
             return ctx.response.status(500).json({
                 message: 'Failed to ban user from server',
+            })
+        }
+    }
+
+    async unbanServerMember(ctx: HttpContext) {
+        const user = ctx.auth.user!
+        const { serverId, membername } = ctx.request.only(['serverId', 'membername'])
+
+        const server = await Server.findByOrFail('id', serverId)
+        
+        if (!server) {
+            return ctx.response.status(404).json({ message: 'Server not found' });
+        }
+
+        const userServerPivot = user.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userServerPivot) {
+            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
+        }
+
+        const userToUnban = await User.findBy('login', membername)
+
+        if (!userToUnban) {
+            return ctx.response.status(404).json({ message: '${membername} doesnt exit / changed his name' });
+        }
+
+        const userToUnbanServerPivot = userToUnban.related('servers')
+            .query()
+            .where('server_id', serverId)
+            .first();
+
+        if (!userToUnbanServerPivot) {
+            return ctx.response.status(400).json({ message: 'User is not a member of this server' });
+        }
+
+        try {
+            await server.related('users')
+            .query()
+            .where('user_id', userToUnban.id)
+            .update({ ban: false, kick_counter: 0 })
+
+            return {
+                message: 'User unbanned from server successfully'
+            }
+        } catch (error) {
+            console.error(error)
+            return ctx.response.status(500).json({
+                message: 'Failed to unban user from server',
             })
         }
     }
