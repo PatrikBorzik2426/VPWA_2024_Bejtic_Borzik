@@ -41,7 +41,7 @@ export const commandHandler = async (messageInput: string, activeServer : Server
         }else{
 
             try{            
-                await axios.post('http://127.0.0.1:3333/server/detele-server',{
+                await axios.post('http://127.0.0.1:3333/server/delete-server',{
                     serverId: activeServer.id
                 },{
                     headers: {

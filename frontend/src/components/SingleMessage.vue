@@ -13,7 +13,7 @@
     <q-item class="q-pa-none" v-for="(message) in wholeMessage" :key="message.id">
       <div class="row item-section-msg full-width q-pa-sm q-my-sm rounded-borders" :class="{'bg-primary':isMentioned(message.content)}">
         <q-avatar class="profile-box q-mr-md">
-          <img src="https://cdn.quasar.dev/img/avatar4.jpg" class=" full-height"/>
+          <img :src="`https://ui-avatars.com/api/?name=${message.login}`" class=" full-height"/>
         </q-avatar>
         <div class=" message-box column">
           <p><span class=" text-bold cursor-pointer ">{{message.login}}</span>  <span class="q-ml-lg" :class="isMentioned(message.content) ? 'text-white' : 'text-grey-7'">{{ message.timestamp }}</span></p>
