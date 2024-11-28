@@ -86,6 +86,7 @@ router.group(()=>{
     router.post('get-member-list', [ServersController,'getMemberList']).use(middleware.auth());
     router.post('kick-server-member', [ServersController,'kickServerMember']).use(middleware.auth());
     router.post('ban-server-member', [ServersController,'banServerMember']).use(middleware.auth());
+    router.post('revoke-user', [ServersController,'revokeUser']).use(middleware.auth());
 }).prefix('server');
 
 

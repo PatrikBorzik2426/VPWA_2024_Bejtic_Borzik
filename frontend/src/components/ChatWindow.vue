@@ -823,7 +823,7 @@ const activeServer = reactive<Server>({
   avatar: "",
   private: false,
   role: "",
-  userid: 0,
+  userid: -1,
 
 });
 

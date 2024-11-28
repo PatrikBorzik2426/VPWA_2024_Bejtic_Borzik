@@ -6,12 +6,10 @@ export default class ServerUser extends BaseSchema {
   public async up() {
     this.schema.createTable(this.tableName, (table) => {
       table.integer('server_id').unsigned().notNullable()
-        .references('servers.id')
-        .onDelete('CASCADE') 
+        .references('servers.id').onDelete('CASCADE')
 
       table.integer('user_id').unsigned().notNullable()
-        .references('users.id')
-        .onDelete('CASCADE') 
+        .references('users.id').onDelete('CASCADE')
 
       table.enum('role', ['creator', 'admin', 'member']).notNullable().defaultTo('member')
       table.integer('position').notNullable().defaultTo(0)

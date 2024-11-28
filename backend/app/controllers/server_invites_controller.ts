@@ -9,10 +9,37 @@ export default class ServerInvitesController {
         const user = ctx.auth.user!
     
         const {serverId, invitedusername} = ctx.request.only(['serverId', 'invitedusername'])
+
+        console.log(serverId, invitedusername)
     
         const server = await Server.findOrFail(serverId)
 
         const invitedUser = await User.findByOrFail('login', invitedusername)
+
+        const serverOwner = await server.related('users')
+        .query()
+        .where('role', 'creator')
+        .first()
+
+        const isInvitedBanned = await invitedUser.related('servers')
+        .query()
+        .where('server_id', server.id)
+        .where('ban', true)
+        .first()
+
+        if (isInvitedBanned) {
+            console.log('User is banned from server', "serverOwner?.id", serverOwner?.id, "user.id", user.id)
+            if (serverOwner?.id === user.id) {
+                await server.related('users')
+                .query()
+                .where('user_id', invitedUser.id)
+                .where('server_id', server.id)
+                .update({
+                    ban: false,
+                    kick_counter: 0
+                })
+            }
+        }
     
         const invite = await ServerInvite.create({
           serverId: server.id,

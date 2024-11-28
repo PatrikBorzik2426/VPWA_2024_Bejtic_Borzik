@@ -3,6 +3,8 @@ import Server from '../models/server.js'
 import User from '../models/user.js'
 import Channel from '../models/channel.js'
 import Friend from '../models/friend.js'
+import { flags } from '@adonisjs/core/ace'
+import { type } from 'os'
 
 
 export default class ServersController {
@@ -33,11 +35,12 @@ export default class ServersController {
     }
 
     async createServer(ctx: HttpContext) {
+
         const user = ctx.auth.user! 
     
-        const { name, privacy} = ctx.request.only(['name', 'privacy'])
+        const {name,privacy} = ctx.request.only(['name','privacy'])
     
-        console.log(name, privacy)
+        console.log("Create server: ",name, privacy)
         const existingServer = await Server.query().where('name', name).first()
         if (existingServer) {
           return ctx.response.status(400).json({
@@ -365,7 +368,11 @@ export default class ServersController {
 
         const server = await Server.findBy('name', servername)
 
-        if (!server || server.privacy) {
+        if (!server) {
+            console.log("Server not found going to create now")
+            this.createServer(ctx)
+            return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
+        }else if (server && server.privacy){
             return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
         }
 
@@ -374,12 +381,10 @@ export default class ServersController {
             .where('server_id', server.id)
             .first();
 
-        if (!userServerPivot) {
-            return ctx.response.status(403).json({ message: 'You are not associated with this server' });
-        }
-
-        if (userServerPivot.$extras.pivot_ban) {
-            return ctx.response.status(403).json({ message: `You are banned from "${servername}"` });
+        if (userServerPivot ) {            
+            if (userServerPivot.$extras.pivot_ban) {
+                return ctx.response.status(403).json({ message: `You are banned from "${servername}"` });
+            }
         }
 
         const userServer = await user.related('servers')
@@ -445,6 +450,8 @@ export default class ServersController {
         const user = ctx.auth.user!
         const { serverId, memberId } = ctx.request.only(['serverId', 'memberId'])
 
+        console.log(serverId, memberId)
+
         const server = await Server.findByOrFail('id', serverId)
 
         if (!server) {
@@ -468,7 +475,14 @@ export default class ServersController {
             return ctx.response.status(403).json({ message: 'You are not the creator/admin of this server' });
         }
 
-        const userToKick = await User.findByOrFail('id', memberId)
+        let userToKick = null
+
+        if(typeof memberId === 'number'){
+            userToKick = await User.findByOrFail('id', memberId)
+        }else{
+            userToKick = await User.findByOrFail('login', memberId)
+        }
+        
 
         if (!userToKick) {
             return ctx.response.status(404).json({ message: 'User not found' });
@@ -484,6 +498,11 @@ export default class ServersController {
         }
 
         try {
+            const ownerOfServer = await server.related('users')
+            .query()
+            .where('role', 'creator')
+            .first();
+
             await server.related('users')
             .query()
             .where('user_id', userToKick.id)
@@ -497,6 +516,21 @@ export default class ServersController {
                   .query()
                   .where('user_id', userToKick.id)
                   .update({ ban: true });
+
+            }else if (ownerOfServer){
+                console.log("Owner Found!")
+
+                if (userToKick.id === ownerOfServer.id) {
+                    return ctx.response.status(403).json({ message: 'You cannot kick the creator of the server' });
+                }else if (user.id === ownerOfServer.id) {
+                    console.log(`User ${userToKick.id} is being banned from the server.`);
+            
+                    await server
+                    .related('users')
+                    .query()
+                    .where('user_id', userToKick.id)
+                    .update({ ban: true });
+                }
             }
 
             await server
@@ -531,6 +565,35 @@ export default class ServersController {
         }
     }
 
+    async revokeUser(ctx: HttpContext) {    
+        const user = ctx.auth.user!
+        const {serverId, memberLogin} = ctx.request.only(['serverId', 'memberLogin'])
+
+        console.log("Revoking user:" , serverId, memberLogin)
+
+        try{
+
+            const server = await Server.findByOrFail('id', serverId)
+            
+            const creator = await server.related('users').query().where('user_id',user.id).where('role', 'creator').first()
+            
+            if (!creator) {
+                return ctx.response.status(403).json({ message: 'You are not the creator of this server' });
+            }
+            
+            const member = await User.findByOrFail('login', memberLogin)
+            
+            await server.related('users').query().where('user_id', member.id).delete()
+
+            return {
+                message: "User revoked from server successfully"
+            }
+
+        }catch(err){
+            return ctx.response.status(500).json({ message: 'Failed to revoke user from server' });
+        }
+    }
+
     async banServerMember(ctx: HttpContext) {
         const user = ctx.auth.user!
         const { serverId, memberId } = ctx.request.only(['serverId', 'memberId'])
@@ -558,7 +621,16 @@ export default class ServersController {
             return ctx.response.status(403).json({ message: 'You are not the creator/admin of this server' });
         }
 
-        const userToBan = await User.findByOrFail('id', memberId)
+        let userToBan = null
+
+        try{
+            userToBan = await User.findByOrFail('id', memberId);
+        }catch{
+            userToBan = await User.findByOrFail('login', memberId);
+        }
+
+        if (!userToBan){
+        }
 
         if (!userToBan) {
             return ctx.response.status(404).json({ message: 'User not found' });
