@@ -2,6 +2,8 @@ import { HttpContext } from "@adonisjs/core/http"
 import DirectMessage from "../models/direct_message.js"
 import transmit from "@adonisjs/transmit/services/main"
 import ChannelMessage from "../models/channel_message.js"
+import db from '@adonisjs/lucid/services/db'
+
 
 export default class MessagesController {
 
@@ -122,6 +124,9 @@ export default class MessagesController {
           message: content
       })
 
+      // const query = db.query() 
+      // query.select('delete_inactive_servers();')
+
       const Msg = await (await ChannelMessage.findByOrFail('id', newMsg.id))
 
       // Authorization middleware example (ensure it’s applied correctly)
@@ -135,4 +140,18 @@ export default class MessagesController {
           },
         }); 
     }
+
+    async getChannelMessageCount(ctx: HttpContext) {
+      const user = ctx.auth.user!
+
+      const { channelId } = ctx.request.all()
+
+      const totalMessagesCount = await ChannelMessage.query()
+      .where('channel_id', channelId)
+      .count('* as total');
+
+      const count = Number(totalMessagesCount[0]?.$extras?.total)
+
+      return ctx.response.ok({ totalMessagesCount: count })
+    };
 }

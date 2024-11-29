@@ -3,8 +3,7 @@ import Server from '../models/server.js'
 import User from '../models/user.js'
 import Channel from '../models/channel.js'
 import Friend from '../models/friend.js'
-import { flags } from '@adonisjs/core/ace'
-import { type } from 'os'
+import transmit from "@adonisjs/transmit/services/main"
 
 
 export default class ServersController {
@@ -435,9 +434,9 @@ export default class ServersController {
                     })
             }
 
-            return {
-                message: 'User added to server successfully'
-            }
+            transmit.broadcast(`server-list:${user.id}`, {
+                message:{"ServerId":server.id,"Action":"join"}
+            })
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

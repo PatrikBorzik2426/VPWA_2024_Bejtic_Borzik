@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { StringDictionary } from 'quasar';
 
 interface Server {
     id: number;
@@ -14,20 +13,23 @@ type Dictionary<T> = {
 [key: string]: T;
 };
 
-async function callAxios( body: Dictionary<string|number|boolean>, url : string){
+export async function callAxios( body: Dictionary<string|number|boolean>|{}, url : string){
+    let callResponse = null;
+
     await axios.post('http://127.0.0.1:3333/'+url,body,{
         headers: {
             'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
             'Content-Type': 'application/json'
         }
     }).then((response) => {
-        console.log(response);
+        console.log('Call axios respond: ' + response);
+        callResponse = response.data;
     }).catch((err) => {
         console.log(err);
     });
    
 
-    return
+    return callResponse;
 }
 
 export const commandHandler = async (messageInput: string, activeServer : Server) => {
@@ -167,3 +169,5 @@ export const showMemberListExternal = ( messageInput: string ) =>{
         return false;
     }
 }
+
+export default callAxios;

@@ -46,8 +46,9 @@ const wholeMessage = ref<Member[]>([]);
 const messageList = ref<HTMLElement | null>(null);
 const additionalMsgs = 5;
 const maximumMsgs = ref<number>(0);
-let currentAdditionalMsgs = ref<number>(0);
 const scrollTop = ref(0);
+const totalChannelsMessages = ref<number>();
+let currentAdditionalMsgs = ref<number>(0);
 
 
 let stopListening : any;
@@ -164,6 +165,20 @@ const loadMessages = async (newId : number) =>{
 
       stopListening = await subscribeToMessages();
     });
+}
+
+function getChannelMessageCount(receiverId: number) {
+  axios.post('http://172.0.0.1/messages/get-channel-messages-count',{
+    receiverId: receiverId
+  },{
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
+    }
+  }).then(response => {
+    totalChannelsMessages.value = response.data.totalMessagesCount;
+  })
+
 }
 
 //Event listeners for scrolling
