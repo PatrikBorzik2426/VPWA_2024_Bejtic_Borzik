@@ -637,7 +637,8 @@
 
       <div class="q-mt-auto" style="height: fit-content;">
         <q-form
-          class="full-width row bg-dark relative-position rounded-borders q-mb-md"
+          class="full-width row bg-dark relative-position rounded-borders "
+          style="margin-bottom: 2rem;"
           v-if="showComponent"
         >
           <q-list class="full-width command-list z-top bg-dark rounded-borders">
@@ -658,17 +659,15 @@
               </q-item-section>
             </q-item>
           </q-list>
-
-        <div
-          class="someone-typing absolute full-width z-top cursor-pointer"
-          v-if="someIsTypingBool"
-          @click="showWhatIsTyping"
-          style=" height: fit-content;"
-        >
-          <p class="q-ma-none full-width bg-grey-9 q-pt-sm">{{ messageBeingTyped }}</p>
-        </div>
-
       </q-form>
+
+      <div
+          class="someone-typing absolute z-top cursor-pointer"
+          @click="showWhatIsTyping"
+          style=" height: fit-content; width: fit-content;"
+        >
+          <p class="q-ma-sm full-width bg-grey-9">{{ someIsTypingMsg }}</p>
+        </div>
 
 
         <div class="cli bg-grey rounded-borders q-px-sm">
@@ -700,16 +699,17 @@
 
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
-import {commandHandler, showMemberListExternal} from '../services/commandHandler';
+import {commandHandler, showMemberListExternal, callAxios} from '../services/commandHandler';
 import { ref, defineProps, watch, reactive, computed} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
+import { Transmit } from '@adonisjs/transmit-client';
 
 // Refs and State
 const inputValue = ref<string>('');
 const inputCli = ref<null | any>(null);
-const showComponent = ref<boolean>(false);
+const showComponent = ref<boolean>(true);
 const currentChannel = ref<string>('');
 const channelList = ref<ServerChannel[]>([]);
 const mobileShowChat = ref<boolean>(false);
@@ -725,8 +725,7 @@ const invitedFriendsName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
 const showAddFriend = ref<boolean>(false);
 const AddedFriend = ref<string>('');
-const messageBeingTyped = ref<string>('Someone is typing ...');
-const someIsTypingBool = ref<boolean>(false);
+const someIsTypingMsg = ref<string>('');
 const filteredCommands = ref({});
 const receiverId = ref<number>(0);
 const friendChatStatus = ref<boolean>(true);
@@ -737,8 +736,15 @@ const friendsList = ref<Friend[]>([]);
 const memberList = ref<ServerMember[]>([]);
 const filesImages = ref<File[]>([]);
 const friendshipId = ref<number>(0);
+let allActivateChats  = [] ;
+let activeChattingSub : any = null;
+let activeChattingOn : boolean = true;
 
 const $q = useQuasar();
+
+const transmit = new Transmit({
+    baseUrl: 'http://127.0.0.1:3333',
+});
 
 // Props
 const props = defineProps<{
@@ -754,12 +760,9 @@ const emit = defineEmits(['emit-mobileShowChat']);
 const commands = {
   '/cancel' : 'Leave the server (if you are creator delete the server)',
   '/list' : 'List all the server users',
-};
-
-const options = {
-  settings: 'Settings',
-  person_add: 'Invite friend',
-  logout: 'Leave server',
+  '/revoke' : 'Revoke a user from the server',
+  '/invite' : 'Invite a user to the server',
+  '/kick' : 'Kick a user from the server',
 };
 
 const roleDisplayNames: Record<string, string> = {
@@ -815,6 +818,11 @@ interface ServerMember {
   status: string;
   role: string;
   isFriend: boolean;
+}
+
+interface RealTimeChat{
+  login: string;
+  message: string;
 }
 
 const activeServer = reactive<Server>({
@@ -885,6 +893,8 @@ const selectFriend = (id: number) => {
     // console.log('Prop friend: ', props.receivedShowFriends);
     mobileShowChat.value = true;
 
+    console.log('Friend name:', friend.name);
+
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friend.notifications = 0;
@@ -923,7 +933,8 @@ const getStatusIcon = (status: string) => {
 
 async function loadMessages (messagePullId : number){
   receiverId.value = messagePullId;
-  console.log('Loading messages for:', messagePullId);
+  await activateSubscriptionChatting(messagePullId);
+  console.log('Loading messages for:', receiverId.value);
   await getFriendshipId(messagePullId);
 };
 
@@ -1001,11 +1012,10 @@ const showNotification = (text: string, currentChannel: string) => {
 };
 
 const showWhatIsTyping = () => {
-  let newValue = '';
-  seeMessagePresent.value = !seeMessagePresent.value;  
+  activeChattingOn = !activeChattingOn;
 };
 
-const checkCommand = () => {
+const checkCommand = async() => {
   showComponent.value = false;
 
   filteredCommands.value = Object.fromEntries(
@@ -1020,11 +1030,12 @@ const checkCommand = () => {
     showComponent.value = false;
   }
 
-  if (inputValue.value.length > 0 && !inputValue.value.startsWith('/')) {
-    someIsTypingBool.value = true;
-  } else {
-    someIsTypingBool.value = false;
+  const body = {
+    channelId : receiverId.value,
+    message: inputValue.value
   }
+
+  await callAxios(body,'messages/current-chatting')
 
   // console.log(someIsTypingBool.value);
 };
@@ -1588,7 +1599,73 @@ const getFriendshipId = async (friendId: number) => {
     catch (error : any) {
       console.error('Error during fetching friendship id:', error.response ? error.response.data : error.message);
     }
+};
+
+const activateSubscriptionChatting =async (channelId : number) => {
+  console.log("Activating subscription for chat: " + channelId);
+
+  activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId}`);
+  await activeChattingSub.create();
+
+  activeChattingSub.onMessage((message: any) => {
+    
+    const newTypingMessage : RealTimeChat = {
+      login: message.login,
+      message: message.message
+    }
+
+    if (activeChattingOn){
+    
+      let found = false;
+
+      if (allActivateChats.length === 0){
+        allActivateChats.push(newTypingMessage);
+      };
+
+      someIsTypingMsg.value = '';
+
+      allActivateChats.forEach((element : any) => {
+        if (element.login === newTypingMessage.login){
+          element.message = newTypingMessage.message;
+          found = true;
+          
+          if (!newTypingMessage.message){
+            console.log('deleted')
+            allActivateChats = allActivateChats.filter((item) => item.login !== element.login);
+          }
+
+        }
+      });
+
+      if (!found){
+        allActivateChats.push(newTypingMessage);
+      }
+
+      allActivateChats.forEach((element : any) => {
+        if (element.message.length > 0){
+          someIsTypingMsg.value += element.login+ ', ';
+        }
+      });
+
+      if (someIsTypingMsg.value.length < 1){
+        someIsTypingMsg.value = '';
+      }else{
+        someIsTypingMsg.value += ' is typing...';
+      }
+  }else{
+      if(newTypingMessage.message) {
+        someIsTypingMsg.value = newTypingMessage.login + ': ' + newTypingMessage.message;
+      }else{
+        someIsTypingMsg.value = '';
+        activeChattingOn = !activeChattingOn;
+      }
+  }
+
+    
+  });
 }
+
+
 
 // Watchers
 watch(
@@ -1640,22 +1717,13 @@ watch(
   }
 );
 
-watch(
-  () => [seeMessagePresent.value, inputValue.value],
-  () => {
-    if (seeMessagePresent.value){
-      messageBeingTyped.value = 'Someone: ' + inputValue.value;
-    }else{
-      messageBeingTyped.value = 'Someone is typing ...';
-    }
-  }
-)
-
 // Initial load
 // loadChannel(friendsList.value[0].name);
 getFriendsList()
 getFriendRequests();
 getServerInvites();
+
+
 </script>
 
 

@@ -450,6 +450,7 @@ import { debounce } from 'lodash';
 import { Transmit } from '@adonisjs/transmit-client';
 import callAxios from '../services/commandHandler.ts';
 import { onMounted } from 'vue';
+import { onBeforeUnmount } from 'vue';
 
 
 onBeforeMount(() => {
@@ -500,6 +501,7 @@ const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
 const selectedTab = ref<'create' | 'join'>('create');
 const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
+let activeSubscription: any = null;
 
 const transmit = new Transmit({
     baseUrl: 'http://127.0.0.1:3333',
@@ -846,18 +848,14 @@ const UpdateServerPositions = async () => {
   });
 }
 
-
-getMainUser();
-getServerList();
-
-onMounted(async()=>{
+async function CreateSubscribe() {
   const response = await callAxios({},'user/get-main-user');
 
   console.log('Main User:', response.formattedMainUser);
 
   const userId = response.formattedMainUser.id
 
-  const activeSubscription = transmit.subscription(`server-list:${userId}`);
+  activeSubscription = transmit.subscription(`server-list:${userId}`);
   await activeSubscription.create();
 
   activeSubscription.onMessage((message: any) => {
@@ -865,6 +863,20 @@ onMounted(async()=>{
 
     getServerList();
   });
+}
+
+
+getMainUser();
+getServerList();
+
+onMounted(async()=>{
+  await CreateSubscribe();
+});
+
+onBeforeUnmount(async()=>{
+  if (activeSubscription != null) {
+    await activeSubscription.close();
+  }
 });
 
 </script>

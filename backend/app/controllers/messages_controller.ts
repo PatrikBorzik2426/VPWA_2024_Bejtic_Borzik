@@ -2,7 +2,6 @@ import { HttpContext } from "@adonisjs/core/http"
 import DirectMessage from "../models/direct_message.js"
 import transmit from "@adonisjs/transmit/services/main"
 import ChannelMessage from "../models/channel_message.js"
-import db from '@adonisjs/lucid/services/db'
 
 
 export default class MessagesController {
@@ -154,4 +153,17 @@ export default class MessagesController {
 
       return ctx.response.ok({ totalMessagesCount: count })
     };
+
+    async currentChatting(ctx: HttpContext) {
+      const user = ctx.auth.user!
+
+      const { channelId, message } = ctx.request.only(['channelId', 'message'])
+
+      console.log('channelId', channelId, 'message', message)
+
+      transmit.broadcast(`channel-current-chatting:${channelId}`, {
+          message: message,
+          login: user.login,
+      });
+    }
 }

@@ -2,6 +2,7 @@ import { HttpContext } from '@adonisjs/core/http'
 import Server from '../models/server.js'
 import User from '../models/user.js'
 import ServerInvite from '../models/server_invite.js'
+import transmit from "@adonisjs/transmit/services/main"
 
 
 export default class ServerInvitesController {
@@ -159,10 +160,10 @@ export default class ServerInvitesController {
                         }
                     })
             }
-                
-            return {
-                serverId: server.id,
-            }
+
+            transmit.broadcast(`server-list:${user.id}`, {
+                message:{"ServerId":server.id,"Action":"join"}
+            })
         } catch (error) {
             console.error('Error joining server:', error)
             return ctx.response.status(500).json({ message: 'Failed to join server', error })
