@@ -829,8 +829,6 @@ const UpdateServerPositions = async () => {
     }
   })
 
-  console.log('jeborit');
-
   console.log('Server Positions:', serverPositions);
 
   axios.post('http://127.0.0.1:3333/server/update-server-positions',{

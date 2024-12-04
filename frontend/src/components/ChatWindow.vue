@@ -638,7 +638,7 @@
       <div class="q-mt-auto" style="height: fit-content;">
         <q-form
           class="full-width row bg-dark relative-position rounded-borders "
-          style="margin-bottom: 2rem;"
+          style="margin-bottom: 3rem;"
           v-if="showComponent"
         >
           <q-list class="full-width command-list z-top bg-dark rounded-borders">
@@ -739,6 +739,7 @@ const friendshipId = ref<number>(0);
 let allActivateChats  = [] ;
 let activeChattingSub : any = null;
 let activeChattingOn : boolean = true;
+let unsubscribeFunction : any = null;
 
 const $q = useQuasar();
 
@@ -890,15 +891,13 @@ const selectFriend = (id: number) => {
   activeServer.id = -1;
 
   friendsList.value = friendsList.value.map((friend) => {
-    // console.log('Prop friend: ', props.receivedShowFriends);
     mobileShowChat.value = true;
-
-    console.log('Friend name:', friend.name);
 
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friend.notifications = 0;
       friendChatStatus.value = props.receivedShowFriends;
+      console.log("Friendship ID: ",  friendChatStatus.value);
       loadMessages(id);
     }
     return friend;
@@ -933,9 +932,19 @@ const getStatusIcon = (status: string) => {
 
 async function loadMessages (messagePullId : number){
   receiverId.value = messagePullId;
-  await activateSubscriptionChatting(messagePullId);
-  console.log('Loading messages for:', receiverId.value);
   await getFriendshipId(messagePullId);
+
+  if (unsubscribeFunction!=null){
+    unsubscribeFunction();
+  }
+
+  console.log("Show channels is: ", showChannels.value);
+
+  if (showChannels.value){
+    await activateSubscriptionChatting(messagePullId,0);
+  }else{
+    await activateSubscriptionChatting(friendshipId.value,0.1);
+  }
 };
 
 const sendMessage = async () => {
@@ -965,16 +974,22 @@ const sendMessage = async () => {
 
     console.log("The sending endpoint is: ",endpoint)
 
-    axios.post(endpoint,{
+    // axios.post(endpoint,{
+    //   receiverId: receiverId.value,
+    //   content: inputValue.value,
+    //   friendshipId: friendshipId.value
+    // },{
+    //   headers:{
+    //     'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+    //     'Content-Type': 'application/json'
+    //   }
+    // })
+
+    callAxios({
       receiverId: receiverId.value,
       content: inputValue.value,
       friendshipId: friendshipId.value
-    },{
-      headers:{
-        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-        'Content-Type': 'application/json'
-      }
-    })
+    },endpoint)
 
     showNotification(inputValue.value, currentChannel.value);
   }
@@ -1017,6 +1032,7 @@ const showWhatIsTyping = () => {
 
 const checkCommand = async() => {
   showComponent.value = false;
+  let channelSocket = 0
 
   filteredCommands.value = Object.fromEntries(
     Object.entries(commands).filter(
@@ -1030,8 +1046,14 @@ const checkCommand = async() => {
     showComponent.value = false;
   }
 
+  if (showChannels.value){
+    channelSocket = receiverId.value;
+  }else{
+    channelSocket = friendshipId.value+0.1;
+  }
+
   const body = {
-    channelId : receiverId.value,
+    channelId : channelSocket,
     message: inputValue.value
   }
 
@@ -1594,6 +1616,7 @@ const getFriendshipId = async (friendId: number) => {
       }
     }).then(response => {
       friendshipId.value = response.data.friendshipId;
+      console.log("Friendship value was set to:", friendshipId.value)
     });
   }
     catch (error : any) {
@@ -1601,13 +1624,13 @@ const getFriendshipId = async (friendId: number) => {
     }
 };
 
-const activateSubscriptionChatting =async (channelId : number) => {
-  console.log("Activating subscription for chat: " + channelId);
+const activateSubscriptionChatting =async (channelId : number, addition : number) => {
+  console.log("Activating subscription for chat: " + channelId+addition);
 
-  activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId}`);
+  activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  activeChattingSub.onMessage((message: any) => {
+  unsubscribeFunction = activeChattingSub.onMessage((message: any) => {
     
     const newTypingMessage : RealTimeChat = {
       login: message.login,
@@ -1693,6 +1716,7 @@ watch(
 watch(
   () => props.receivedShowFriends,
   (newVal) => {
+    console.log('receivedShowFriends value:', newVal);
     if (newVal !== undefined) {
       showChannels.value = false;
       getFriendsList();
