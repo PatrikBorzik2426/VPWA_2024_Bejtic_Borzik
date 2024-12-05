@@ -57,61 +57,6 @@
             </q-btn>
           </q-item>
 
-          <!-- <q-dialog v-model="showCreateServer">
-            <q-card dark class="bg-grey-9 " style="border-radius: 0.3rem; width: 27rem;"  >
-                <q-toolbar class="row justify-between items-center q-py-sm">
-                  <div class="text-h6">Create Server</div>   
-                  <q-icon
-                    flat
-                    round
-                    class="cursor-pointer"
-                    name="close"
-                    color="primary"
-                    size="1.3rem"
-                    @click="showCreateServer = false"></q-icon>
-                  </q-toolbar>
-                  <q-separator color="grey-8" class="q-mb-sm"/>
-                <q-card-section >
-                  <div class="text-subtitle2 text-center text-grey-6">Give your new server a personality with a name and an icon. You can always change it later.</div>
-                  
-                </q-card-section>
-                  <q-card-section class="text-center">
-            <q-avatar size="5rem" class="file-avatar">
-              <q-file v-model="image" class="file-circle file-input" filled rounded multiple accept=".jpg, image/*" @update:model-value="previewImage"/>
-              <img :src="uploadimglink" alt="Avatar" class="accavatar file-image"/>
-              <q-icon name="edit" size="2rem" class="hover-icon" />
-            </q-avatar>
-                  </q-card-section>
-                <q-card-section class="q-pt-none ">
-                  
-
-                  <div class="text-subtitle2 text-grey-6">Server name</div>
-                  <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;" class="q-my-sm">
-                  </q-input>
-                  <q-card-section class=" row items-center justify-between q-pb-none q-pt-sm q-pl-xs">
-                  <q-toggle
-                  dark
-                  keep-color
-                  v-model="privateserver"
-                  checked-icon="lock"
-                  color="red"
-                  unchecked-icon="public"
-                  :label="privateserver ? 'Private Server' : 'Public Server'"
-                  class="q-mt-sm"
-                  />
-                  <q-btn
-                        no-caps    
-                        label="Create"
-                        color="grey-8"
-                        class="q-mt-sm"
-                        style="border-radius: 0.8rem;"
-                        @click="CreateServer(), showCreateServer = false"
-                      />
-                    </q-card-section>
-                  </q-card-section> 
-              </q-card>
-          </q-dialog> -->
-
           <q-dialog v-model="showCreateServer">
             <q-card dark class="bg-grey-9" style="border-radius: 0.3rem; width: 27rem;">
               <q-toolbar class="row justify-between items-center q-py-sm">
@@ -406,6 +351,18 @@
                     Change your email
                   </q-tooltip>
               </div>
+            </div>
+            <div class="row q-mt-sm">
+               <q-toggle
+                dark
+                keep-color
+                v-model="privateserver"
+                checked-icon="lock"
+                color="red"
+                unchecked-icon="public"
+                :label="privateserver ? 'Private Server' : 'Public Server'"
+                class="q-mt-sm"
+              />
             </div>
           </div>
           </q-card-section>
@@ -859,6 +816,9 @@ async function CreateSubscribe() {
   activeSubscription.onMessage((message: any) => {
     console.log('Received message:', message);
 
+    showNotification("Omegalul", "poop")
+
+
     getServerList();
   });
 }
@@ -910,7 +870,7 @@ onBeforeUnmount(async()=>{
 
 .popup {
   width: 350px;
-  height: 540px;
+  height: 570px;
   border-radius: 20px;
   display: flex;
   align-items: center;

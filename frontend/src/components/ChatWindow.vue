@@ -339,7 +339,7 @@
                         class="q-mt-sm"
                         style="border-radius: 0.8rem;"
                         @click="deleteChannel(); showChannelSettings = false"
-                      />
+                    />
                     <q-btn
                         no-caps    
                         label="Update"
@@ -736,7 +736,7 @@ const friendsList = ref<Friend[]>([]);
 const memberList = ref<ServerMember[]>([]);
 const filesImages = ref<File[]>([]);
 const friendshipId = ref<number>(0);
-let allActivateChats  = [] ;
+let allActivateChats  = [];
 let activeChattingSub : any = null;
 let activeChattingOn : boolean = true;
 let unsubscribeFunction : any = null;
@@ -763,7 +763,7 @@ const commands = {
   '/list' : 'List all the server users',
   '/revoke' : 'Revoke a user from the server',
   '/invite' : 'Invite a user to the server',
-  '/kick' : 'Kick a user from the server',
+  '/kick' : 'Kick a user from the server'
 };
 
 const roleDisplayNames: Record<string, string> = {
@@ -832,8 +832,7 @@ const activeServer = reactive<Server>({
   avatar: "",
   private: false,
   role: "",
-  userid: -1,
-
+  userid: -1
 });
 
 const editingServer = reactive<Server>({
@@ -853,7 +852,6 @@ const selectedChannelSettings = reactive<ServerChannel>({
 });
 
 // Functions
-
 const membersByRole = computed(() => {
   const roles = ['creator', 'admin', 'member'];
   return roles
@@ -934,6 +932,10 @@ async function loadMessages (messagePullId : number){
   receiverId.value = messagePullId;
   await getFriendshipId(messagePullId);
 
+  if (someIsTypingMsg.value != ''){
+    someIsTypingMsg.value = '';
+  }
+
   if (unsubscribeFunction!=null){
     unsubscribeFunction();
   }
@@ -950,12 +952,12 @@ async function loadMessages (messagePullId : number){
 const sendMessage = async () => {
   const isItCommand = await commandHandler(inputValue.value, activeServer);
 
-  console.log('Is it a command:', isItCommand);
+  console.log('Is it a command: ', isItCommand);
 
   if (isItCommand){
     const showMemberListBoolean = showMemberListExternal(inputValue.value)
 
-    console.log('Is it a showMemberListBoolean:', showMemberListBoolean);
+    console.log('Is it a showMemberListBoolean: ', showMemberListBoolean);
 
     if (showMemberListBoolean){
       getMemberList();
@@ -963,67 +965,24 @@ const sendMessage = async () => {
   }
 
   if (inputValue.value.length > 0 && !isItCommand) {
-    console.log('Sending message:', inputValue.value);
+    console.log('Sending message: ', inputValue.value);
     let endpoint = ''
 
     if (activeServer.id != -1){
-      endpoint = 'http://127.0.0.1:3333/messages/add-server-message';
+      endpoint = 'messages/add-server-message';
     }else{
-      endpoint = 'http://127.0.0.1:3333/messages/add-personal-message'
+      endpoint = 'messages/add-personal-message'
     }
-
-    console.log("The sending endpoint is: ",endpoint)
-
-    // axios.post(endpoint,{
-    //   receiverId: receiverId.value,
-    //   content: inputValue.value,
-    //   friendshipId: friendshipId.value
-    // },{
-    //   headers:{
-    //     'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-    //     'Content-Type': 'application/json'
-    //   }
-    // })
-
+    
     callAxios({
       receiverId: receiverId.value,
       content: inputValue.value,
       friendshipId: friendshipId.value
     },endpoint)
-
-    showNotification(inputValue.value, currentChannel.value);
   }
 
   inputValue.value = '';
   checkCommand();
-};
-
-const showNotification = (text: string, currentChannel: string) => {
-  setTimeout(() => {
-    // console.log('App visible:', $q.appVisible);
-
-    if (!$q.appVisible) {
-      if (Notification.permission === 'granted') {
-        const notification = new Notification('Quasar App', {
-          body: `${currentChannel}:\t ${text}`,
-          icon: 'https://cdn.quasar.dev/logo-v2/svg/quasar-logo.svg',
-        });
-
-        notification.onclick = () => {
-          window.focus();
-        };
-      } else {
-        console.error('Notification permission denied.');
-      }
-    } else {
-      $q.notify({
-        message: `${currentChannel}:\t ${text}`,
-        color: 'primary',
-        position: 'bottom-right',
-        timeout: 2000,
-      });
-    }
-  }, 1000);
 };
 
 const showWhatIsTyping = () => {
@@ -1630,12 +1589,12 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  unsubscribeFunction = activeChattingSub.onMessage((message: any) => {
-    
+  unsubscribeFunction = activeChattingSub.onMessage((message: any) => {    
     const newTypingMessage : RealTimeChat = {
       login: message.login,
       message: message.message
     }
+
 
     if (activeChattingOn){
     
@@ -1687,8 +1646,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
     
   });
 }
-
-
 
 // Watchers
 watch(

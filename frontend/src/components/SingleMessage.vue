@@ -31,6 +31,9 @@
 import { ref, defineProps, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Transmit } from '@adonisjs/transmit-client';
 import axios from 'axios';
+import { useQuasar } from 'quasar';
+
+const $q = useQuasar();
 
 interface Member{
   id : number,
@@ -92,6 +95,26 @@ function isMentioned(content: string) {
   return temp;
 }
 
+const showNotification = async (text: string, currentChannel: string) => {
+  const visibility = $q.appVisible
+
+  console.log('App visibility:', visibility);
+
+  if (Notification.permission === "default") {
+    await Notification.requestPermission();
+  }
+
+  if (!visibility) {
+      const notification = new Notification('Quasar App', {
+        body: `${currentChannel}:\t ${text}`,
+      });
+
+      notification.onclick = () => {
+        window.focus();
+      };
+  } 
+};
+
 async function subscribeToMessages() {
   console.log('Subscribing to messages:', props.friendshipId);
   let broadcast=''
@@ -106,17 +129,31 @@ async function subscribeToMessages() {
 
   await activeSubscription.create()
    
-  return activeSubscription.onMessage((message:any) => {
+  return activeSubscription.onMessage(async (message:any) => {
         console.log('Received message:', message); // Process the message
-        
-        wholeMessage.value.push({
-          id: message.message.id,
-          login: message.message.login,
-          content: message.message.content,
-          timestamp: message.message.createdAt
-        });
 
-        scrollBottom();
+        try{
+          await showNotification( message.message.content , message.message.login );
+        }catch(e){
+          console.log(e);
+        }
+
+        try{
+          wholeMessage.value.push({
+            id: message.message.id,
+            login: message.message.login,
+            content: message.message.content,
+            timestamp: message.message.createdAt
+          });
+        }catch(e){
+          console.log("Problém s pridaním správy: ",e);
+        }
+
+        try{
+          scrollBottom();
+        }catch{
+          console.log("Problém so scrollom");
+        }
   });
 
 }
@@ -147,7 +184,7 @@ const loadMessages = async (newId : number) =>{
     }).then(async response => {
       wholeMessage.value = [];  
 
-      const dataList = response.data.messages.reverse()
+      const dataList = response.data.messages
 
       dataList.forEach((element:any) => {
 
@@ -162,6 +199,8 @@ const loadMessages = async (newId : number) =>{
       maximumMsgs.value = response.data.totalMessagesCount;
 
       console.log('Maximum messages:', maximumMsgs.value);
+
+      scrollBottom();
 
       stopListening = await subscribeToMessages();
     });

@@ -2,6 +2,8 @@ import { HttpContext } from '@adonisjs/core/http'
 import User from '../models/user.js'
 import FriendRequest from '../models/friend_request.js'
 import Friend from '../models/friend.js'
+import transmit from "@adonisjs/transmit/services/main"
+
 
 export default class FriendsController {
     async createFriendRequest(ctx: HttpContext) {
@@ -54,10 +56,18 @@ export default class FriendsController {
             receiverId: receiver.id,
             friendrequest_status: 'floating',
           });
+
+          const friendRequestBody = {
+            friendRequestId: friendRequest.id,
+            senderId: friendRequest.senderId,
+            receiverId: friendRequest.receiverId,
+            friendrequest_status: friendRequest.friendrequest_status
+          }
       
-          return {
-            friendRequest,
-          };
+          transmit.broadcast(`channel-current-chatting:${receiver.id}}`, {
+            friendRequest: friendRequestBody,
+          });
+
         } catch (error) {
           console.error(error);
           return ctx.response.status(500).json({
