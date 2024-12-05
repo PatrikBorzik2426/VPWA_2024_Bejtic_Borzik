@@ -356,11 +356,11 @@
                <q-toggle
                 dark
                 keep-color
-                v-model="privateserver"
-                checked-icon="lock"
-                color="red"
-                unchecked-icon="public"
-                :label="privateserver ? 'Private Server' : 'Public Server'"
+                v-model="Mainuser.allnotifications"
+                checked-icon="notifications"
+                color="green"
+                unchecked-icon="notification_important"
+                :label="Mainuser.allnotifications ? 'Receive all notifications' : 'Receive only mentions'"
                 class="q-mt-sm"
               />
             </div>
@@ -401,7 +401,7 @@
 import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import axios from 'axios';
+import axios, { all } from 'axios';
 import draggable from 'vuedraggable';
 import { debounce } from 'lodash';
 import { Transmit } from '@adonisjs/transmit-client';
@@ -430,6 +430,7 @@ interface User {
   email: string;
   avatar: string;
   status: string;
+  allnotifications: boolean;
 }
 
 interface Server {
@@ -485,7 +486,8 @@ const Mainuser = reactive<User>({
   surname: "",
   email: "",
   avatar: "",
-  status: ""
+  status: "",
+  allnotifications: true
 });
 
 const onFileChange = () => {
@@ -657,6 +659,7 @@ const getMainUser = async () => {
     Mainuser.email = mainUserData.email;
     Mainuser.avatar = mainUserData.avatar;
     Mainuser.status = mainUserData.status;
+    Mainuser.allnotifications = mainUserData.allnotifications;
 
     console.log("Main User assigned:", Mainuser);
   } catch (error : any) {
@@ -671,7 +674,8 @@ const updateMainUser = async () => {
       surname: Mainuser.surname,
       nickname: Mainuser.nickname,
       email: Mainuser.email,
-      status: Mainuser.status
+      status: Mainuser.status,
+      allnotifications: Mainuser.allnotifications
     }, {
       headers: {
         'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
