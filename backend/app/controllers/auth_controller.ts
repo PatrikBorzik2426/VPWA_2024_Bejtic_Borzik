@@ -50,6 +50,8 @@ export default class AuthController {
 
       user.user_status = 'Online'
 
+      user.save()
+
       const token = await User.accessTokens.create(user)
 
       return ctx.response.ok({
