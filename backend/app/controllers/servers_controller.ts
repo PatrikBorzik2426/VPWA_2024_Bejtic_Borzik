@@ -813,15 +813,17 @@ export default class ServersController {
         const position = Number(channelCount?.$extras?.totalChannels) + 1;
 
         try {
-            const channel = await Channel.create({
+            await Channel.create({
                 name,
                 serverId,
                 position,
             })
+            
+            console.log("Channel created on server with ID: ", serverId)
 
-            return {
-                channel
-            }
+            transmit.broadcast(`channel-list:${serverId}`, {
+                
+            })
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({
@@ -879,7 +881,8 @@ export default class ServersController {
               .update({ position: pos });
           }
     
-          return ctx.response.status(200).json({ message: 'Server positions updated successfully' })
+          transmit.broadcast(`channel-list:${serverId}`, {})
+
         } catch (error) {
           console.error('Error updating server positions:', error)
           console.log(channels)
@@ -926,9 +929,8 @@ export default class ServersController {
                 .where('serverId', serverId)
                 .update({ name })
 
-            return {
-                message: 'Channel updated successfully'
-            }
+            transmit.broadcast(`channel-list:${serverId}`, {})
+
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({
@@ -987,9 +989,8 @@ export default class ServersController {
                     .update({ position: i + 1 })
             }
 
-            return {
-                message: 'Channel deleted successfully'
-            }
+            transmit.broadcast(`channel-list:${serverId}`, {})
+
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

@@ -1,6 +1,6 @@
 <template>
   <div class="overflow-auto q-pr-md" ref="messageList"
-    :style = "{maxHeight: $q.screen.gt.sm ? '82.5vh' : '70vh'}"
+    :style = "{maxHeight: $q.screen.gt.sm ? '77.5vh' : '70vh'}"
   >
   <q-infinite-scroll :offset="250" reverse @load="addMessages">
     <template v-slot:loading>

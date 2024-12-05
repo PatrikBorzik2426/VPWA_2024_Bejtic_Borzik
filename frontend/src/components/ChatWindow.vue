@@ -666,7 +666,7 @@
           @click="showWhatIsTyping"
           style=" height: fit-content; width: fit-content;"
         >
-          <p class="q-ma-sm full-width bg-grey-9">{{ someIsTypingMsg }}</p>
+          <p class="q-pb-sm full-width bg-grey-9">{{ someIsTypingMsg }}</p>
         </div>
 
 
@@ -739,7 +739,8 @@ const friendshipId = ref<number>(0);
 let allActivateChats  = [];
 let activeChattingSub : any = null;
 let activeChattingOn : boolean = true;
-let unsubscribeFunction : any = null;
+let unsubscribeFunctionChatting : any = null;
+let unsubscribeFunctionChannels : any = null;
 
 const $q = useQuasar();
 
@@ -936,8 +937,8 @@ async function loadMessages (messagePullId : number){
     someIsTypingMsg.value = '';
   }
 
-  if (unsubscribeFunction!=null){
-    unsubscribeFunction();
+  if (unsubscribeFunctionChatting!=null){
+    unsubscribeFunctionChatting();
   }
 
   console.log("Show channels is: ", showChannels.value);
@@ -1289,9 +1290,9 @@ const updateServer = async () => {
       'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
       'Content-Type': 'application/json'
     }
-  }).then(response => {
+  }).then(async (response) => {
     console.log(response.data);
-    getActiveServer(activeServer.id);
+    await getActiveServer(activeServer.id);
   }).catch(error => {
     console.error('Error during leaving server:', error.response ? error.response.data :  error.message);
   });
@@ -1496,8 +1497,8 @@ const createChannel = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
-    getServerChannels(activeServer.id);
+    // console.log(response.data);
+    // getServerChannels(activeServer.id);
     currentChannel.value = newChannelName.value;
     newChannelName.value = '';
   }).catch(error => {
@@ -1541,7 +1542,6 @@ const updateChannel = async () => {
     }
   }).then(response => {
     console.log(response.data);
-    getServerChannels(activeServer.id);
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
@@ -1558,7 +1558,6 @@ const deleteChannel = async () => {
     }
   }).then(response => {
     console.log(response.data);
-    getServerChannels(activeServer.id);
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
@@ -1589,7 +1588,7 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  unsubscribeFunction = activeChattingSub.onMessage((message: any) => {    
+  unsubscribeFunctionChatting = activeChattingSub.onMessage((message: any) => {    
     const newTypingMessage : RealTimeChat = {
       login: message.login,
       message: message.message
@@ -1642,18 +1641,29 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
         activeChattingOn = !activeChattingOn;
       }
   }
-
-    
   });
 }
+
+const updateChannelOnChange = async () => {
+
+  const channelSub = transmit.subscription(`channel-list:${activeServer.id}`);
+  await channelSub.create();
+
+  unsubscribeFunctionChannels = channelSub.onMessage((message: any) => {
+    getServerChannels(activeServer.id);
+  });
+
+  console.log('Updating channel on change on server: ', activeServer.id);
+  
+};  
 
 // Watchers
 watch(
   () => [props.receivedServerId, props.lastUpdate],
-  ([newId]) => {
+  async ([newId]) => {
     // console.log('receivedServerId value:', newId);
     if (newId !== undefined && newId !== null) {
-      getActiveServer(props.receivedServerId);
+      await getActiveServer(props.receivedServerId);
       getServerChannels(props.receivedServerId);
       showChannels.value = true;
       if (channelList.value.length > 0) {
@@ -1666,6 +1676,12 @@ watch(
 
       // console.log('Server ID checked (same value too):', newId);
     }
+
+    if (unsubscribeFunctionChannels != null){
+      unsubscribeFunctionChannels();
+    }
+
+    await updateChannelOnChange();
   },
   { immediate: false }
 );
@@ -1703,7 +1719,6 @@ watch(
 getFriendsList()
 getFriendRequests();
 getServerInvites();
-
 
 </script>
 
