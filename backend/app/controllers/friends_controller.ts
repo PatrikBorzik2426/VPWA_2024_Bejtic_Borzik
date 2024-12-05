@@ -45,9 +45,12 @@ export default class FriendsController {
             if (existingRequest.friendrequest_status === 'rejected') {
               existingRequest.friendrequest_status = 'floating';
               await existingRequest.save();
-              return {
-                friendRequest: existingRequest,
-              };
+
+              transmit.broadcast(`friend-request-change:${receiver.id}`,{
+                message: 'Friend requests changed',
+              })
+
+              return ctx.response.json({ message: 'Friend request sent' });
             }
           }
       
@@ -64,10 +67,17 @@ export default class FriendsController {
             friendrequest_status: friendRequest.friendrequest_status
           }
       
+
           transmit.broadcast(`channel-current-chatting:${receiver.id}}`, {
             friendRequest: friendRequestBody,
           });
 
+          console.log("Friend request change on channel with ID: ", receiver.id)
+
+          transmit.broadcast(`friend-request-change:${receiver.id}`,{
+            message: 'Friend requests changed',
+          })
+         
         } catch (error) {
           console.error(error);
           return ctx.response.status(500).json({
@@ -128,9 +138,17 @@ export default class FriendsController {
 
         await friendRequest.save()
 
-        return {
-            friend,
-        }
+        transmit.broadcast(`friend-request-change:${user.id}`,{
+          message: 'Friend requests changed',
+        })
+
+        transmit.broadcast(`friend-list-change:${sender.id}`,{
+          message: 'Friend list changed',
+        })
+
+        transmit.broadcast(`friend-list-change:${receiver.id}`,{
+          message: 'Friend list changed',
+        })
     }
 
     async rejectFriendRequest(ctx: HttpContext) {
@@ -156,9 +174,9 @@ export default class FriendsController {
 
         console.log(friendRequest)
 
-        return {
-            friendRequest,
-        }
+        transmit.broadcast(`friend-request-change:${user.id}`,{
+          message: 'Friend requests changed',
+        })
     }
 
     async getFriendRequests(ctx: HttpContext) {
@@ -215,9 +233,11 @@ export default class FriendsController {
         const friendship = await Friend.query()
           .where('user1Id', user.id)
           .where('user2Id', friendId)
-          .orWhere('user1Id', user.id)
-          .where('user2Id', friendId)
+          .orWhere('user1Id', friendId)
+          .where('user2Id', user.id)
           .first()
+
+        console.log("Removing friendship: ", friendship, user.id, friendId)
 
         if (!friendship) {
           return ctx.response.status(404).json({ message: 'Friendship not found' });
@@ -225,9 +245,13 @@ export default class FriendsController {
     
         await friendship.delete()
     
-        return {
-          message: 'Friendship deleted',
-        }
+        transmit.broadcast(`friend-list-change:${user.id}`,{
+          message: 'Friend list changed',
+        })
+
+        transmit.broadcast(`friend-list-change:${friendId}`,{
+          message: 'Friend list changed',
+        })
       }
     
     async getFriendshipId(ctx: HttpContext) {
@@ -253,7 +277,7 @@ export default class FriendsController {
         }).first()
 
         return{
-          'friendshipId': friend?.id
+          'friend shipId': friend?.id
         }
   }
 }

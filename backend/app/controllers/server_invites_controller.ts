@@ -49,9 +49,9 @@ export default class ServerInvitesController {
           serverinvite_status: 'floating',
         })
     
-        return {
-          invite,
-        }
+        transmit.broadcast(`server-request-change:${invitedUser.id}`,{
+            message: 'Server invites changed',
+        })
       }
 
     async getServerInvites(ctx: HttpContext) {
@@ -163,6 +163,11 @@ export default class ServerInvitesController {
             transmit.broadcast(`server-list:${user.id}`, {
                 message:{"ServerId":server.id,"Action":"join"}
             })
+
+            transmit.broadcast(`server-request-change:${user.id}`,{
+                message: 'Server invites changed',
+            })
+
         } catch (error) {
             console.error('Error joining server:', error)
             return ctx.response.status(500).json({ message: 'Failed to join server', error })
@@ -192,9 +197,9 @@ export default class ServerInvitesController {
 
         console.log(serverInvite)
 
-        return {
-            serverInvite,
-        }
+        transmit.broadcast(`server-request-change:${user.id}`,{
+                message: 'Server invites changed',
+        })
     }
     
 }

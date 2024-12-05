@@ -100,7 +100,6 @@ function isMentioned(content: string) {
 }
 
 const showNotification = async (text: string, currentChannel: string) => {
-  getMainUser();
   
   const visibility = $q.appVisible
 
@@ -114,7 +113,7 @@ const showNotification = async (text: string, currentChannel: string) => {
     return;
   }
 
-  if(main_user_status.value == 'Do not disturb'){
+  if(main_user_status.value == 'Do Not Disturb'){
     return;
   }
 
@@ -147,14 +146,20 @@ async function subscribeToMessages() {
   await activeSubscription.create()
    
   return activeSubscription.onMessage(async (message:any) => {
-        console.log('Received message:', message); // Process the message
+        await getMainUser();
 
+        if (main_user_status.value == 'Offline'){
+          return
+        }
+
+        console.log('Received message:', message); // Process the message
+          
         try{
           await showNotification( message.message.content , message.message.login );
         }catch(e){
           console.log(e);
         }
-
+        
         try{
           wholeMessage.value.push({
             id: message.message.id,
@@ -165,17 +170,24 @@ async function subscribeToMessages() {
         }catch(e){
           console.log("Problém s pridaním správy: ",e);
         }
-
+        
         try{
           scrollBottom();
         }catch{
           console.log("Problém so scrollom");
         }
-  });
-
+      });
+      
 }
 
 const loadMessages = async (newId : number) =>{
+  await getMainUser();
+
+  if (main_user_status.value == 'Offline'){
+    wholeMessage.value = [];
+    return;
+  }
+
   if (stopListening !== undefined) {
       stopListening();
     }
@@ -258,11 +270,32 @@ const getMainUser = async () => {
   }
 };
 
+async function subscribeUpdateUser(){
+  await getMainUser();
+
+  console.log("Subscribing to user status with login: ", main_user_nickname.value);
+
+  const activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
+
+  await activeSubscription.create()
+   
+  return activeSubscription.onMessage(async (message:any) => {
+      if (message.userStatus !== "Offline"){
+        loadMessages(props.receiverId);
+      }
+  });
+}
+
 //Event listeners for scrolling
-onMounted(() => {
+onMounted(async() => {
+  await getMainUser();
+
   if (messageList.value) {
     messageList.value.addEventListener('scroll', handleScroll);
   }
+
+  await subscribeUpdateUser();
+
 });
 
 onBeforeUnmount(() => {
@@ -278,9 +311,19 @@ watch(
     console.log(props.receiverId, props.friendshipId, props.serverId);
     loadMessages(newId);
     scrollBottom();
+
   },
   { immediate: true },
 );
+
+watch(
+  () => main_user_status.value,
+  (newVal, oldVal) =>{
+    if (oldVal == 'Offline'){
+      loadMessages(props.receiverId);
+    }
+  }
+)
 
 // watch(wholeMessage, () => {
 // },

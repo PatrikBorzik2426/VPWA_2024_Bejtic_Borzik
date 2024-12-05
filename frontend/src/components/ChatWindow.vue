@@ -583,17 +583,7 @@
                     </q-badge>
                   </q-avatar>
                   <p class="q-ma-none" style="text-transform: none">{{ friend.name }}</p>
-                </div>
-                  <q-badge
-                    v-if="friend.notifications > 0"
-                    color="red"
-                    floating
-                    rounded
-                    class="relative-position q-ml-auto q-mr-md"
-                    style="top: 0"
-                    >{{ friend.notifications }}
-                  </q-badge>
-                
+                </div>                
               </q-btn>
             </q-item>
           </q-list>
@@ -700,7 +690,7 @@
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
 import {commandHandler, showMemberListExternal, callAxios} from '../services/commandHandler';
-import { ref, defineProps, watch, reactive, computed} from 'vue';
+import { ref, defineProps, watch, reactive, computed, onMounted} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
@@ -729,7 +719,8 @@ const someIsTypingMsg = ref<string>('');
 const filteredCommands = ref({});
 const receiverId = ref<number>(0);
 const friendChatStatus = ref<boolean>(true);
-const seeMessagePresent = ref<boolean>(false);
+const main_user_status = ref<string>('');
+const main_user_id = ref<number>(0);
 const friendrequests = ref<FriendRequest[]>([]); 
 const serverinvites = ref<ServerInvite[]>([]); 
 const friendsList = ref<Friend[]>([]);
@@ -950,7 +941,28 @@ async function loadMessages (messagePullId : number){
   }
 };
 
+const getMainUser = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/user/get-main-user', {}, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const mainUserData = response.data.formattedMainUser;  
+
+    main_user_status.value = mainUserData.status;
+    main_user_id.value = mainUserData.id;
+    
+  } catch (error : any) {
+    console.error('Error during fetching main user:', error.response ? error.response.data : error.message);
+  }
+};
+
 const sendMessage = async () => {
+  await getMainUser();
+
   const isItCommand = await commandHandler(inputValue.value, activeServer);
 
   console.log('Is it a command: ', isItCommand);
@@ -965,7 +977,7 @@ const sendMessage = async () => {
     }
   }
 
-  if (inputValue.value.length > 0 && !isItCommand) {
+  if (inputValue.value.length > 0 && !isItCommand && main_user_status.value !== 'Offline') {
     console.log('Sending message: ', inputValue.value);
     let endpoint = ''
 
@@ -1183,7 +1195,7 @@ const getFriendsList = () => {
 
 
 const removeFriend = (friendId: number) => {
-  // console.log('Removing friend:', friendId);
+  console.log('Removing friend:', friendId);
 
   axios.post('http://127.0.0.1:3333/friend/remove-friend',{
     friendId: friendId
@@ -1588,7 +1600,13 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  unsubscribeFunctionChatting = activeChattingSub.onMessage((message: any) => {    
+  unsubscribeFunctionChatting = activeChattingSub.onMessage(async (message: any) => {    
+    await getMainUser();
+
+    if (main_user_status.value === 'Offline'){
+      return;
+    }
+    
     const newTypingMessage : RealTimeChat = {
       login: message.login,
       message: message.message
@@ -1655,7 +1673,47 @@ const updateChannelOnChange = async () => {
 
   console.log('Updating channel on change on server: ', activeServer.id);
   
-};  
+};
+
+const updateFriendsRequestsOnChange = async () => {
+  await getMainUser();
+
+  const friendRequestSub = transmit.subscription(`friend-request-change:${main_user_id.value}`);
+  await friendRequestSub.create();
+
+  friendRequestSub.onMessage((message: any) => {
+    getFriendRequests();
+  });
+
+  console.log('Updating friend requests on change with id: ', main_user_id.value);
+  
+};
+
+const updateServerRequestsOnChange = async () => {
+  await getMainUser();
+
+  const serverInviteSub = transmit.subscription(`server-request-change:${main_user_id.value}`);
+  await serverInviteSub.create();
+
+  serverInviteSub.onMessage((message: any) => {
+    getServerInvites();
+  });
+
+  console.log('Updating server invites on change with id: ', main_user_id.value);
+}
+
+const updateFriendListOnChange = async () => {
+  await getMainUser();
+
+  const friendListSub = transmit.subscription(`friend-list-change:${main_user_id.value}`);
+  await friendListSub.create();
+
+  friendListSub.onMessage((message: any) => {
+    getFriendsList();
+  });
+
+  console.log('Updating friend list on change with id: ', main_user_id.value);
+}
 
 // Watchers
 watch(
@@ -1719,6 +1777,12 @@ watch(
 getFriendsList()
 getFriendRequests();
 getServerInvites();
+
+onMounted(async () => {
+  await updateFriendsRequestsOnChange();
+  await updateServerRequestsOnChange();
+  await updateFriendListOnChange();
+});
 
 </script>
 

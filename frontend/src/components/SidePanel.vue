@@ -19,9 +19,6 @@
       <q-item>
         <q-btn round unelevated :color="showfriends ? 'grey-8' : 'grey-9'" @click="ShowFriends">
           <q-icon center size="1.7rem" color="primary" name="group" />
-          <q-badge v-if="unreadFriends > 0" color="red" floating rounded>{{
-            unreadFriends
-            }}</q-badge>
           <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
             Friends
           </q-tooltip>
@@ -31,9 +28,6 @@
       <q-item>
         <q-btn round unelevated :color="showservers ? 'grey-8' : 'grey-9'" @click="ShowServers">
           <q-icon center size="1.7rem" color="primary" name="dns" />
-          <q-badge v-if="totalUnreadServers > 0" color="red" floating rounded>{{
-            totalUnreadServers
-            }}</q-badge>
           <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
             Servers
           </q-tooltip>
@@ -162,14 +156,6 @@
                   <q-avatar size="2.6rem">
                     <img :src="element.avatar" alt="Server Avatar" />
                   </q-avatar>
-                  <q-badge
-                    v-if="element.notifications > 0"
-                    color="red"
-                    floating
-                    rounded
-                  >
-                    {{ element.notifications }}
-                  </q-badge>
                   <q-tooltip
                     anchor="center end"
                     self="center start"
@@ -191,8 +177,6 @@
           <q-avatar size="2.6rem">
             <img :src="selectedServer.avatar" alt="Server Avatar" />
           </q-avatar>
-          <q-badge v-if="selectedServer.notifications > 0" color="red" floating rounded>{{ selectedServer.notifications
-            }}</q-badge>
           <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
             {{ selectedServer.name }}
           </q-tooltip>
@@ -741,7 +725,7 @@ const CreateServer = async () => {
     }
   }).then(response => {
     console.log(response.data);
-    getServerList();
+    // getServerList();
     selectServer(response.data.server.id);
     serverName.value = '';
   }).catch(error => {
@@ -760,7 +744,7 @@ const JoinServer = async () => {
     }
   }).then(response => {
     console.log(response.data);
-    getServerList();
+    // getServerList();
     selectServer(response.data.serverId);
     servertojoin.value = '';
     $q.notify({
@@ -808,6 +792,9 @@ const UpdateServerPositions = async () => {
 }
 
 async function CreateSubscribe() {
+
+  console.log("Server list subscription about to form!")
+
   const response = await callAxios({},'user/get-main-user');
 
   console.log('Main User:', response.formattedMainUser);
@@ -819,10 +806,6 @@ async function CreateSubscribe() {
 
   activeSubscription.onMessage((message: any) => {
     console.log('Received message:', message);
-
-    showNotification("Omegalul", "poop")
-
-
     getServerList();
   });
 }

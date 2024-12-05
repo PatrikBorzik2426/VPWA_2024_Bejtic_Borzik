@@ -2,7 +2,8 @@ import { HttpContext } from "@adonisjs/core/http"
 import DirectMessage from "../models/direct_message.js"
 import transmit from "@adonisjs/transmit/services/main"
 import ChannelMessage from "../models/channel_message.js"
-
+import Channel from "../models/channel.js"
+import { DateTime } from "luxon"
 
 export default class MessagesController {
 
@@ -123,9 +124,14 @@ export default class MessagesController {
           message: content
       })
 
-      // const query = db.query() 
-      // query.select('delete_inactive_servers();')
+      const channel = await Channel.findByOrFail('id', receiverId)
+      
+      const channelsServer = await channel.related('server').query().firstOrFail()
 
+      channelsServer.lastActivity = DateTime.now();
+
+      await channelsServer.save();
+ 
       const Msg = await (await ChannelMessage.findByOrFail('id', newMsg.id))
 
       // Authorization middleware example (ensure it’s applied correctly)
@@ -161,9 +167,13 @@ export default class MessagesController {
 
       console.log('channelId', channelId, 'message', message)
 
-      transmit.broadcast(`channel-current-chatting:${channelId}`, {
+      if (user.user_status === 'Offline') {
+        return ctx.response.badRequest({ message: 'User is offline' });
+      }else{ 
+        transmit.broadcast(`channel-current-chatting:${channelId}`, {
           message: message,
           login: user.login,
-      });
+        });
+      }
     }
 }

@@ -84,9 +84,9 @@ export default class ServersController {
     
         //   await trx.commit()
     
-          return {
-            server
-          }
+        transmit.broadcast(`server-list:${user.id}`, {
+            message:{"ServerId":server.id,"Action":"join"}
+        })
         } catch (error) {
           console.error(error)
         //   await trx.rollback()
@@ -121,8 +121,11 @@ export default class ServersController {
                 .where('server_id', server_id)
                 .update({ inServer: false });
     
-            return ctx.response.status(200).json({ message: 'Left server successfully' })
-        } catch (error) {
+                transmit.broadcast(`server-list:${user.id}`, {
+                    message: "Successfully left server"
+                })        
+            
+            } catch (error) {
             console.error('Error leaving server:', error)
             return ctx.response.status(500).json({ message: 'Failed to leave server', error })
         }
@@ -156,9 +159,9 @@ export default class ServersController {
                 .where('id', serverId)
                 .update({ name, privacy })
 
-            return {
-                message: 'Server updated successfully'
-            }
+            transmit.broadcast(`server-list:${user.id}`, {
+                message: "Successfully updated the server"
+            })   
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({
@@ -192,7 +195,9 @@ export default class ServersController {
         try {
             await server.delete();
     
-            return ctx.response.status(200).json({ message: 'Server deleted successfully' })
+            transmit.broadcast(`server-list:${user.id}`, {
+                message: "Successfully deleted server"
+            })           
         } catch (error) {
             console.error('Error deleting server:', error)
             return ctx.response.status(500).json({ message: 'Failed to delete server', error })
@@ -553,9 +558,9 @@ export default class ServersController {
                 .update({ position: position++ });
             }
 
-            return {
-                message: 'User kicked from server successfully'
-            }
+            transmit.broadcast(`server-list:${user.id}`, {
+                message: "User kicked from the server successfully"
+            })   
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({
@@ -665,9 +670,9 @@ export default class ServersController {
                 .update({ position: position++ });
             }
 
-            return {
-                message: 'User banned from server successfully'
-            }
+            transmit.broadcast(`server-list:${user.id}`, {
+                message: "User banned from the server successfully"
+            })   
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

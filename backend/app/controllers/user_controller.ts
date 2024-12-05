@@ -1,5 +1,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import User from '../models/user.js'
+import transmit from "@adonisjs/transmit/services/main"
+
 
 export default class UserController {
 
@@ -68,10 +70,12 @@ async updateMainUser(ctx: HttpContext) {
     mainUser.user_status = status
 
     await mainUser.save()
+    
+    console.log("Transmitting user with ID:", user.login)
 
-    return {
-        message: 'User updated',
-    }
+    transmit.broadcast(`updatedUser:${user.login}`, {
+      userStatus: status,
+    }); 
 
 
 }
