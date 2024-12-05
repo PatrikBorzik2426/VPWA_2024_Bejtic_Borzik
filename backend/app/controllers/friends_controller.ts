@@ -10,6 +10,10 @@ export default class FriendsController {
         const user = ctx.auth.user!; 
       
         const receiverLogin = ctx.request.input('receiverLogin'); 
+
+        if(receiverLogin === user.login) {
+            return ctx.response.badRequest({ message: 'You cannot send a friend request to yourself' });
+        }
       
         try {
           const receiver = await User.findBy('login', receiverLogin);
@@ -279,5 +283,24 @@ export default class FriendsController {
         return{
           'friend shipId': friend?.id
         }
+  }
+
+  async informFriendsAboutStatusChange(ctx: HttpContext) {
+    const user = ctx.auth.user!
+  
+    const allFriends = await Friend.query()
+      .where('user1Id', user.id)
+      .orWhere('user2Id', user.id)
+      .preload('user1')
+      .preload('user2')
+
+  
+    // loop through all of the friends and console.log all their logins
+    allFriends.forEach((friend) => {
+
+      transmit.broadcast(`friend-list-change:${friend.user2.id}`,{
+        message: 'Friend list changed',
+      })
+    })
   }
 }

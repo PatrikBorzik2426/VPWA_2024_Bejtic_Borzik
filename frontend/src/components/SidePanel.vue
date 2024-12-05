@@ -678,6 +678,8 @@ const updateMainUser = async () => {
       });
       getMainUser();
     });
+
+    await callAxios({},'friend/inform-friends-status');
 };
 
 const getServerList = async () => {

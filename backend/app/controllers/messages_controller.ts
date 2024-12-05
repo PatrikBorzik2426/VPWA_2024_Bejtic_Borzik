@@ -64,14 +64,25 @@ export default class MessagesController {
     }
 
     async getServerMessages(ctx: HttpContext) {
-      const { receiverId } = ctx.request.all()
+
+      const { receiverId, additionalMsgs } = ctx.request.all()
 
       const channelId: number = receiverId
 
       const messages = await ChannelMessage.query()
-      .where('channel_id', channelId)
-      .orderBy('created_at', 'asc')
-      .preload('user')
+        .where('channel_id', channelId)
+        .orderBy('created_at', 'desc')
+        .preload('user')
+        .limit(8+additionalMsgs);
+
+      const totalMessagesCount = await ChannelMessage.query()
+        .where('channel_id', channelId)
+        .count('* as total');
+
+      const count = Number(totalMessagesCount[0]?.$extras?.total)
+
+      console.log("Channel ID: ", channelId)
+      console.log('10+additionalMsgs', 10+additionalMsgs,'totalMessagesCount', count)
 
       const messageData = messages.map(message => ({
           messageId: message.id,
@@ -81,7 +92,7 @@ export default class MessagesController {
           createdAt: message.timeSent, // Example: formatting timestamp
         }))
     
-        return ctx.response.ok({ messages: messageData })
+      return ctx.response.ok({ messages: messageData, totalMessagesCount: count })
     }
 
     async addPersonalMessage(ctx: HttpContext) {

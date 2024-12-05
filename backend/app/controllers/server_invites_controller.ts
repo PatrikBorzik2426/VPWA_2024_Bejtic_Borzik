@@ -12,6 +12,10 @@ export default class ServerInvitesController {
         const {serverId, invitedusername} = ctx.request.only(['serverId', 'invitedusername'])
 
         console.log(serverId, invitedusername)
+
+        if (invitedusername === user.login) {
+            return ctx.response.badRequest({ message: 'You cannot invite yourself' })
+        }
     
         const server = await Server.findOrFail(serverId)
 

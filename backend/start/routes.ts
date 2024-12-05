@@ -61,6 +61,7 @@ router.group(()=>{
     router.post('list-friends',[FriendController,'getFriendslist']).use(middleware.auth());
     router.post('remove-friend',[FriendController,'removeFriend']).use(middleware.auth());
     router.post('get-friendship-id',[FriendController,'getFriendshipId']).use(middleware.auth());
+    router.post('inform-friends-status',[FriendController,'informFriendsAboutStatusChange']).use(middleware.auth());
 }).prefix('friend');
 
 
