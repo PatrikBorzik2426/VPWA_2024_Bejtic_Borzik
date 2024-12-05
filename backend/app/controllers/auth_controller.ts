@@ -48,7 +48,7 @@ export default class AuthController {
         return ctx.response.unauthorized({ message: 'Invalid login or password' })
       }
 
-      user.status = 'online'
+      user.user_status = 'Online'
 
       const token = await User.accessTokens.create(user)
 
@@ -66,7 +66,7 @@ export default class AuthController {
     try {
       const user = ctx.auth.user!
 
-      user.status = 'offline'
+      user.user_status = 'Offline'
       await user.save()
 
       await User.accessTokens.delete(user, user.currentAccessToken.identifier)

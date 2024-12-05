@@ -114,7 +114,6 @@ export default class ServerInvitesController {
             return ctx.response.badRequest({ message: 'You are banned from this server' })
         }
 
-        //chceck if user is already in server
         const isInServer = await server.related('users')
             .query()
             .where('user_id', user.id)

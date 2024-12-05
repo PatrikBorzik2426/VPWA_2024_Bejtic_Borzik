@@ -24,6 +24,7 @@ async getMainUser(ctx: HttpContext) {
         email: mainUser.email,
         // avatar: mainUser.avatar,
         avatar: `https://ui-avatars.com/api/?name=${mainUser.login}`,
+        allnotifications: mainUser.allnotifications,
         status: mainUser.user_status,
     }
 
@@ -38,7 +39,7 @@ async getMainUser(ctx: HttpContext) {
 async updateMainUser(ctx: HttpContext) {
     const user = ctx.auth.user!
 
-    const { nickname, name, surname, email, status } = ctx.request.all()
+    const { nickname, name, surname, email, allnotifications, status } = ctx.request.all()
 
     const mainUser = await User.query()
       .where('id', user.id)
@@ -58,13 +59,12 @@ async updateMainUser(ctx: HttpContext) {
         message: 'Nickname is already taken',
       });
     }
-
     
-
     mainUser.login = nickname
     mainUser.firstName = name
     mainUser.lastName = surname
     mainUser.email = email
+    mainUser.allnotifications = allnotifications
     mainUser.user_status = status
 
     await mainUser.save()

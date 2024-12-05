@@ -32,8 +32,12 @@ import { ref, defineProps, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Transmit } from '@adonisjs/transmit-client';
 import axios from 'axios';
 import { useQuasar } from 'quasar';
+import { get } from 'http';
 
 const $q = useQuasar();
+const allnotifications = ref<boolean>(false);
+const main_user_status = ref<string>('');
+const main_user_nickname = ref<string>('');
 
 interface Member{
   id : number,
@@ -96,6 +100,8 @@ function isMentioned(content: string) {
 }
 
 const showNotification = async (text: string, currentChannel: string) => {
+  getMainUser();
+  
   const visibility = $q.appVisible
 
   console.log('App visibility:', visibility);
@@ -104,15 +110,26 @@ const showNotification = async (text: string, currentChannel: string) => {
     await Notification.requestPermission();
   }
 
-  if (!visibility) {
-      const notification = new Notification('Quasar App', {
-        body: `${currentChannel}:\t ${text}`,
-      });
+  if(visibility){
+    return;
+  }
 
-      notification.onclick = () => {
-        window.focus();
-      };
-  } 
+  if(main_user_status.value == 'Do not disturb'){
+    return;
+  }
+
+  if(!allnotifications.value && !text.includes('@'+ main_user_nickname.value)){
+    return;
+    
+  }
+    const notification = new Notification('Quasar App', {
+      body: `${currentChannel}:\t ${text}`,
+    });
+
+    notification.onclick = () => {
+      window.focus();
+    };
+   
 };
 
 async function subscribeToMessages() {
@@ -219,6 +236,27 @@ function getChannelMessageCount(receiverId: number) {
   })
 
 }
+
+const getMainUser = async () => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/user/get-main-user', {}, {
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const mainUserData = response.data.formattedMainUser;  
+
+    main_user_nickname.value = mainUserData.nickname;
+    main_user_status.value = mainUserData.status;
+    allnotifications.value = mainUserData.allnotifications;
+
+    
+  } catch (error : any) {
+    console.error('Error during fetching main user:', error.response ? error.response.data : error.message);
+  }
+};
 
 //Event listeners for scrolling
 onMounted(() => {

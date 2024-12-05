@@ -29,6 +29,9 @@ export default class User extends BaseModel {
   declare email: string
 
   @column()
+  declare allnotifications: boolean
+
+  @column()
   declare user_status: 'Online' | 'Offline' | 'Do Not Disturb'
 
   @column()

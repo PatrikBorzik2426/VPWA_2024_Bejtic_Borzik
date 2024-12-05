@@ -1704,7 +1704,6 @@ getFriendsList()
 getFriendRequests();
 getServerInvites();
 
-
 </script>
 
 
