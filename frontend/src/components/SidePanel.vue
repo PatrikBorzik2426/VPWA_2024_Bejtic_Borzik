@@ -82,22 +82,12 @@
                   </q-card-section>
                   <q-card-section class="text-center">
                     <q-avatar size="5rem" class="file-avatar">
-                      <q-file
-                        v-model="image"
-                        class="file-circle file-input"
-                        filled
-                        rounded
-                        multiple
-                        accept=".jpg, image/*"
-                        @update:model-value="previewImage"
-                      />
-                      <img :src="uploadimglink" alt="Avatar" class="accavatar file-image" />
-                      <q-icon name="edit" size="2rem" class="hover-icon" />
+                      <img :src="`https://ui-avatars.com/api/?name=${newServerName}`" alt="Avatar"/>
                     </q-avatar>
                   </q-card-section>
                   <q-card-section class="q-pt-none">
                     <div class="text-subtitle2 text-grey-6">Server name</div>
-                    <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;"          class="q-my-sm" />
+                    <q-input dark outlined v-model="newServerName" style="border-radius: 10rem;"   class="q-my-sm" @keyup.enter="CreateServer"/>
                     <q-card-section class="row items-center justify-between q-pb-none q-pt-sm q-pl-xs">
                       <q-toggle
                         dark
@@ -130,7 +120,7 @@
                     <div class="text-subtitle2 text-grey-6">
                       Server Name
                     </div>
-                    <q-input dark outlined v-model="servertojoin" style="border-radius: 10rem;"           class="q-my-sm" placeholder="Enter server name" />
+                    <q-input dark outlined v-model="servertojoin" style="border-radius: 10rem;"    class="q-my-sm" placeholder="Enter server name" @keyup.enter="JoinServer"/>
                     <q-btn
                       no-caps
                       label="Join"
@@ -154,7 +144,7 @@
                 <q-btn round elevated @click="selectServer(element.id)">
                   <div v-if="selectedServerId === element.id && showselectedserver" class="server-dot"></div>
                   <q-avatar size="2.6rem">
-                    <img :src="element.avatar" alt="Server Avatar" />
+                    <img :src="`https://ui-avatars.com/api/?name=${element.name}`" alt="Server Avatar" />
                   </q-avatar>
                   <q-tooltip
                     anchor="center end"
@@ -175,7 +165,7 @@
         <q-btn round elevated @click="selectServer(selectedServer.id)">
           <div class="server-dot"></div>
           <q-avatar size="2.6rem">
-            <img :src="selectedServer.avatar" alt="Server Avatar" />
+            <img :src="`https://ui-avatars.com/api/?name=${selectedServer.name}`" alt="Server Avatar" />
           </q-avatar>
           <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
             {{ selectedServer.name }}
@@ -192,9 +182,7 @@
         <q-card elevated dark class="account-card bg-grey-9 ">
           <q-card-section class="text-center">
             <q-avatar size="5rem" class="file-avatar">
-              <q-file v-model="filesImages" class="file-circle file-input" filled rounded single accept=".jpg, image/*" @update:model-value="onFileChange"/>
-              <img :src="Mainuser.avatar" alt="Avatar" class="accavatar file-image"/>
-              <q-icon name="edit" size="2rem" class="hover-icon" />
+              <img :src="`https://ui-avatars.com/api/?name=${Mainuser.nickname}`" alt="Avatar" />
             </q-avatar>
           </q-card-section>
 
@@ -412,7 +400,6 @@ interface User {
   name: string;
   surname: string;
   email: string;
-  avatar: string;
   status: string;
   allnotifications: boolean;
 }
@@ -420,19 +407,15 @@ interface User {
 interface Server {
   id: number;
   name: string;
-  avatar: string;
   privacy: boolean;
-  notifications: number;
   role: string;
   position: number;
 }
 
 // Refs and State
 const page = ref('');
-const filesImages = ref<File | null>(null);
 const serverList = ref<Server[]>([]);
 const servertojoin = ref<string>('');
-const unreadFriends = ref(4);
 const showservers = ref(false);
 const showfriends = ref(true);
 const showaccount = ref(false);
@@ -442,26 +425,11 @@ const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
 const selectedTab = ref<'create' | 'join'>('create');
-const uploadimglink = ref<string>('https://www.google.com/url?sa=i&url=https%3A%2F%2Fuxwing.com%2Ffile-upload-icon%2F&psig=AOvVaw3AzPtOKcxMdZhfz9XMnR-X&ust=1730073096318000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCOCkqd-erYkDFQAAAAAdAAAAABAE');
 let activeSubscription: any = null;
 
 const transmit = new Transmit({
     baseUrl: 'http://127.0.0.1:3333',
 });
-
-let image = ref(null);
-let imageUrl = ref('');
-
-const previewImage = () => {
-  if (image.value) {
-    imageUrl.value = URL.createObjectURL(image.value[0]);
-  }
-};
-
-function halabala() {
-  imageUrl.value = uploadimglink.value;
-  previewImage();
-}
 
 const Mainuser = reactive<User>({
   id: 0,
@@ -469,14 +437,9 @@ const Mainuser = reactive<User>({
   name: "",
   surname: "",
   email: "",
-  avatar: "",
   status: "",
   allnotifications: true
 });
-
-const onFileChange = () => {
-  console.log('Selected file:', filesImages.value);
-};
 
 const serverName = ref<string>(Mainuser.name);
 
@@ -518,6 +481,8 @@ watch(
   },
   { deep: true } 
 );
+
+
 // Data
 
 const options = [
@@ -560,10 +525,6 @@ const statusIcon = computed(() => {
     case 'Offline': return 'trip_origin';
     default: return 'circle';
   }
-});
-
-const totalUnreadServers = computed(() => {
-  return serverList.value.reduce((acc, server) => acc + server.notifications, 0);
 });
 
 const selectedServer = computed(() => {
@@ -641,7 +602,6 @@ const getMainUser = async () => {
     Mainuser.name = mainUserData.name;
     Mainuser.surname = mainUserData.surname;
     Mainuser.email = mainUserData.email;
-    Mainuser.avatar = mainUserData.avatar;
     Mainuser.status = mainUserData.status;
     Mainuser.allnotifications = mainUserData.allnotifications;
 
@@ -699,9 +659,7 @@ const getServerList = async () => {
       serverList.value.push({
         id: server.id,
         name: server.name,
-        avatar: server.avatar,
         privacy: server.privacy,
-        notifications: server.notifications || 0,
         role: server.role,
         position: server.position,
       })
@@ -718,7 +676,7 @@ const getServerList = async () => {
 
 const CreateServer = async () => {
   axios.post('http://127.0.0.1:3333/server/create-server',{
-    name: serverName.value,
+    name: newServerName.value,
     privacy: privateserver.value,
   },{
     headers: {
@@ -729,7 +687,6 @@ const CreateServer = async () => {
     console.log(response.data);
     // getServerList();
     selectServer(response.data.server.id);
-    serverName.value = '';
   }).catch(error => {
     console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
   });
@@ -813,11 +770,15 @@ async function CreateSubscribe() {
 }
 
 
-getMainUser();
-getServerList();
+
 
 onMounted(async()=>{
   await CreateSubscribe();
+});
+
+onBeforeMount(async() => {
+  await getMainUser();
+  await getServerList();
 });
 
 onBeforeUnmount(async()=>{
@@ -870,53 +831,6 @@ onBeforeUnmount(async()=>{
   border-radius: 20px;
   width: 90%;
   margin-top: 2%;
-}
-
-.file-avatar {
-  position: relative;
-  border-radius: 50%; 
-  overflow: hidden;   
-}
-
-.file-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0; 
-  z-index: 3; 
-  cursor: pointer;
-}
-
-.file-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;       
-}
-
-.hover-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); 
-  opacity: 0; 
-  z-index: 2; 
-  color: white;
-  transition: opacity 0.3s ease; 
-}
-
-.file-avatar:hover .hover-icon {
-  opacity: 0.7;  
-}
-
-.file-avatar:hover .file-image { 
-  opacity: 0.5; 
-  filter: brightness(0.7); 
 }
 
 .popup-status {

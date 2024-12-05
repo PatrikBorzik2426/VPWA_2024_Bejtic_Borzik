@@ -21,8 +21,7 @@ export default class ServersController {
             id: server.id,
             name: server.name,
             avatar: `https://ui-avatars.com/api/?name=${server.name}`,
-            privacy: server.privacy,
-            notifications: Math.floor(Math.random() * 100),   
+            privacy: server.privacy,  
             role: server.$extras.pivot_role, 
             position: server.$extras.pivot_position, 
         }))
@@ -46,14 +45,12 @@ export default class ServersController {
             message: 'Server with this name already exists',
           })
         }
-        
-        // const trx = await Database.transaction()
     
         try {
           const server = await Server.create({
             name,
             privacy,
-          }/*,{ client: trx }*/)
+          })
 
           const userWithServerCount = await User.query()
           .where('id', user.id) 
@@ -73,23 +70,19 @@ export default class ServersController {
               inServer: true,
               kick_counter: 0, 
             },
-          }/*, trx*/)
+          })
 
-          //create channel
             await Channel.create({
                 name: 'general',
                 serverId: server.id,
                 position: 1,
-            }/*, trx*/)
-    
-        //   await trx.commit()
+            })
     
         transmit.broadcast(`server-list:${user.id}`, {
             message:{"ServerId":server.id,"Action":"join"}
         })
         } catch (error) {
           console.error(error)
-        //   await trx.rollback()
           return ctx.response.status(500).json({
             message: 'Failed to create server',
           })
@@ -767,7 +760,6 @@ export default class ServersController {
         const formattedChannels = serverChannls.map((channel) => ({
             id: channel.id,
             name: channel.name,
-            notifications: Math.floor(Math.random() * 100),
             position: channel.position,
         }))
 

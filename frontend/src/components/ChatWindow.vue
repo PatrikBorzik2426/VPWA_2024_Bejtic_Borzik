@@ -59,9 +59,7 @@
                   <q-separator color="grey-8" class="q-mb-sm"/>
                   <q-card-section class="text-center">
                     <q-avatar size="5rem" class="file-avatar">
-                      <q-file v-model="filesImages" class="file-circle file-input" filled rounded single        accept=".jpg, image/*" />
-                      <img :src="activeServer.avatar" alt="Avatar" class="accavatar file-image"/>
-                      <q-icon name="edit" size="2rem" class="hover-icon" />
+                      <img :src="`https://ui-avatars.com/api/?name=${editingServer.name}`" alt="Avatar"/>
                     </q-avatar>
                   </q-card-section>
                 <q-card-section class="q-pt-none ">
@@ -120,7 +118,7 @@
                   <q-separator color="grey-8" class="q-mb-sm"/>
                 <q-card-section class="q-pt-none ">
                   <div class="text-subtitle2 text-grey-6">Friends name</div>
-                  <q-input dark outlined v-model="invitedFriendsName" style="border-radius: 10rem;" class="q-my-sm" placeholder="Nickname">
+                  <q-input dark outlined v-model="invitedFriendsName" style="border-radius: 10rem;" class="q-my-sm" placeholder="Nickname" @keyup.enter="inviteFriend">
                     <template v-slot:prepend>
                       <q-icon name="tag" />
                     </template>
@@ -396,7 +394,7 @@
                 <q-list v-if="serverinvites.length > 0">
                   <q-item v-for="invite in serverinvites" :key="invite.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
                       <q-avatar size="2.5rem">
-                         <img :src="invite.avatar" alt="Avatar" /> 
+                         <img :src="`https://ui-avatars.com/api/?name=${invite.name}`" alt="Avatar" /> 
                          <q-badge rounded floating color="grey-9" class="q-pa-none">
                             <q-icon
                               color="primary"
@@ -469,7 +467,7 @@
                 <q-list v-if="friendrequests.length > 0">
                   <q-item v-for="request in friendrequests" :key="request.id" class="justify-in-between items-center q-mx-sm q-mb-sm">
                       <q-avatar size="2.5rem">
-                         <img :src="request.avatar" alt="Avatar" /> 
+                         <img :src="`https://ui-avatars.com/api/?name=${request.name}`" alt="Avatar" /> 
                       </q-avatar>
                       <q-item-label class="q-ml-sm q-mr-xl">{{ request.name }}</q-item-label>
                     <div class="q-ml-auto">
@@ -528,7 +526,7 @@
                   </q-toolbar>
                   <q-separator color="grey-8" class="q-mb-sm"/>
                 <q-card-section>
-                  <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm">
+                  <q-input dark outlined v-model="AddedFriend" placeholder="You can add friends with their nickname" style="border-radius: 10rem;" class="q-my-sm" @keyup.enter="addFriend">
                   </q-input>
                   <q-card-section class="row justify-end q-pb-none q-pt-sm q-pr-xs">
                   <q-btn
@@ -725,7 +723,6 @@ const friendrequests = ref<FriendRequest[]>([]);
 const serverinvites = ref<ServerInvite[]>([]); 
 const friendsList = ref<Friend[]>([]);
 const memberList = ref<ServerMember[]>([]);
-const filesImages = ref<File[]>([]);
 const friendshipId = ref<number>(0);
 let allActivateChats  = [];
 let activeChattingSub : any = null;
@@ -769,7 +766,6 @@ interface Friend {
   id: number;
   friendId: number;
   name: string;
-  notifications: number;
   avatar: string;
   status: string;
 }
@@ -791,7 +787,6 @@ interface ServerInvite {
 interface ServerChannel {
   id: number;
   name: string;
-  notifications: number;
   position: number;
 }
 
@@ -839,7 +834,6 @@ const editingServer = reactive<Server>({
 const selectedChannelSettings = reactive<ServerChannel>({
   id: -1,
   name: '',
-  notifications: 0,
   position: 0,
 });
 
@@ -885,7 +879,6 @@ const selectFriend = (id: number) => {
 
     if (friend.id === id) {
       currentChannel.value = friend.name;
-      friend.notifications = 0;
       friendChatStatus.value = props.receivedShowFriends;
       console.log("Friendship ID: ",  friendChatStatus.value);
       loadMessages(id);
@@ -1181,7 +1174,6 @@ const getFriendsList = () => {
         name: friend.friendName,
         avatar: friend.friendAvatar,
         status: friend.friendStatus,
-        notifications: friend.friendUnreadMessages,
       });
 
       // console.log(friendsList.value);
@@ -1261,13 +1253,13 @@ const getServerChannels = async (serverId: number) => {
       channelList.value.push({
         id: channel.id,
         name: channel.name,
-        notifications: channel.notifications || 0,
         position: channel.position,
       })
 
       console.log('channel List:', channelList)
     })
     channelList.value.sort((a, b) => a.position - b.position)
+    loadChannel(channelList.value[0].name, channelList.value[0].id);
     // console.log('Sorted Server List:', serverList)
   } catch (error) {
     console.error('Error fetching channel list:', error.response?.data || error.message)
@@ -1286,7 +1278,8 @@ const leaveServer = async () => {
     console.log(response.data);
     getFriendsList();
     showChannels.value = false;
-    loadChannel(friendsList.value[0].name);
+    currentChannel.value = ''; 
+    loadMessages(-1);
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
@@ -1322,7 +1315,8 @@ const deleteServer = async () => {
     console.log(response.data);
     getFriendsList();
     showChannels.value = false;
-    loadChannel(friendsList.value[0].name);
+    currentChannel.value = ''; 
+    loadMessages(-1);
   }).catch(error => {
     console.error('Error during deleting server:', error.response ? error.response.data :  error.message);
   });
@@ -1396,9 +1390,6 @@ const banMember = async (memberId: number) => {
     console.error('Error creating channel:', error.response ? error.response.data :  error.message);
   });
 }
-
-
-
 
 const inviteFriend = async () => {
   axios.post('http://127.0.0.1:3333/server-invite/create-server-invite',{
@@ -1751,6 +1742,8 @@ watch(
     if (newVal !== undefined) {
       showChannels.value = false;
       getFriendsList();
+      currentChannel.value = '';
+      loadMessages(0);
     }
 
     // loadChannel(currentChannel.value);
@@ -1793,38 +1786,6 @@ onMounted(async () => {
   position: relative;
   border-radius: 50%; 
   overflow: hidden;   
-}
-
-.file-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0; 
-  z-index: 3; 
-  cursor: pointer;
-}
-
-.file-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;       
-}
-
-.hover-icon {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%); 
-  opacity: 0; 
-  z-index: 2; 
-  color: white;
-  transition: opacity 0.3s ease; 
 }
 
 .chat-window,
