@@ -2,7 +2,7 @@
   "name": "vpwa-bejtic-borzik",
   "version": "0.0.1",
   "description": "A Quasar Project",
-  "productName": "Chat App",
+  "productName": "Comb Bot",
   "author": "PatrikBorzik2426 <xborzik@stuba.sk>",
   "private": true,
   "scripts": {
@@ -35,7 +35,14 @@
     "prettier": "^2.5.1",
     "typescript": "~5.5.4",
     "vite-plugin-checker": "^0.8.0",
-    "vue-tsc": "^2.0.29"
+    "vue-tsc": "^2.0.29",
+    "workbox-build": "7.0.x",
+    "workbox-cacheable-response": "7.0.x",
+    "workbox-core": "7.0.x",
+    "workbox-expiration": "7.0.x",
+    "workbox-precaching": "7.0.x",
+    "workbox-routing": "7.0.x",
+    "workbox-strategies": "7.0.x"
   },
   "engines": {
     "node": "^20 || ^18 || ^16",
