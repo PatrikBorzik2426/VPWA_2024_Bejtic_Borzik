@@ -29,7 +29,6 @@ onBeforeMount(() => {
     'Content-Type': 'application/json'
   }
   }).then(response => {
-    console.log(response.data);
   }).catch(() => {
     router.push('/login');
   });

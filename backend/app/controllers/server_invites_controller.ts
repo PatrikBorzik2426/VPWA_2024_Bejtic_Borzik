@@ -11,7 +11,6 @@ export default class ServerInvitesController {
     
         const {serverId, invitedusername} = ctx.request.only(['serverId', 'invitedusername'])
 
-        console.log(serverId, invitedusername)
 
         if (invitedusername === user.login) {
             return ctx.response.badRequest({ message: 'You cannot invite yourself' })
@@ -33,7 +32,6 @@ export default class ServerInvitesController {
         .first()
 
         if (isInvitedBanned) {
-            console.log('User is banned from server', "serverOwner?.id", serverOwner?.id, "user.id", user.id)
             if (serverOwner?.id === user.id) {
                 await server.related('users')
                 .query()
@@ -73,7 +71,6 @@ export default class ServerInvitesController {
     async getServerInvites(ctx: HttpContext) {
         const user = ctx.auth.user!
 
-        console.log(user.id)
     
         const serverinvites = await ServerInvite.query()
           .where('invitedUserId', user.id)
@@ -85,12 +82,10 @@ export default class ServerInvitesController {
             id: invite.id,
             servername: invite.server.name,
             serveravatar: `https://ui-avatars.com/api/?name=${invite.server.name}`,
-            // serveravatar: invite.server.avatar,
             serverprivacy: invite.server.privacy,
             invitedBy: invite.invitedBy.login,
           }))
 
-          console.log(mappedInvites)
     
         return {
             mappedInvites
@@ -102,7 +97,6 @@ export default class ServerInvitesController {
 
         const serverInviteId = ctx.request.input('serverInviteId')
 
-        console.log(serverInviteId)
 
         const serverInvite = await ServerInvite.findOrFail(serverInviteId)
 
@@ -199,7 +193,6 @@ export default class ServerInvitesController {
 
         const serverInviteId = ctx.request.input('serverInviteId')
 
-        console.log(serverInviteId)
 
         const serverInvite = await ServerInvite.findOrFail(serverInviteId)
 
@@ -215,7 +208,6 @@ export default class ServerInvitesController {
 
         await serverInvite.save()
 
-        console.log(serverInvite)
 
         transmit.broadcast(`server-request-change:${user.id}`,{
                 message: 'Server invites changed',

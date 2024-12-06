@@ -8,7 +8,6 @@ export default class Servers extends BaseSchema {
       table.increments('id').primary()
       table.string('name', 64).notNullable()
       table.boolean('privacy').defaultTo(false) 
-      table.string('avatar').nullable()
       table.timestamp('last_activity', { useTz: true }).defaultTo(this.now())
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())

@@ -10,8 +10,6 @@ export default class DirectMessages extends BaseSchema {
       table.integer('receiver_user_id').unsigned().references('id').inTable('users').onDelete('CASCADE').notNullable()
       table.string('message', 300).notNullable()
       table.timestamp('time_sent', { useTz: true }).defaultTo(this.now())
-
-      // Automatically managed timestamps for created and updated dates
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })

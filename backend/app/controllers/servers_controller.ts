@@ -15,7 +15,6 @@ export default class ServersController {
             .wherePivot('ban', false) 
             .andWhere('inServer', true)
         
-        console.log(servers)
 
         const result = servers.map((server) => ({
             id: server.id,
@@ -26,7 +25,6 @@ export default class ServersController {
             position: server.$extras.pivot_position, 
         }))
         
-        console.log(result)
         return {
             servers: result,
         }
@@ -38,7 +36,6 @@ export default class ServersController {
     
         const {name,privacy} = ctx.request.only(['name','privacy'])
     
-        console.log("Create server: ",name, privacy)
         const existingServer = await Server.query().where('name', name).first()
         if (existingServer) {
           return ctx.response.status(400).json({
@@ -95,7 +92,6 @@ export default class ServersController {
         const user = ctx.auth.user!
         const server_id = ctx.request.input('serverId')
 
-        console.log(server_id)
     
         const pivot = await user.related('servers')
             .query()
@@ -195,7 +191,6 @@ export default class ServersController {
             await server.delete();
 
             allMembers.forEach((member) => {
-                console.log(`Deleting server for user with ID ${member.$extras.pivot_user_id}`)
                 transmit.broadcast(`server-list:${member.$extras.pivot_user_id}`, {
                     message: "Successfully deleted server",
                     action: "showFriends",
@@ -222,14 +217,12 @@ export default class ServersController {
           return ctx.response.status(400).json({ message: 'Invalid input format. Expected an array of servers.' })
         }
 
-        console.log(servers)
     
         try {
           for (const server of servers) {
             const { id, position } = server
             const pos = Number(position) - banned
 
-            console.log(`Updating position for server with ID ${id} to ${pos}`)
     
             const pivot = await user.related('servers')
                 .query()
@@ -243,7 +236,6 @@ export default class ServersController {
             const isBanned = pivot.$extras.pivot_ban || !pivot.$extras.pivot_inServer;
 
             if (isBanned) {
-                console.log(`User is banned from server with ID ${id}. Exiting loop.`);
                 banned++;
                 continue; 
               }
@@ -257,7 +249,6 @@ export default class ServersController {
           return ctx.response.status(200).json({ message: 'Server positions updated successfully' })
         } catch (error) {
           console.error('Error updating server positions:', error)
-          console.log(servers)
           return ctx.response.status(500).json({ message: 'Failed to update server positions', error })
         }
       }    
@@ -361,8 +352,6 @@ export default class ServersController {
             role: member.$extras.pivot_role,
             isFriend: friendIds.has(member.id),
         }))
-        console.log('debilko')
-        console.log(formattedMembers)
     
         return {
             members: formattedMembers,
@@ -373,12 +362,10 @@ export default class ServersController {
         const user = ctx.auth.user!
         const servername = ctx.request.input('servername')
 
-        console.log(servername)
 
         const server = await Server.findBy('name', servername)
 
         if (!server) {
-            console.log("Server not found going to create now")
             this.createServer(ctx)
             return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
         }else if (server && server.privacy){
@@ -462,7 +449,6 @@ export default class ServersController {
         const user = ctx.auth.user!
         const { serverId, memberId, command } = ctx.request.only(['serverId', 'memberId', 'command'])
 
-        console.log(serverId, memberId)
 
         const server = await Server.findByOrFail('id', serverId)
 
@@ -522,7 +508,6 @@ export default class ServersController {
             .update({ inServer: false })
 
             if (userToKickServerPivot.$extras.pivot_kick_counter >= 3) {
-                console.log(`User ${userToKick.id} is being banned from the server.`);
             
                 await server
                   .related('users')
@@ -531,12 +516,10 @@ export default class ServersController {
                   .update({ ban: true });
 
             }else if (ownerOfServer && command){
-                console.log("Owner Found!")
 
                 if (userToKick.id === ownerOfServer.id) {
                     return ctx.response.status(403).json({ message: 'You cannot kick the creator of the server' });
                 }else if (user.id === ownerOfServer.id) {
-                    console.log(`User ${userToKick.id} is being banned from the server.`);
             
                     await server
                     .related('users')
@@ -563,7 +546,6 @@ export default class ServersController {
         const user = ctx.auth.user!
         const {serverId, memberLogin} = ctx.request.only(['serverId', 'memberLogin'])
 
-        console.log("Revoking user:" , serverId, memberLogin)
 
         try{
 
@@ -757,7 +739,6 @@ export default class ServersController {
 
         const serverChannls = await server.related('channels').query()
 
-        console.log(serverChannls)
         const formattedChannels = serverChannls.map((channel) => ({
             id: channel.id,
             name: channel.name,
@@ -817,7 +798,6 @@ export default class ServersController {
                 position,
             })
             
-            console.log("Channel created on server with ID: ", serverId)
 
             transmit.broadcast(`channel-list:${serverId}`, {
                 
@@ -844,7 +824,6 @@ export default class ServersController {
           return ctx.response.status(400).json({ message: 'Invalid input format. Expected an array of servers.' })
         }
 
-        console.log(channels)
 
         const pivot = await user.related('servers')
                 .query()
@@ -860,7 +839,6 @@ export default class ServersController {
             const { id, position } = channel
             const pos = Number(position) - deleted
 
-            console.log(`Updating position for channel with ID ${id} to ${pos}`)
 
             const isDeleted = !(await Channel.query()
                 .where('serverId', serverId)
@@ -868,7 +846,6 @@ export default class ServersController {
                 .first());
 
             if (isDeleted) {
-                console.log(`channel doesnt exist with ID ${id}. Exiting loop.`);
                 deleted++;
                 continue; 
               }
@@ -883,7 +860,6 @@ export default class ServersController {
 
         } catch (error) {
           console.error('Error updating server positions:', error)
-          console.log(channels)
           return ctx.response.status(500).json({ message: 'Failed to update server positions', error })
         }
       }  

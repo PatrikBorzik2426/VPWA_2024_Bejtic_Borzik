@@ -70,7 +70,7 @@ const passwordRule = (value: string) => {
   if (!hasSpecialChar) {
     return 'Password must contain at least one special character.';
   }
-  return true; // Password is valid
+  return true; 
 };
 
 function handleSubmit() {

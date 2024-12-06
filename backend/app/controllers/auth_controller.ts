@@ -1,13 +1,8 @@
-// app/Controllers/Http/AuthController.ts
 import { HttpContext } from '@adonisjs/core/http'
 import User from '../models/user.js'
 
 export default class AuthController {
-
-  // Registration
   async register(ctx: HttpContext) {
-
-    // Extracting required fields for registration
     const { login, password, firstName, lastName, email } = ctx.request.only([
       'login',
       'password',
@@ -16,30 +11,25 @@ export default class AuthController {
       'email',
     ])
 
-    console.log(login, password, firstName, lastName, email)
 
     try {
       const user = await User.create({ login, password, firstName, lastName, email, user_status: 'Offline' })
 
       const token = await User.accessTokens.create(user)
 
-      console.log(token)
 
       return {
         user,
         token,
       }
     } catch (error) {
-      console.log(error)
       return ctx.response.badRequest({ message: 'Registration failed', error })
     }
   }
 
-  // Login
   async login(ctx: HttpContext) {
     const { login, password } = ctx.request.only(['login', 'password'])
 
-    console.log(login,password)
 
     try {
       const user = await User.findByOrFail('login', login)
@@ -63,7 +53,6 @@ export default class AuthController {
     }
   }
 
-  // Logout
   async logout(ctx: HttpContext) {
     try {
       const user = ctx.auth.user!
@@ -73,7 +62,6 @@ export default class AuthController {
 
       await User.accessTokens.delete(user, user.currentAccessToken.identifier)
 
-      console.log(user)
 
       return ctx.response.ok({ message: 'Logged out successfully' })
 
@@ -82,13 +70,11 @@ export default class AuthController {
     }
   }
 
-  // Me
   async check(ctx: HttpContext) {
     const user = ctx.auth.user!
 
     const check = await ctx.auth.check()
 
-    console.log(check)
 
     if (!check) {
       return ctx.response.unauthorized({ message: 'Unauthorized' })
