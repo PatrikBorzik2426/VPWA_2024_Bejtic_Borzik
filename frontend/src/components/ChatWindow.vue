@@ -652,10 +652,17 @@
 
       <div
           class="someone-typing absolute z-top cursor-pointer"
-          @click="showWhatIsTyping"
           style=" height: fit-content; width: fit-content;"
         >
-          <p class="q-pb-sm full-width bg-grey-9">{{ someIsTypingMsg }}</p>
+        <div class="full-width bg-grey-9 block q-mb-lg">
+          <span v-for="(message, index) in someIsTypingMsg" :key="index"
+          :class="{ 'hover-effect': index !== someIsTypingMsg.length - 1 }"
+          class = " q-pa-xs "
+          @click="showTypedMessage(index,message), showWhatIsTyping()"
+          >
+            {{ message }}
+          </span>
+        </div>
         </div>
 
 
@@ -714,7 +721,7 @@ const invitedFriendsName = ref<string>('');
 const showFriendRequests = ref<boolean>(false);
 const showAddFriend = ref<boolean>(false);
 const AddedFriend = ref<string>('');
-const someIsTypingMsg = ref<string>('');
+const someIsTypingMsg = ref<string[]>(['']);
 const filteredCommands = ref({});
 const receiverId = ref<number>(0);
 const friendChatStatus = ref<boolean>(true);
@@ -725,9 +732,10 @@ const serverinvites = ref<ServerInvite[]>([]);
 const friendsList = ref<Friend[]>([]);
 const memberList = ref<ServerMember[]>([]);
 const friendshipId = ref<number>(0);
+const showTypedMessageData = ref<string | null>(null);
 let allActivateChats  = [];
 let activeChattingSub : any = null;
-let activeChattingOn : boolean = true;
+let activeChattingOn : boolean = false;
 let unsubscribeFunctionChatting : any = null;
 let unsubscribeFunctionChannels : any = null;
 
@@ -920,8 +928,8 @@ async function loadMessages (messagePullId : number){
   receiverId.value = messagePullId;
   await getFriendshipId(messagePullId);
 
-  if (someIsTypingMsg.value != ''){
-    someIsTypingMsg.value = '';
+  if (someIsTypingMsg.value.length > 0){
+    someIsTypingMsg.value = [''];
   }
 
   if (unsubscribeFunctionChatting!=null){
@@ -1588,8 +1596,13 @@ const getFriendshipId = async (friendId: number) => {
     }
 };
 
+const showTypedMessage = (index: number, text: string) => {  
+  if(index < someIsTypingMsg.value.length - 1){
+    showTypedMessageData.value = text.replace('is typing ...', '').replace(',','').trim();
+  }
+};
+
 const activateSubscriptionChatting =async (channelId : number, addition : number) => {
-  console.log("Activating subscription for chat: " + channelId+addition);
 
   activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
@@ -1597,25 +1610,36 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   unsubscribeFunctionChatting = activeChattingSub.onMessage(async (message: any) => {    
     await getMainUser();
 
-    if (main_user_status.value === 'Offline'){
-      return;
-    }
-    
-    const newTypingMessage : RealTimeChat = {
-      login: message.login,
-      message: message.message
-    }
 
+    console.log("Active array: ", someIsTypingMsg.value);
 
-    if (activeChattingOn){
-    
+    if(activeChattingOn && message.message.length > 1){
+      if(showTypedMessageData.value === message.login ){
+        someIsTypingMsg.value = [message.login + ": " + message.message];
+        return;
+      }
+    }else{
+
+      activeChattingOn = false;
+
+      console.log("Active chatting should be false: ", activeChattingOn);
+
+      if (main_user_status.value === 'Offline'){
+        return;
+      }
+
+      someIsTypingMsg.value = [];
+      
+      const newTypingMessage : RealTimeChat = {
+        login: message.login,
+        message: message.message
+      }
+      
       let found = false;
 
       if (allActivateChats.length === 0){
         allActivateChats.push(newTypingMessage);
       };
-
-      someIsTypingMsg.value = '';
 
       allActivateChats.forEach((element : any) => {
         if (element.login === newTypingMessage.login){
@@ -1636,23 +1660,22 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
 
       allActivateChats.forEach((element : any) => {
         if (element.message.length > 0){
-          someIsTypingMsg.value += element.login+ ', ';
+          someIsTypingMsg.value.push(element.login + ', ');
         }
       });
 
+      console.log('All activate chats in array 1:', someIsTypingMsg.value);
+
       if (someIsTypingMsg.value.length < 1){
-        someIsTypingMsg.value = '';
+        someIsTypingMsg.value = [''];
       }else{
-        someIsTypingMsg.value += ' is typing...';
+        someIsTypingMsg.value[someIsTypingMsg.value.length] = "is typing ...";
       }
-  }else{
-      if(newTypingMessage.message) {
-        someIsTypingMsg.value = newTypingMessage.login + ': ' + newTypingMessage.message;
-      }else{
-        someIsTypingMsg.value = '';
-        activeChattingOn = !activeChattingOn;
-      }
-  }
+      console.log('All activate chats in array 1:', someIsTypingMsg.value);
+    }
+
+    console.log("Activating subscription for chat: " + channelId+addition);
+
   });
 }
 
@@ -1850,5 +1873,10 @@ onMounted(async () => {
 
 .scrollable::-webkit-scrollbar {
   display: none;
+}
+
+.hover-effect:hover {
+  background-color: var(--q-primary);
+  border-radius: 0.35rem;
 }
 </style>
