@@ -12,11 +12,8 @@ export default class Users extends BaseSchema {
       table.string('last_name', 35).notNullable()
       table.string('email', 254).notNullable().unique()
       table.boolean('allnotifications').defaultTo(true).notNullable()
-      table.string('avatar').nullable()
       table.enu('user_status', ['Online', 'Offline', 'Do Not Disturb']).defaultTo('online').notNullable()
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
-
-      // Automatically managed timestamps for created and updated dates
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })
   }

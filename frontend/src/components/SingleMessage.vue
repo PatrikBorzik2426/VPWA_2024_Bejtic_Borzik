@@ -6,7 +6,6 @@
     <template v-slot:loading>
         <div v-if="display_loader" class="row justify-center" >
           <q-spinner-dots color="primary" size="40px"/>
-          <!-- <p v-else>No more messages ... You have found the beginning!</p> -->
         </div>
     </template>
 
@@ -32,7 +31,6 @@ import { ref, defineProps, watch, onMounted, onBeforeUnmount } from 'vue';
 import { Transmit } from '@adonisjs/transmit-client';
 import axios from 'axios';
 import { useQuasar } from 'quasar';
-import { get } from 'http';
 
 const $q = useQuasar();
 const allnotifications = ref<boolean>(false);
@@ -55,7 +53,6 @@ const messageList = ref<HTMLElement | null>(null);
 const additionalMsgs = ref<number>(5);
 const maximumMsgs = ref<number>(0);
 const scrollTop = ref(0);
-const totalChannelsMessages = ref<number>();
 let currentAdditionalMsgs = ref<number>(0);
 
 
@@ -80,8 +77,6 @@ function handleScroll() {
     scrollTop.value = messageList.value.scrollTop;
     if (scrollTop.value === 0 && currentAdditionalMsgs.value+5 < maximumMsgs.value) {
       addMessages();
-    }else{
-      console.log("ScrollTop: ", scrollTop.value, "CurrentAdditional: ", currentAdditionalMsgs.value+5, "Maximum Msg:", maximumMsgs.value)
     }
   }
 }
@@ -104,7 +99,6 @@ const showNotification = async (text: string, currentChannel: string) => {
   
   const visibility = $q.appVisible
 
-  console.log('App visibility:', visibility);
 
   if (Notification.permission === "default") {
     await Notification.requestPermission();
@@ -133,7 +127,6 @@ const showNotification = async (text: string, currentChannel: string) => {
 };
 
 async function subscribeToMessages() {
-  console.log('Subscribing to messages:', props.friendshipId);
   let broadcast=''
 
   if (props.serverId != -1){
@@ -142,7 +135,7 @@ async function subscribeToMessages() {
     broadcast = `friendship:${props.friendshipId}`;
   }
 
-  const activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
+  const activeSubscription = transmit.subscription(broadcast); 
 
   await activeSubscription.create()
    
@@ -153,12 +146,10 @@ async function subscribeToMessages() {
           return
         }
 
-        console.log('Received message:', message); // Process the message
           
         try{
           await showNotification( message.message.content , message.message.login );
         }catch(e){
-          console.log(e);
         }
         
         try{
@@ -169,13 +160,11 @@ async function subscribeToMessages() {
             timestamp: message.message.createdAt
           });
         }catch(e){
-          console.log("Problém s pridaním správy: ",e);
         }
         
         try{
           scrollBottom();
         }catch{
-          console.log("Problém so scrollom");
         }
       });
       
@@ -193,7 +182,6 @@ const loadMessages = async (newId : number) =>{
       stopListening();
     }
 
-    console.log('Receiver ID changed:', newId);
 
     let endpoint = '';
 
@@ -228,26 +216,11 @@ const loadMessages = async (newId : number) =>{
         });
       });
 
-      console.log('Maximum messages:', response.data.totalMessagesCount);
       
       maximumMsgs.value = response.data.totalMessagesCount;
 
       stopListening = await subscribeToMessages();
     });
-}
-
-function getChannelMessageCount(receiverId: number) {
-  axios.post('http://172.0.0.1/messages/get-channel-messages-count',{
-    receiverId: receiverId
-  },{
-    headers: {
-      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-      'Content-Type': 'application/json'
-    }
-  }).then(response => {
-    totalChannelsMessages.value = response.data.totalMessagesCount;
-  })
-
 }
 
 const getMainUser = async () => {
@@ -274,9 +247,7 @@ const getMainUser = async () => {
 async function subscribeUpdateUser(){
   await getMainUser();
 
-  console.log("Subscribing to user status with login: ", main_user_nickname.value);
-
-  const activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
+  const activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); 
 
   await activeSubscription.create()
    
@@ -305,11 +276,10 @@ onBeforeUnmount(() => {
   }
 });
 
-// Watch for changes in `receiverId` to update the messages
+// Watchers
 watch(
   () => props.receiverId,
   async (newId) => {
-    console.log(props.receiverId, props.friendshipId, props.serverId);
     loadMessages(newId);
     scrollBottom();
 
@@ -336,7 +306,6 @@ watch(
       display_loader.value = false;
     }
 
-    console.log("Display loader: ", display_loader.value);
 
   }
 )

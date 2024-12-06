@@ -856,7 +856,7 @@ const membersByRole = computed(() => {
       role,
       members: memberList.value.filter((member) => member.role === role),
     }))
-    .filter((entry) => entry.members.length > 0); // Exclude empty roles
+    .filter((entry) => entry.members.length > 0); 
 });
 
 const openChannelSettings = (channel: ServerChannel) => {
@@ -882,7 +882,6 @@ function cloneServer(){
 requestNotificationPermission();
 
 const selectFriend = (id: number) => {
-  console.log('Selected friend:', id);
   activeServer.id = -1;
 
   friendsList.value = friendsList.value.map((friend) => {
@@ -891,7 +890,6 @@ const selectFriend = (id: number) => {
     if (friend.id === id) {
       currentChannel.value = friend.name;
       friendChatStatus.value = props.receivedShowFriends;
-      console.log("Friendship ID: ",  friendChatStatus.value);
       loadMessages(id);
     }
     return friend;
@@ -936,7 +934,6 @@ async function loadMessages (messagePullId : number){
     unsubscribeFunctionChatting();
   }
 
-  console.log("Show channels is: ", showChannels.value);
 
   if (showChannels.value){
     await activateSubscriptionChatting(messagePullId,0);
@@ -969,12 +966,10 @@ const sendMessage = async () => {
 
   const isItCommand = await commandHandler(inputValue.value, activeServer);
 
-  console.log('Is it a command: ', isItCommand);
 
   if (isItCommand){
     const showMemberListBoolean = showMemberListExternal(inputValue.value)
 
-    console.log('Is it a showMemberListBoolean: ', showMemberListBoolean);
 
     if (showMemberListBoolean){
       getMemberList();
@@ -982,7 +977,6 @@ const sendMessage = async () => {
   }
 
   if (inputValue.value.length > 0 && !isItCommand && main_user_status.value !== 'Offline') {
-    console.log('Sending message: ', inputValue.value);
     let endpoint = ''
 
     if (activeServer.id != -1){
@@ -1035,7 +1029,6 @@ const checkCommand = async() => {
 
   await callAxios(body,'messages/current-chatting')
 
-  // console.log(someIsTypingBool.value);
 };
 
 const loadChannel = (channelName: string, messagePullId: number) => {
@@ -1054,7 +1047,6 @@ const pickCommand = (command: string) => {
 
 // Backend Calls
 async function addFriend(){
-  // console.log('Adding friend:', AddedFriend);
 
   axios.post('http://127.0.0.1:3333/friend/create-friend-request',{
     receiverLogin: AddedFriend.value
@@ -1064,7 +1056,6 @@ async function addFriend(){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
     AddedFriend.value = '';
     $q.notify({
         type: 'positive',
@@ -1087,7 +1078,6 @@ async function addFriend(){
 }
 
 async function acceptFriendRequest(requestId: number){
-  // console.log('Accepting friend request:', friendrequests.value[0].name);
 
   axios.post('http://127.0.0.1:3333/friend/accept-friend-request',{
     friendRequestId: requestId
@@ -1097,7 +1087,6 @@ async function acceptFriendRequest(requestId: number){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
     deleteFriendRequest(requestId);
     getFriendsList();
   }).catch(error => {
@@ -1113,7 +1102,6 @@ const deleteFriendRequest = (requestId: number) => {
 };
 
 async function rejectFriendRequest(requestId: number){
-  // console.log('Rejecting friend request:', friendrequests.value[0].name);
 
   axios.post('http://127.0.0.1:3333/friend/reject-friend-request',{
     friendRequestId: requestId
@@ -1123,13 +1111,11 @@ async function rejectFriendRequest(requestId: number){
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data.friend);
     deleteFriendRequest(requestId);
   }).catch(error => {
     console.error('Error during rejecting friendrequest:', error.response ? error.response.data : error.message);
   });
 
-  // console.log(friendrequests.value);
 }
 
 const getFriendRequests = () => {
@@ -1142,10 +1128,8 @@ const getFriendRequests = () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data.mappedRequests);
 
     response.data.mappedRequests.forEach((element : any) => {
-      // console.log('Element:', element);
 
       friendrequests.value.push({
         id: element.friendRequestId,
@@ -1153,7 +1137,6 @@ const getFriendRequests = () => {
         avatar: element.senderAvatar,
       });
 
-      // console.log(friendrequests.value);
     })
 
   }).catch(error => {
@@ -1170,14 +1153,11 @@ const getFriendsList = () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data.mappedFriends);
 
-    // console.log('daco to urobilo');
 
     friendsList.value = [];
 
     response.data.mappedFriends.forEach((friend : any) => {
-      console.log('Friend:', friend);
 
       friendsList.value.push({
         id: friend.friendId,
@@ -1187,7 +1167,6 @@ const getFriendsList = () => {
         status: friend.friendStatus,
       });
 
-      // console.log(friendsList.value);
     })
 
   }).catch(error => {
@@ -1198,7 +1177,6 @@ const getFriendsList = () => {
 
 
 const removeFriend = (friendId: number) => {
-  console.log('Removing friend:', friendId);
 
   axios.post('http://127.0.0.1:3333/friend/remove-friend',{
     friendId: friendId
@@ -1208,7 +1186,6 @@ const removeFriend = (friendId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
     if(showChannels.value){
       getMemberList();
     } else {
@@ -1240,7 +1217,6 @@ const getActiveServer = async (serverId: number) => {
     activeServer.role = activeServerData.role;
     activeServer.userid = activeServerData.userid;
 
-    console.log("Active server assigned:", activeServer);
   } catch (error : any) {
     console.error('Error during fetching active server:', error.response ? error.response.data : error.message);
   }
@@ -1259,7 +1235,6 @@ const getServerChannels = async (serverId: number) => {
     })
 
     response.data.serverChannels.forEach((channel: any) => {
-      console.log('channel:', channel)
 
       channelList.value.push({
         id: channel.id,
@@ -1267,11 +1242,9 @@ const getServerChannels = async (serverId: number) => {
         position: channel.position,
       })
 
-      console.log('channel List:', channelList)
     })
     channelList.value.sort((a, b) => a.position - b.position)
     loadChannel(channelList.value[0].name, channelList.value[0].id);
-    // console.log('Sorted Server List:', serverList)
   } catch (error) {
     console.error('Error fetching channel list:', error.response?.data || error.message)
   }
@@ -1286,7 +1259,6 @@ const leaveServer = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
     getFriendsList();
     showChannels.value = false;
     currentChannel.value = ''; 
@@ -1307,7 +1279,6 @@ const updateServer = async () => {
       'Content-Type': 'application/json'
     }
   }).then(async (response) => {
-    console.log(response.data);
     await getActiveServer(activeServer.id);
   }).catch(error => {
     console.error('Error during leaving server:', error.response ? error.response.data :  error.message);
@@ -1323,7 +1294,6 @@ const deleteServer = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
     getFriendsList();
     showChannels.value = false;
     currentChannel.value = ''; 
@@ -1344,10 +1314,8 @@ const getMemberList = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data.members);
 
     response.data.members.forEach((member : any) => {
-      console.log('Member:', member);
 
       memberList.value.push({
         id: member.id,
@@ -1358,7 +1326,6 @@ const getMemberList = async () => {
         isFriend: member.isFriend,
       });
 
-      console.log(memberList.value);
     })
 
   }).catch(error => {
@@ -1378,7 +1345,6 @@ const kickMember = async (memberId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
     getMemberList();
   }).catch(error => {
     console.error('Error creating channel:', error.response ? error.response.data :  error.message);
@@ -1386,7 +1352,6 @@ const kickMember = async (memberId: number) => {
 }
 
 const banMember = async (memberId: number) => {
-  console.log('Banning member:', memberId);
   axios.post('http://127.0.0.1:3333/server/ban-server-member',{
     serverId: activeServer.id,
     memberId: memberId
@@ -1396,7 +1361,6 @@ const banMember = async (memberId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
     getMemberList();
   }).catch(error => {
     console.error('Error creating channel:', error.response ? error.response.data :  error.message);
@@ -1413,7 +1377,6 @@ const inviteFriend = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
     invitedFriendsName.value = '';
     $q.notify({
         type: 'positive',
@@ -1443,7 +1406,6 @@ const acceptServerInvite = async (inviteId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
     getServerInvites();
   }).catch(error => {
     console.error('Error during accepting friendrequest:', error.response ? error.response.data : error.message);
@@ -1459,13 +1421,11 @@ const rejectServerInvite = async (inviteId: number) => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data.friend);
     getServerInvites();
   }).catch(error => {
     console.error('Error during rejecting friendrequest:', error.response ? error.response.data : error.message);
   });
 
-  // console.log(friendrequests.value);
 }
 
 const getServerInvites = () => {
@@ -1478,10 +1438,8 @@ const getServerInvites = () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data.serverinvites);
 
     response.data.mappedInvites.forEach((invite: any) => {
-      // console.log('Element:', element);
 
       serverinvites.value.push({
         id: invite.id,
@@ -1493,7 +1451,6 @@ const getServerInvites = () => {
 
       serverinvites.value.sort((a, b) => b.id - a.id);
 
-      console.log(serverinvites.value);
     })
 
   }).catch(error => {
@@ -1512,8 +1469,6 @@ const createChannel = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    // console.log(response.data);
-    // getServerChannels(activeServer.id);
     currentChannel.value = newChannelName.value;
     newChannelName.value = '';
   }).catch(error => {
@@ -1538,8 +1493,6 @@ const updateChannelposition = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
-    // getServerList();
   }).catch(error => {
     console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
   });
@@ -1556,7 +1509,6 @@ const updateChannel = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
@@ -1572,7 +1524,6 @@ const deleteChannel = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
   }).catch(error => {
     console.error('Error during updating channel:', error.response ? error.response.data :  error.message);
   });
@@ -1589,7 +1540,6 @@ const getFriendshipId = async (friendId: number) => {
       }
     }).then(response => {
       friendshipId.value = response.data.friendshipId;
-      console.log("Friendship value was set to:", friendshipId.value)
     });
   }
     catch (error : any) {
@@ -1648,7 +1598,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
           found = true;
           
           if (!newTypingMessage.message){
-            console.log('deleted')
             allActivateChats = allActivateChats.filter((item) => item.login !== element.login);
           }
 
@@ -1689,7 +1638,6 @@ const updateChannelOnChange = async () => {
     getServerChannels(activeServer.id);
   });
 
-  console.log('Updating channel on change on server: ', activeServer.id);
   
 };
 
@@ -1703,7 +1651,6 @@ const updateFriendsRequestsOnChange = async () => {
     getFriendRequests();
   });
 
-  console.log('Updating friend requests on change with id: ', main_user_id.value);
   
 };
 
@@ -1717,7 +1664,6 @@ const updateServerRequestsOnChange = async () => {
     getServerInvites();
   });
 
-  console.log('Updating server invites on change with id: ', main_user_id.value);
 }
 
 const updateFriendListOnChange = async () => {
@@ -1730,14 +1676,12 @@ const updateFriendListOnChange = async () => {
     getFriendsList();
   });
 
-  console.log('Updating friend list on change with id: ', main_user_id.value);
 }
 
 // Watchers
 watch(
   () => [props.receivedServerId, props.lastUpdate],
   async ([newId]) => {
-    // console.log('receivedServerId value:', newId);
     if (newId !== undefined && newId !== null) {
       await getActiveServer(props.receivedServerId);
       getServerChannels(props.receivedServerId);
@@ -1750,7 +1694,6 @@ watch(
         friendChatStatus.value = false;
       }
 
-      // console.log('Server ID checked (same value too):', newId);
     }
 
     if (unsubscribeFunctionChannels != null){
@@ -1765,7 +1708,6 @@ watch(
 watch(
   () => props.receivedShowFriends,
   (newVal) => {
-    console.log('receivedShowFriends value:', newVal);
     if (newVal !== undefined) {
       showChannels.value = false;
       getFriendsList();
@@ -1793,7 +1735,6 @@ watch(
 );
 
 // Initial load
-// loadChannel(friendsList.value[0].name);
 getFriendsList()
 getFriendRequests();
 getServerInvites();
@@ -1817,7 +1758,6 @@ onMounted(async () => {
 
 .chat-window,
 .channel-rooms {
-  /* border: var(--grey) 3px solid; */
   border-radius: 1rem;
   max-height: 97.5
   vh !important;
