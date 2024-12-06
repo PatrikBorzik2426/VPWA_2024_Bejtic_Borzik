@@ -155,6 +155,19 @@ export const commandHandler = async (messageInput: string, activeServer : Server
         }
 
         return true;
+    }else if (splitMessage[0] === '/quit'){
+        try{
+            const body : Dictionary<number> = {
+                serverId: activeServer.id
+            }
+
+            callAxios(body, 'server/delete-server')
+
+        }catch(err){
+            console.log(err)
+        }
+
+        return true;
     }
     
     return false;

@@ -763,8 +763,16 @@ async function CreateSubscribe() {
   activeSubscription = transmit.subscription(`server-list:${userId}`);
   await activeSubscription.create();
 
-  activeSubscription.onMessage((message: any) => {
-    console.log('Received message:', message);
+  activeSubscription = activeSubscription.onMessage((message: any) => {
+    try{
+      if (message.serverId === selectedServerId.value ){
+        console.log("Action has happened!")
+        ShowFriends();
+      }
+    }catch{
+      console.log("Error in server list subscription")
+    }
+
     getServerList();
   });
 }
@@ -776,16 +784,19 @@ onMounted(async()=>{
   await CreateSubscribe();
 });
 
-onBeforeMount(async() => {
-  await getMainUser();
-  await getServerList();
-});
+// onBeforeMount(async() => {
+//   await getMainUser();
+//   await getServerList();
+// });
 
 onBeforeUnmount(async()=>{
   if (activeSubscription != null) {
-    await activeSubscription.close();
+    await activeSubscription();
   }
 });
+
+getMainUser();
+getServerList();
 
 </script>
 

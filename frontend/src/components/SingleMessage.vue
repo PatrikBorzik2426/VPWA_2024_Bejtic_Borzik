@@ -122,7 +122,7 @@ const showNotification = async (text: string, currentChannel: string) => {
     return;
     
   }
-    const notification = new Notification('Quasar App', {
+    const notification = new Notification('Comb Bot', {
       body: `${currentChannel}:\t ${text}`,
     });
 

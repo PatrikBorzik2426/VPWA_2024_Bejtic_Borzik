@@ -121,6 +121,7 @@ export default class ServerInvitesController {
         const isInServer = await server.related('users')
             .query()
             .where('user_id', user.id)
+            .where('inServer', true)
             .first()
 
         if (isInServer) {

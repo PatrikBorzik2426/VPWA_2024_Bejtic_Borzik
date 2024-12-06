@@ -19,7 +19,7 @@ export default class AuthController {
     console.log(login, password, firstName, lastName, email)
 
     try {
-      const user = await User.create({ login, password, firstName, lastName, email, user_status: 'Online' })
+      const user = await User.create({ login, password, firstName, lastName, email, user_status: 'Offline' })
 
       const token = await User.accessTokens.create(user)
 

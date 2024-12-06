@@ -165,7 +165,7 @@ export default class ServersController {
 
     async deleteServer(ctx: HttpContext) {
         const user = ctx.auth.user!
-        const server_id = ctx.request.input('serverId')
+        const server_id = ctx.request.input('serverId')                   
     
         const pivot = await user.related('servers')
             .query()
@@ -181,16 +181,26 @@ export default class ServersController {
         }
 
         const server = await Server.find(server_id);
+
         if (!server) {
           return ctx.response.status(404).json({ message: 'Server not found' });
         }
-        console.log('jebo')
+
+        const allMembers = await server.related('users').query()
+            .where('server_id', server_id)
+        
         try {
             await server.delete();
+
+            allMembers.forEach((member) => {
+                console.log(`Deleting server for user with ID ${member.$extras.pivot_user_id}`)
+                transmit.broadcast(`server-list:${member.$extras.pivot_user_id}`, {
+                    message: "Successfully deleted server",
+                    action: "showFriends",
+                    serverId: server_id
+                })           
+            })
     
-            transmit.broadcast(`server-list:${user.id}`, {
-                message: "Successfully deleted server"
-            })           
         } catch (error) {
             console.error('Error deleting server:', error)
             return ctx.response.status(500).json({ message: 'Failed to delete server', error })
@@ -551,8 +561,10 @@ export default class ServersController {
                 .update({ position: position++ });
             }
 
-            transmit.broadcast(`server-list:${user.id}`, {
-                message: "User kicked from the server successfully"
+            transmit.broadcast(`server-list:${memberId}`, {
+                message: "User kicked from the server successfully",
+                action: "showFriends",
+                serverId: serverId
             })   
         } catch (error) {
             console.error(error)
@@ -582,9 +594,11 @@ export default class ServersController {
             
             await server.related('users').query().where('user_id', member.id).delete()
 
-            return {
-                message: "User revoked from server successfully"
-            }
+            transmit.broadcast(`server-list:${member.id}`, {
+                message: "User kicked from the server successfully",
+                action: "showFriends",
+                serverId: serverId
+            }) 
 
         }catch(err){
             return ctx.response.status(500).json({ message: 'Failed to revoke user from server' });
@@ -663,8 +677,10 @@ export default class ServersController {
                 .update({ position: position++ });
             }
 
-            transmit.broadcast(`server-list:${user.id}`, {
-                message: "User banned from the server successfully"
+            transmit.broadcast(`server-list:${memberId}`, {
+                message: "User banned from the server successfully",
+                action: "showFriends",
+                serverId: serverId
             })   
         } catch (error) {
             console.error(error)
