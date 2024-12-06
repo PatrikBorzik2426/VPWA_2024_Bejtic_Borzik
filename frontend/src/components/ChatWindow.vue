@@ -629,10 +629,11 @@
           style="margin-bottom: 3rem;"
           v-if="showComponent"
         >
-          <q-list class="full-width command-list z-top bg-dark rounded-borders">
+          <q-list dark class="full-width command-list z-top bg-dark rounded-borders">
             <q-item
               v-for="(value, key) in filteredCommands"
               :key="key"
+              dark
               class="hover-fill"
             >
               <q-item-section
@@ -752,7 +753,9 @@ const commands = {
   '/list' : 'List all the server users',
   '/revoke' : 'Revoke a user from the server',
   '/invite' : 'Invite a user to the server',
-  '/kick' : 'Kick a user from the server'
+  '/kick' : 'Kick a user from the server',
+  '/quit' : 'Quit the server',
+  '/join' : 'Join the server / create a new one',
 };
 
 const roleDisplayNames: Record<string, string> = {

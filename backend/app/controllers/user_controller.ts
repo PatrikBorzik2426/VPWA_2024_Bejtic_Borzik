@@ -8,8 +8,6 @@ export default class UserController {
 async getMainUser(ctx: HttpContext) {
     const user = ctx.auth.user!
 
-    console.log(user)
-
     const mainUser = await User.query()
       .where('id', user.id)
       .firstOrFail()
@@ -76,9 +74,9 @@ async updateMainUser(ctx: HttpContext) {
     transmit.broadcast(`updatedUser:${user.login}`, {
       userStatus: status,
     }); 
-
-
 }
+
+
 
 
 }

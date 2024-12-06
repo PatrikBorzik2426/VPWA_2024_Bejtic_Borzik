@@ -4,8 +4,8 @@
   >
   <q-infinite-scroll :offset="250" reverse @load="addMessages">
     <template v-slot:loading>
-        <div class="row justify-center" >
-          <q-spinner-dots color="primary" size="40px" />
+        <div v-if="display_loader" class="row justify-center" >
+          <q-spinner-dots color="primary" size="40px"/>
           <!-- <p v-else>No more messages ... You have found the beginning!</p> -->
         </div>
     </template>
@@ -38,6 +38,7 @@ const $q = useQuasar();
 const allnotifications = ref<boolean>(false);
 const main_user_status = ref<string>('');
 const main_user_nickname = ref<string>('');
+const display_loader = ref<boolean>(false);
 
 interface Member{
   id : number,
@@ -51,7 +52,7 @@ const transmit = new Transmit({
   });
 const wholeMessage = ref<Member[]>([]);
 const messageList = ref<HTMLElement | null>(null);
-const additionalMsgs = 5;
+const additionalMsgs = ref<number>(5);
 const maximumMsgs = ref<number>(0);
 const scrollTop = ref(0);
 const totalChannelsMessages = ref<number>();
@@ -71,7 +72,7 @@ function scrollBottom(){
     if (messageList.value) {
       messageList.value.scrollTop = messageList.value.scrollHeight;
     }
-  }, 100);
+  }, 300);
 }
 
 function handleScroll() {
@@ -86,7 +87,7 @@ function handleScroll() {
 }
 
 async function addMessages(){
-  currentAdditionalMsgs.value = currentAdditionalMsgs.value + additionalMsgs;
+  currentAdditionalMsgs.value = currentAdditionalMsgs.value + additionalMsgs.value;
 
   setTimeout(async () => {
     await loadMessages(props.receiverId);
@@ -121,7 +122,7 @@ const showNotification = async (text: string, currentChannel: string) => {
     return;
     
   }
-    const notification = new Notification('Quasar App', {
+    const notification = new Notification('Comb Bot', {
       body: `${currentChannel}:\t ${text}`,
     });
 
@@ -215,6 +216,8 @@ const loadMessages = async (newId : number) =>{
 
       const dataList = response.data.messages
 
+      dataList.reverse();
+
       dataList.forEach((element:any) => {
 
         wholeMessage.value.push({
@@ -225,11 +228,9 @@ const loadMessages = async (newId : number) =>{
         });
       });
 
+      console.log('Maximum messages:', response.data.totalMessagesCount);
+      
       maximumMsgs.value = response.data.totalMessagesCount;
-
-      console.log('Maximum messages:', maximumMsgs.value);
-
-      scrollBottom();
 
       stopListening = await subscribeToMessages();
     });
@@ -325,9 +326,20 @@ watch(
   }
 )
 
-// watch(wholeMessage, () => {
-// },
-// { immediate: true, deep: true });
+watch(
+  () => currentAdditionalMsgs.value,
+  (newVal) => {
+
+    if (newVal < maximumMsgs.value-2){
+      display_loader.value = true;
+    }else{
+      display_loader.value = false;
+    }
+
+    console.log("Display loader: ", display_loader.value);
+
+  }
+)
 
 
 </script>

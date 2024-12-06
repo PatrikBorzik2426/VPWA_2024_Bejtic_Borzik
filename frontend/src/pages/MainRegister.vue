@@ -91,7 +91,7 @@ function handleSubmit() {
     localStorage.setItem('bearer', token.token);
 
     if (token){
-      router.push('/chatapp');
+      router.push('/login');
     }
 
   })
