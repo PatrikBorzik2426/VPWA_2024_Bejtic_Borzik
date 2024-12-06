@@ -1362,7 +1362,8 @@ const getMemberList = async () => {
 const kickMember = async (memberId: number) => {
   axios.post('http://127.0.0.1:3333/server/kick-server-member',{
     memberId: memberId,
-    serverId: activeServer.id
+    serverId: activeServer.id,
+    command: false
   },{
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('bearer'),

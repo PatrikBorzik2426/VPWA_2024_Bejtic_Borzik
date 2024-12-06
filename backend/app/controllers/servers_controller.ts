@@ -52,20 +52,22 @@ export default class ServersController {
             privacy,
           })
 
-          const userWithServerCount = await User.query()
-          .where('id', user.id) 
-          .withCount('servers', (query) => {
-            query.wherePivot('ban', false) 
-                 .andWhere('inServer', true)
-          })
-          .firstOrFail()
-        
-          const position = Number(userWithServerCount.$extras.servers_count)
+          const userServers = await user.related('servers').query()
+          .wherePivot('ban', false)
+          .andWhere('inServer', true)
+          .orderBy('pivot_position')
+
+          let position = 2;
+          for (const userServer of userServers) {
+          await user.related('servers').query()
+              .wherePivot('server_id', userServer.id)
+              .update({ position: position++ });
+          }
     
           await server.related('users').attach({
             [user.id]: {
               role: 'creator', 
-              position: position + 1, 
+              position: 1, 
               ban: false, 
               inServer: true,
               kick_counter: 0, 
@@ -410,31 +412,34 @@ export default class ServersController {
             .where('inServer', false)
             .first()
 
-        const serverCount = await user
-        .related('servers') 
-        .query()
-        .wherePivot('ban', false)
-        .andWhere('inServer', true)
-        .count('* as total') 
-        .first();
-
-        const pos = Number(serverCount?.$extras?.total || 0) + 1;
 
         try {
+
+            const userServers = await user.related('servers').query()
+                .andWhere('inServer', true)
+                .orderBy('pivot_position')
+
+            let position = 2;
+            for (const userServer of userServers) {
+            await user.related('servers').query()
+                .wherePivot('server_id', userServer.id)
+                .update({ position: position++ });
+            }
+
             if (wasInServer) {
                 await server.related('users')
                     .query()
                     .where('user_id', user.id)
                     .update({
                         inServer: true,
-                        position: pos,
+                        position: 1,
                     })
             }else {
                 await server.related('users')
                     .attach({
                         [user.id]: {
                             role: 'member',
-                            position: pos,
+                            position: 1,
                             ban: false,
                             inServer: true,
                             kick_counter: 0,
@@ -455,7 +460,7 @@ export default class ServersController {
 
     async kickServerMember(ctx: HttpContext) {
         const user = ctx.auth.user!
-        const { serverId, memberId } = ctx.request.only(['serverId', 'memberId'])
+        const { serverId, memberId, command } = ctx.request.only(['serverId', 'memberId', 'command'])
 
         console.log(serverId, memberId)
 
@@ -514,8 +519,9 @@ export default class ServersController {
             .query()
             .where('user_id', userToKick.id)
             .update({ kick_counter: userToKickServerPivot.$extras.pivot_kick_counter + 1 })
-            
-            if (userToKickServerPivot.$extras.pivot_kick_counter + 1 >= 3) {
+            .update({ inServer: false })
+
+            if (userToKickServerPivot.$extras.pivot_kick_counter >= 3) {
                 console.log(`User ${userToKick.id} is being banned from the server.`);
             
                 await server
@@ -524,7 +530,7 @@ export default class ServersController {
                   .where('user_id', userToKick.id)
                   .update({ ban: true });
 
-            }else if (ownerOfServer){
+            }else if (ownerOfServer && command){
                 console.log("Owner Found!")
 
                 if (userToKick.id === ownerOfServer.id) {
@@ -538,27 +544,6 @@ export default class ServersController {
                     .where('user_id', userToKick.id)
                     .update({ ban: true });
                 }
-            }
-
-            await server
-                  .related('users')
-                  .query()
-                  .where('user_id', userToKick.id)
-                  .update({ inServer: false });
-
-            const userServers = await userToKick
-              .related('servers')
-              .query()
-              .wherePivot('ban', false) 
-              .orderBy('pivot_position');
-                
-            let position = 1;
-            for (const userServer of userServers) {
-              await userToKick
-                .related('servers')
-                .query()
-                .wherePivot('server_id', userServer.id)
-                .update({ position: position++ });
             }
 
             transmit.broadcast(`server-list:${memberId}`, {
@@ -990,7 +975,6 @@ export default class ServersController {
                 .where('serverId', serverId)
                 .delete()
 
-            //recalculate positions
             const channels = await Channel.query()
                 .where('serverId', serverId)
                 .orderBy('position')
