@@ -43,7 +43,7 @@
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
             <q-item>
-            <q-btn round flat @click="showCreateServer = true, halabala()" class="q-my-sm">
+            <q-btn round flat @click="showCreateServer = true" class="q-my-sm">
                 <q-icon center name="add" size="2.6rem" color="primary"/>
               <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
                 Create Server
@@ -441,16 +441,7 @@ const Mainuser = reactive<User>({
   allnotifications: true
 });
 
-const serverName = ref<string>(Mainuser.name);
-
-const newServerName = computed({
-  get() {
-    return serverName.value || `${Mainuser.name}'s Server`
-  },
-  set(value: string) {
-    serverName.value = value
-  },
-})
+const newServerName = ref<string>(`${Mainuser.name}'s Server`);
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
@@ -468,6 +459,23 @@ watch(
   () => {
     console.log('watch', props.receivedShowMobileChat);
     showMobileChat.value = props.receivedShowMobileChat;
+  }
+);
+
+watch(
+  () => showCreateServer.value,
+  () => {
+    newServerName.value = `${Mainuser.nickname}'s Server`;
+
+    if (serverList.value.find((server) => server.name === newServerName.value)) {
+      let counter = 1;
+
+      while (serverList.value.find((server) => server.name === `${newServerName.value} ${counter}`)) {
+        counter++;
+      }
+
+      newServerName.value = `${newServerName.value} ${counter}`;
+    }
   }
 );
 

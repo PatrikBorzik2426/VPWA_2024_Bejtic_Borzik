@@ -145,7 +145,8 @@ export const commandHandler = async (messageInput: string, activeServer : Server
         try{
             const body : Dictionary<number | string> = {
                 serverId: activeServer.id,
-                memberId: splitMessage[1]
+                memberId: splitMessage[1],
+                command: true
             }
 
             callAxios(body, 'server/kick-server-member')
