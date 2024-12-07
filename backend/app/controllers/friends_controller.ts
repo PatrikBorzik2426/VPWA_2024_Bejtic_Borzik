@@ -34,7 +34,6 @@ export default class FriendsController {
             })
             .first();
 
-            console.log(existingFriendship)
       
           if (existingFriendship) {
             return ctx.response.badRequest({ message: 'You are already friends' });
@@ -76,7 +75,6 @@ export default class FriendsController {
             friendRequest: friendRequestBody,
           });
 
-          console.log("Friend request change on channel with ID: ", receiver.id)
 
           transmit.broadcast(`friend-request-change:${receiver.id}`,{
             message: 'Friend requests changed',
@@ -96,7 +94,6 @@ export default class FriendsController {
 
         const friendRequestId = ctx.request.input('friendRequestId')
 
-        console.log(friendRequestId)
 
         const friendRequest = await FriendRequest.findOrFail(friendRequestId)
 
@@ -131,14 +128,10 @@ export default class FriendsController {
         const user1Id = Math.min(friendRequest.senderId, friendRequest.receiverId)
         const user2Id = Math.max(friendRequest.senderId, friendRequest.receiverId)
     
-        const friend = await Friend.create({
+        await Friend.create({
           user1Id : user1Id,
           user2Id : user2Id,
         })
-    
-        console.log('Friendship created:', friend)
-    
-        console.log(friendRequest)
 
         await friendRequest.save()
 
@@ -160,7 +153,6 @@ export default class FriendsController {
 
         const friendRequestId = ctx.request.input('friendRequestId')
 
-        console.log(friendRequestId)
 
         const friendRequest = await FriendRequest.findOrFail(friendRequestId)
 
@@ -176,7 +168,6 @@ export default class FriendsController {
 
         await friendRequest.save()
 
-        console.log(friendRequest)
 
         transmit.broadcast(`friend-request-change:${user.id}`,{
           message: 'Friend requests changed',
@@ -198,7 +189,6 @@ export default class FriendsController {
             senderName: request.sender.login,
           }))
 
-          console.log(mappedRequests)
     
         return {
           mappedRequests,
@@ -217,11 +207,9 @@ export default class FriendsController {
         const mappedFriends = friends.map((friend) => ({
             id : friend.id,
             friendId: friend.user1.id === user.id ? friend.user2.id : friend.user1.id,
-            //friendAvatar: friend.user1.id === user.id ? friend.user2.avatar : friend.user1.avatar,
             friendName: friend.user1.id === user.id ? friend.user2.login : friend.user1.login,
             friendAvatar: `https://ui-avatars.com/api/?name=${friend.user1.id === user.id ? friend.user2.login : friend.user1.login}`,
             friendStatus: friend.user1.id === user.id ? friend.user2.user_status : friend.user1.user_status,
-            friendUnreadMessages: Math.floor(Math.random() * 100),
         }))
     
         return {
@@ -241,7 +229,6 @@ export default class FriendsController {
           .where('user2Id', user.id)
           .first()
 
-        console.log("Removing friendship: ", friendship, user.id, friendId)
 
         if (!friendship) {
           return ctx.response.status(404).json({ message: 'Friendship not found' });
@@ -295,7 +282,6 @@ export default class FriendsController {
       .preload('user2')
 
   
-    // loop through all of the friends and console.log all their logins
     allFriends.forEach((friend) => {
 
       transmit.broadcast(`friend-list-change:${friend.user2.id}`,{

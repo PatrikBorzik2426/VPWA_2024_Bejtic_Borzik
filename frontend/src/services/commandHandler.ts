@@ -22,10 +22,8 @@ export async function callAxios( body: Dictionary<string|number|boolean>|{}, url
             'Content-Type': 'application/json'
         }
     }).then((response) => {
-        console.log('Call axios respond: ' + response);
         callResponse = response.data;
     }).catch((err) => {
-        console.log(err);
     });
    
 
@@ -33,12 +31,9 @@ export async function callAxios( body: Dictionary<string|number|boolean>|{}, url
 }
 
 export const commandHandler = async (messageInput: string, activeServer : Server) => {
-    // Check if message is a command
-    console.log('Command Input: ' + messageInput, activeServer);
 
     const splitMessage = messageInput.split(' ');
 
-    console.log('Split command: ' + splitMessage);
 
     if (splitMessage[0] === '/cancel'){
         
@@ -52,7 +47,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
                 callAxios(body, 'server/leave-server');
 
             }catch(err){
-                console.log(err);
             }
 
 
@@ -72,7 +66,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
 
                 return true;
             }catch(err){
-                console.log(err);
             }
 
             return true;
@@ -91,7 +84,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
                 callAxios(body, 'server/create-server');
                 
             }catch(err){
-                console.log(err);
             }
         }else{
             try{
@@ -106,7 +98,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
                 return true;
 
             }catch(err){
-                console.log(err);
             }
         }
 
@@ -122,7 +113,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
                 callAxios(body, 'server-invite/create-server-invite');
 
             }catch(err){
-                console.log(err);
             }
 
             return true;
@@ -137,7 +127,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
             callAxios(body, 'server/revoke-user')
 
         }catch(err){
-            console.log(err)
         }
 
         return true;
@@ -145,13 +134,13 @@ export const commandHandler = async (messageInput: string, activeServer : Server
         try{
             const body : Dictionary<number | string> = {
                 serverId: activeServer.id,
-                memberId: splitMessage[1]
+                memberId: splitMessage[1],
+                command: true
             }
 
             callAxios(body, 'server/kick-server-member')
 
         }catch(err){
-            console.log(err)
         }
 
         return true;
@@ -164,7 +153,6 @@ export const commandHandler = async (messageInput: string, activeServer : Server
             callAxios(body, 'server/delete-server')
 
         }catch(err){
-            console.log(err)
         }
 
         return true;

@@ -14,8 +14,6 @@ export default class MessagesController {
 
         const user2_id: number = receiverId
 
-        console.log('user2_id', user2_id, 'user.id', user.id)
-
         const messages = await DirectMessage.query()
         .where((query) => {
           query
@@ -50,14 +48,13 @@ export default class MessagesController {
 
         const count = Number(totalMessagesCount[0]?.$extras?.total)
 
-        console.log('10+additionalMsgs', 10+additionalMsgs,'totalMessagesCount', count)
 
         const messageData = messages.map(message => ({
             messageId: message.id,
-            messageContent: message.message,   // Example field
-            senderName: message.sender?.login,  // Accessing preloaded sender data
-            receiverName: message.receiver?.login, // Accessing preloaded receiver data
-            createdAt: message.timeSent, // Example: formatting timestamp
+            messageContent: message.message,   
+            senderName: message.sender?.login,  
+            receiverName: message.receiver?.login, 
+            createdAt: message.timeSent,
           }))
       
         return ctx.response.ok({ messages: messageData, totalMessagesCount: count })
@@ -81,15 +78,13 @@ export default class MessagesController {
 
       const count = Number(totalMessagesCount[0]?.$extras?.total)
 
-      console.log("Channel ID: ", channelId)
-      console.log('10+additionalMsgs', 10+additionalMsgs,'totalMessagesCount', count)
 
       const messageData = messages.map(message => ({
           messageId: message.id,
-          messageContent: message.message,   // Example field
-          senderName: message.user?.login,  // Accessing preloaded sender data
-          receiverName: message.user?.login, // Accessing preloaded receiver data
-          createdAt: message.timeSent, // Example: formatting timestamp
+          messageContent: message.message,   
+          senderName: message.user?.login,  
+          receiverName: message.user?.login,
+          createdAt: message.timeSent,
         }))
     
       return ctx.response.ok({ messages: messageData, totalMessagesCount: count })
@@ -100,8 +95,6 @@ export default class MessagesController {
 
         const { receiverId, content, friendshipId } = ctx.request.all()
 
-        console.log('receiver_id', receiverId, 'user_id', user.id, 'message', content, 'friendshipId', friendshipId)
-
         const newMsg = await DirectMessage.create({
             senderUserId: user.id,
             receiverUserId: receiverId,
@@ -110,7 +103,6 @@ export default class MessagesController {
 
         const Msg = await (await DirectMessage.findByOrFail('id', newMsg.id))
 
-        // Authorization middleware example (ensure it’s applied correctly)
         transmit.broadcast(`friendship:${friendshipId}`, {
             message: {
               id: Msg.id,
@@ -145,7 +137,6 @@ export default class MessagesController {
  
       const Msg = await (await ChannelMessage.findByOrFail('id', newMsg.id))
 
-      // Authorization middleware example (ensure it’s applied correctly)
       transmit.broadcast(`channel:${receiverId}`, {
           message: {
             id: Msg.id,
@@ -157,26 +148,11 @@ export default class MessagesController {
         }); 
     }
 
-    async getChannelMessageCount(ctx: HttpContext) {
-      const user = ctx.auth.user!
-
-      const { channelId } = ctx.request.all()
-
-      const totalMessagesCount = await ChannelMessage.query()
-      .where('channel_id', channelId)
-      .count('* as total');
-
-      const count = Number(totalMessagesCount[0]?.$extras?.total)
-
-      return ctx.response.ok({ totalMessagesCount: count })
-    };
-
     async currentChatting(ctx: HttpContext) {
       const user = ctx.auth.user!
 
       const { channelId, message } = ctx.request.only(['channelId', 'message'])
 
-      console.log('channelId', channelId, 'message', message)
 
       if (user.user_status === 'Offline') {
         return ctx.response.badRequest({ message: 'User is offline' });

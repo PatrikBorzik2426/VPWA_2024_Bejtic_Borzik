@@ -11,7 +11,6 @@ export default class ServerInvitesController {
     
         const {serverId, invitedusername} = ctx.request.only(['serverId', 'invitedusername'])
 
-        console.log(serverId, invitedusername)
 
         if (invitedusername === user.login) {
             return ctx.response.badRequest({ message: 'You cannot invite yourself' })
@@ -33,7 +32,6 @@ export default class ServerInvitesController {
         .first()
 
         if (isInvitedBanned) {
-            console.log('User is banned from server', "serverOwner?.id", serverOwner?.id, "user.id", user.id)
             if (serverOwner?.id === user.id) {
                 await server.related('users')
                 .query()
@@ -43,10 +41,22 @@ export default class ServerInvitesController {
                     ban: false,
                     kick_counter: 0
                 })
+            }else {
+                return ctx.response.badRequest({ message: 'User is banned from this server' })
             }
         }
+
+        const isInServer = await invitedUser.related('servers')
+        .query()
+        .where('server_id', server.id)
+        .where('inServer', true)
+        .first()
+
+        if (isInServer) {
+            return ctx.response.badRequest({ message: 'User is already in this server' })
+        }
     
-        const invite = await ServerInvite.create({
+        await ServerInvite.create({
           serverId: server.id,
           invitedUserId: invitedUser.id,
           invitedById: user.id,
@@ -61,7 +71,6 @@ export default class ServerInvitesController {
     async getServerInvites(ctx: HttpContext) {
         const user = ctx.auth.user!
 
-        console.log(user.id)
     
         const serverinvites = await ServerInvite.query()
           .where('invitedUserId', user.id)
@@ -73,12 +82,10 @@ export default class ServerInvitesController {
             id: invite.id,
             servername: invite.server.name,
             serveravatar: `https://ui-avatars.com/api/?name=${invite.server.name}`,
-            // serveravatar: invite.server.avatar,
             serverprivacy: invite.server.privacy,
             invitedBy: invite.invitedBy.login,
           }))
 
-          console.log(mappedInvites)
     
         return {
             mappedInvites
@@ -90,7 +97,6 @@ export default class ServerInvitesController {
 
         const serverInviteId = ctx.request.input('serverInviteId')
 
-        console.log(serverInviteId)
 
         const serverInvite = await ServerInvite.findOrFail(serverInviteId)
 
@@ -133,31 +139,34 @@ export default class ServerInvitesController {
             .where('user_id', user.id)
             .where('inServer', false)
             .first()
-
-        const serverCount = await user.related('servers')
-            .query()
-            .wherePivot('ban', false) 
-            .wherePivot('inServer', true)
-            .count('* as total') 
-            .first()
-    
-        const pos = Number(serverCount?.$extras?.total || 0) + 1
     
         try {
+            const userServers = await user.related('servers').query()
+            .andWhere('inServer', true)
+            .orderBy('pivot_position')
+
+            let position = 2;
+            for (const userServer of userServers) {
+            await user.related('servers').query()
+                .wherePivot('server_id', userServer.id)
+                .update({ position: position++ });
+            }
+
+
             if (wasInServer) {
                 await server.related('users')
                     .query()
                     .where('user_id', user.id)
                     .update({
                         inServer: true,
-                        position: pos,
+                        position: 1,
                     })
             }else {
                 await server.related('users')
                     .attach({
                         [user.id]: {
                             role: 'member',
-                            position: pos,
+                            position: 1,
                             ban: false,
                             inServer: true,
                             kick_counter: 0,
@@ -184,7 +193,6 @@ export default class ServerInvitesController {
 
         const serverInviteId = ctx.request.input('serverInviteId')
 
-        console.log(serverInviteId)
 
         const serverInvite = await ServerInvite.findOrFail(serverInviteId)
 
@@ -200,7 +208,6 @@ export default class ServerInvitesController {
 
         await serverInvite.save()
 
-        console.log(serverInvite)
 
         transmit.broadcast(`server-request-change:${user.id}`,{
                 message: 'Server invites changed',

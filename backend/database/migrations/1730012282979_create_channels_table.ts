@@ -10,7 +10,6 @@ export default class Channels extends BaseSchema {
       table.string('name', 64).notNullable()
       table.integer('position').notNullable()
       table.timestamp('last_activity', { useTz: true }).defaultTo(this.now())
-
       table.timestamp('created_at', { useTz: true }).defaultTo(this.now())
       table.timestamp('updated_at', { useTz: true }).defaultTo(this.now())
     })

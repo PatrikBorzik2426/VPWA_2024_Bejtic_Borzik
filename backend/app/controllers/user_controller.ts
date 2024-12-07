@@ -22,13 +22,10 @@ async getMainUser(ctx: HttpContext) {
         name: mainUser.firstName,
         surname: mainUser.lastName,
         email: mainUser.email,
-        // avatar: mainUser.avatar,
         avatar: `https://ui-avatars.com/api/?name=${mainUser.login}`,
         allnotifications: mainUser.allnotifications,
         status: mainUser.user_status,
     }
-
-    console.log(formattedMainUser)
 
 
     return {
@@ -68,8 +65,7 @@ async updateMainUser(ctx: HttpContext) {
     mainUser.user_status = status
 
     await mainUser.save()
-    
-    console.log("Transmitting user with ID:", user.login)
+  
 
     transmit.broadcast(`updatedUser:${user.login}`, {
       userStatus: status,

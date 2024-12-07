@@ -43,7 +43,7 @@
       <div v-if="showservers" class=" full-height">
         <q-list class="scrollable full-height">
             <q-item>
-            <q-btn round flat @click="showCreateServer = true, halabala()" class="q-my-sm">
+            <q-btn round flat @click="showCreateServer = true" class="q-my-sm">
                 <q-icon center name="add" size="2.6rem" color="primary"/>
               <q-tooltip anchor="center end" self="center start" class="bg-grey-8 text-body2">
                 Create Server
@@ -73,7 +73,6 @@
               <q-separator color="grey-8" />
             
               <q-tab-panels dark v-model="selectedTab" animated>
-                <!-- Create Server Tab -->
                 <q-tab-panel class="bg-grey-9" name="create">
                   <q-card-section>
                     <div class="text-subtitle2 text-center text-grey-6">
@@ -111,7 +110,6 @@
                   </q-card-section>
                 </q-tab-panel>
               
-                <!-- Join Server Tab -->
                 <q-tab-panel class="bg-grey-9" name="join">
                   <q-card-section>
                     <div class="text-subtitle2 text-center text-grey-6 q-mb-xl q-mt-md">
@@ -437,16 +435,7 @@ const Mainuser = reactive<User>({
   allnotifications: true
 });
 
-const serverName = ref<string>(Mainuser.name);
-
-const newServerName = computed({
-  get() {
-    return serverName.value || `${Mainuser.name}'s Server`
-  },
-  set(value: string) {
-    serverName.value = value
-  },
-})
+const newServerName = ref<string>(`${Mainuser.name}'s Server`);
 
 // Emit events
 const emit = defineEmits(['emit-friends', 'emit-server-id']);
@@ -462,17 +451,30 @@ const props = defineProps<{
 watch(
   () => props.receivedShowMobileChat,
   () => {
-    console.log('watch', props.receivedShowMobileChat);
     showMobileChat.value = props.receivedShowMobileChat;
+  }
+);
+
+watch(
+  () => showCreateServer.value,
+  () => {
+    newServerName.value = `${Mainuser.nickname}'s Server`;
+
+    if (serverList.value.find((server) => server.name === newServerName.value)) {
+      let counter = 1;
+
+      while (serverList.value.find((server) => server.name === `${newServerName.value} ${counter}`)) {
+        counter++;
+      }
+
+      newServerName.value = `${newServerName.value} ${counter}`;
+    }
   }
 );
 
 watch(
   () => Mainuser, 
   (newValue, oldValue) => {
-    console.log('Mainuser changed:', newValue)
-    console.log('Previous value:', oldValue)
-
     debouncedUpdateMainUser();
   },
   { deep: true } 
@@ -529,12 +531,10 @@ const selectedServer = computed(() => {
 
 // Functions
 const debouncedUpdateMainUser = debounce(() => {
-  console.log('Debounced updateMainUser called');
   updateMainUser();
 }, 300);
 
 function selectServer(serverId: number) {
-  console.log(selectedServerId.value, serverId, showfriends.value);
   if (selectedServerId.value != serverId) {
     emit('emit-server-id', serverId);
   }
@@ -573,7 +573,6 @@ function LogOut() {
     }
   })
   .then(response => {
-    console.log("Logout: " + response.data);
   })
   .catch(error => {
     console.error('Error during registration:', error.response ? error.response.data : error.message);
@@ -601,7 +600,6 @@ const getMainUser = async () => {
     Mainuser.status = mainUserData.status;
     Mainuser.allnotifications = mainUserData.allnotifications;
 
-    console.log("Main User assigned:", Mainuser);
   } catch (error : any) {
     console.error('Error during fetching main user:', error.response ? error.response.data : error.message);
   }
@@ -622,7 +620,6 @@ const updateMainUser = async () => {
         'Content-Type': 'application/json'
       }
     }).then(response => {
-      console.log("User updated:", response.data);
     }).catch(error => {
       const message = error.response?.data?.message || 'An error occurred';
 
@@ -650,7 +647,6 @@ const getServerList = async () => {
     })
 
     response.data.servers.forEach((server: any) => {
-      // console.log('Server:', server)
 
       serverList.value.push({
         id: server.id,
@@ -660,10 +656,8 @@ const getServerList = async () => {
         position: server.position,
       })
 
-      // console.log('Server List:', serverList)
     })
     serverList.value.sort((a, b) => a.position - b.position)
-    // console.log('Sorted Server List:', serverList)
   } catch (error : any) {
     console.error('Error fetching server list:', error.response?.data || error.message)
   }
@@ -680,8 +674,6 @@ const CreateServer = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
-    // getServerList();
     selectServer(response.data.server.id);
   }).catch(error => {
     console.error('Error during fetching friend requests:', error.response ? error.response.data :  error.message);
@@ -698,8 +690,6 @@ const JoinServer = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
-    // getServerList();
     selectServer(response.data.serverId);
     servertojoin.value = '';
     $q.notify({
@@ -729,7 +719,6 @@ const UpdateServerPositions = async () => {
     }
   })
 
-  console.log('Server Positions:', serverPositions);
 
   axios.post('http://127.0.0.1:3333/server/update-server-positions',{
     servers: serverPositions,
@@ -739,8 +728,6 @@ const UpdateServerPositions = async () => {
       'Content-Type': 'application/json'
     }
   }).then(response => {
-    console.log(response.data);
-    // getServerList();
   }).catch(error => {
     console.error('Error during updating server positions:', error.response ? error.response.data :  error.message);
   });
@@ -758,11 +745,9 @@ async function CreateSubscribe() {
   const unsub = activeSubscription.onMessage((message: any) => {
     try{
       if (message.serverId === selectedServerId.value ){
-        console.log("Action has happened!")
         ShowFriends();
       }
     }catch{
-      console.log("Error in server list subscription")
     }
 
     getServerList();
