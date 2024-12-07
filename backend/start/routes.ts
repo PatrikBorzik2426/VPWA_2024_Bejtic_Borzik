@@ -27,7 +27,7 @@ transmit.registerRoutes()
 transmit.authorize<{ friendshipId: string }>('friendship:friendshipId', async (ctx: HttpContext, { friendshipId }) => {
     const userId = ctx.auth.user?.id;
 
-    console.log("Authorizing friendshipId", friendshipId, "for user", userId);
+    
 
     if (!userId) {
       return false;

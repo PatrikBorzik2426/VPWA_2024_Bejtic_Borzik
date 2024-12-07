@@ -130,7 +130,7 @@ const showNotification = async (text: string, currentChannel: string) => {
 async function subscribeToMessages() {
   let broadcast=''
   
-  console.log('Server ID:', props.serverId, 'Friendship ID:', props.friendshipId);
+  
 
   if(props.receiverId === undefined || props.receiverId < 0){
     return;
@@ -140,7 +140,7 @@ async function subscribeToMessages() {
     return;
   }
   
-  console.log('Subscribing to messages:', props.friendshipId);
+  
 
   if (props.serverId != -1){
     broadcast = `channel:${props.receiverId}`;
@@ -151,7 +151,7 @@ async function subscribeToMessages() {
   let activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
   await activeSubscription.create()
 
-  console.log('Subscribed to:', broadcast);
+  
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
         await getMainUser();
@@ -267,7 +267,7 @@ async function subscribeUpdateUser(){
   let activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
   await activeSubscription.create()
 
-  console.log('Subscribed to:', `updatedUser:${main_user_nickname.value}`);
+  
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
       if (message.userStatus !== "Offline"){
@@ -296,16 +296,16 @@ onBeforeUnmount(async() => {
   }
 
   subCollector.forEach(async (unsub,index) => {
-    console.log('Unsubscribing:', unsub);
+    
     try{
       if (index % 2 == 0){
         await unsub();
       }else{
         await unsub.delete();
-        console.log("Is deleted?", unsub.isDeleted());
+        
       }
     }catch(e){
-      console.log('Error during unsubscribing:', e);
+      
     }
     
 });
@@ -319,7 +319,7 @@ watch(
     if(props.receiverId != -1){
       loadMessages(newId);
       scrollBottom();
-      console.log('cucko');
+      
     }
       
   },

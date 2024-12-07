@@ -931,8 +931,6 @@ async function loadMessages (messagePullId : number){
     someIsTypingMsg.value = [''];
   }
 
-  console.log("Show channels is: ", showChannels.value);
-
   if (showChannels.value){
     await activateSubscriptionChatting(messagePullId,0);
   }else{
@@ -1539,7 +1537,6 @@ const getFriendshipId = async (friendId: number) => {
         'Content-Type': 'application/json'
       }
     }).then(response => {
-      console.log("Friendship id:", response.data.friendshipId);
       friendshipId.value = response.data.friendshipId;
     });
   }
@@ -1563,13 +1560,11 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   let activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  console.log("Activating subscription for chat: " + channelId+addition);
-
   let unsub = activeChattingSub.onMessage(async (message: any) => {    
     await getMainUser();
 
 
-    console.log("Active array: ", someIsTypingMsg.value);
+    
 
     if(activeChattingOn && message.message.length > 1){
       if(showTypedMessageData.value === message.login ){
@@ -1580,7 +1575,7 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
 
       activeChattingOn = false;
 
-      console.log("Active chatting should be false: ", activeChattingOn);
+      
 
       if (main_user_status.value === 'Offline'){
         return;
@@ -1621,17 +1616,17 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
         }
       });
 
-      console.log('All activate chats in array 1:', someIsTypingMsg.value);
+      
 
       if (someIsTypingMsg.value.length < 1){
         someIsTypingMsg.value = [''];
       }else{
         someIsTypingMsg.value[someIsTypingMsg.value.length] = "is typing ...";
       }
-      console.log('All activate chats in array 1:', someIsTypingMsg.value);
+      
     }
 
-    console.log("Activating subscription for chat: " + channelId+addition);
+    
 
   });
 
@@ -1643,7 +1638,7 @@ const updateChannelOnChange = async () => {
   let channelSub = transmit.subscription(`channel-list:${activeServer.id}`);
   await channelSub.create();
 
-  console.log('Subscription updating channel on change on server: ', activeServer.id);
+  
 
   let unsub = channelSub.onMessage((message: any) => {
     getServerChannels(activeServer.id);
@@ -1659,13 +1654,13 @@ const updateFriendsRequestsOnChange = async () => {
   let friendRequestSub = transmit.subscription(`friend-request-change:${main_user_id.value}`);
   await friendRequestSub.create();
 
-  console.log('Subscription updating friend requests on change with id: ', main_user_id.value);
+  
 
   let unsub = friendRequestSub.onMessage((message: any) => {
     getFriendRequests();
   });
 
-  console.log('Updating friend requests on change with id: ', main_user_id.value);
+  
 
   subCollector.push( unsub, friendRequestSub);
   
@@ -1677,13 +1672,13 @@ const updateServerRequestsOnChange = async () => {
   let serverInviteSub = transmit.subscription(`server-request-change:${main_user_id.value}`);
   await serverInviteSub.create();
 
-  console.log('Subscription updating server invites on change with id: ', main_user_id.value);
+  
 
   let unsub = serverInviteSub.onMessage((message: any) => {
     getServerInvites();
   });
 
-  console.log('Updating server invites on change with id: ', main_user_id.value);
+  
 
   subCollector.push( unsub,serverInviteSub);
 }
@@ -1694,13 +1689,13 @@ const updateFriendListOnChange = async () => {
   let friendListSub = transmit.subscription(`friend-list-change:${main_user_id.value}`);
   await friendListSub.create();
 
-  console.log('Subscription updating friend list on change with id: ', main_user_id.value);
+  
 
   let unsub = friendListSub.onMessage((message: any) => {
     getFriendsList();
   });
 
-  console.log('Updating friend list on change with id: ', main_user_id.value);
+  
 
   subCollector.push(unsub,friendListSub);
 }
@@ -1770,7 +1765,7 @@ onMounted(async () => {
 
 onBeforeUnmount(async() => {
   subCollector.forEach(async (unsub,index) => {
-    console.log('Unsubscribing:', unsub);
+    
     try{
       if (index % 2 == 0){
         await unsub();
@@ -1778,7 +1773,7 @@ onBeforeUnmount(async() => {
         await unsub.delete();
       }
     }catch(e){
-      console.log('Error during unsubscribing:', e);
+      
     }
     
 });

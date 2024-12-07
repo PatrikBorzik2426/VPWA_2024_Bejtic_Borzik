@@ -423,7 +423,6 @@ let subCollector : any[] = [];
 
 const transmit = new Transmit({
   baseUrl: 'http://127.0.0.1:3333',
-    baseUrl: 'http://127.0.0.1:3333', 
 });
 
 const Mainuser = reactive<User>({
@@ -742,7 +741,7 @@ async function CreateSubscribe() {
   let activeSubscription = transmit.subscription(`server-list:${Mainuser.id}`); // Create a subscription to the channel
   await activeSubscription.create();
   
-  console.log('Subscribing to server list with user id:', Mainuser.id);
+  
 
   const unsub = activeSubscription.onMessage((message: any) => {
     try{
@@ -765,16 +764,16 @@ onMounted(()=>{
 onBeforeUnmount(async() => {
   page.value = "Chatapp";
   subCollector.forEach(async (unsub,index) => {
-    console.log('Unsubscribing:', unsub);
+    
     try{
       if (index % 2 == 0){
         await unsub();
       }else{
         await unsub.delete();
-        console.log("Did it delete?", unsub.isDeleted)
+        
       }
     }catch(e){
-      console.log('Error during unsubscribing:', e);
+      
     }
     
 });
