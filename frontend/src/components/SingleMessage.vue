@@ -263,8 +263,6 @@ const getMainUser = async () => {
 async function subscribeUpdateUser(){
   await getMainUser();
 
-  const activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); 
-
   let activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
   await activeSubscription.create()
 
@@ -287,7 +285,7 @@ onMounted(async() => {
     messageList.value.addEventListener('scroll', handleScroll);
   }
 
-  // await subscribeUpdateUser();
+  await subscribeUpdateUser();
 
 });
 
