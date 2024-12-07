@@ -62,7 +62,6 @@ export default class AuthController {
 
       await User.accessTokens.delete(user, user.currentAccessToken.identifier)
 
-
       return ctx.response.ok({ message: 'Logged out successfully' })
 
     } catch (error) {

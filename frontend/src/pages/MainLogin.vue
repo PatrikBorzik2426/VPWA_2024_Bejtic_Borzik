@@ -26,6 +26,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import callAxios from 'src/services/commandHandler';
 
 const router = useRouter();
 
@@ -56,6 +57,7 @@ async function handleSubmit(){
     localStorage.setItem('bearer', token.token);
 
     if (token){
+      callAxios({},"friend/inform-friends-status");
       await router.push('/chatapp');
     }else{
       registrationError.value = true;

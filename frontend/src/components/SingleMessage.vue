@@ -118,6 +118,10 @@ async function subscribeToMessages() {
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
 
+        if(main_user_status.value === 'Offline'){
+          return;
+        }
+
         try{
           wholeMessage.value.push({
             id: message.message.id,
@@ -146,7 +150,7 @@ const loadMessages = async (newId : number) =>{
 
   console.log("Loading Messages");
 
-  if (main_user_status.value == 'Offline'){
+  if (main_user_status.value === 'Offline'){
     wholeMessage.value = [];
     return;
   }
@@ -241,7 +245,7 @@ onBeforeUnmount(async() => {
     messageList.value.removeEventListener('scroll', handleScroll);
   }
 
-  subCollector.forEach(async(unsub,index) => {
+  subCollector.forEach(async(unsub) => {
           try
           {
             unsub();
@@ -260,7 +264,7 @@ onBeforeUnmount(async() => {
 watch(
   () => props.receiverId,
   async (newId) => {    
-    subCollector.forEach(async(unsub,index) => {
+    subCollector.forEach(async(unsub) => {
           try
           {
             unsub();

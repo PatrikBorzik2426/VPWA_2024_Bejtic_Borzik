@@ -66,7 +66,6 @@ async updateMainUser(ctx: HttpContext) {
 
     await mainUser.save()
   
-
     transmit.broadcast(`updatedUser:${user.login}`, {
       userStatus: status,
     }); 

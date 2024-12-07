@@ -358,7 +358,7 @@
 
         </q-card>
         <div class="q-mt-md">
-          <q-btn rounded label="Log Out" color="red-9" @click="LogOut"/>
+          <q-btn rounded label="Log Out" color="red-9" @click="LogOut()"/>
           <q-btn flat rounded class="q-ml-md" label="Close" color="primary" @click="showaccount = false"/>
         </div>
 
@@ -368,10 +368,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
+import { ref, computed, watch, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import axios, { Method, all } from 'axios';
+import axios from 'axios';
 import draggable from 'vuedraggable';
 import { debounce } from 'lodash';
 import { Transmit } from '@adonisjs/transmit-client';
@@ -530,8 +530,8 @@ const selectedServer = computed(() => {
 });
 
 // Functions
-const debouncedUpdateMainUser = debounce(() => {
-  updateMainUser();
+const debouncedUpdateMainUser = debounce(async () => {
+  await updateMainUser();
 }, 300);
 
 function selectServer(serverId: number) {
@@ -565,18 +565,9 @@ function ShowAccount() {
 }
 
 async function LogOut() {
-  await axios.post('http://127.0.0.1:3333/auth/logout', {
-  }, {
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + localStorage.getItem('bearer')
-    }
-  })
-  .then(response => {
-  })
-  .catch(error => {
-    console.error('Error during registration:', error.response ? error.response.data : error.message);
-  });
+  
+  await callAxios({},'friend/inform-friends-status');
+  await callAxios({},'auth/logout');
 
   router.push('/login');
 }
@@ -638,7 +629,7 @@ const updateMainUser = async () => {
 const getServerList = async () => {
   serverList.value = [];
 
-  subCollectorChannels.forEach(async(unsub,index) => {
+  subCollectorChannels.forEach(async(unsub) => {
     try
     {
       unsub();
@@ -699,7 +690,6 @@ async function addChannelSubscription(channelId: number){
   await getMainUser();
 
   let activeSubscription = transmit.subscription(`channel:${channelId}`); // Create a subscription to the channel
-  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
   await activeSubscription.create();
 
   const unsub = activeSubscription.onMessage(async (message: any) => {
@@ -818,7 +808,6 @@ async function CreateSubscribe() {
   await getMainUser();
 
   let activeSubscription = transmit.subscription(`server-list:${Mainuser.id}`); // Create a subscription to the channel
-  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
   const output= await activeSubscription.create();
 
   const unsub = activeSubscription.onMessage(async (message: any) => {
@@ -843,7 +832,7 @@ onMounted(async ()=>{
 
 onBeforeUnmount(async() => {
   page.value = "Chatapp";
-  subCollector.forEach(async(unsub,index) => {
+  subCollector.forEach(async(unsub) => {
           try
           {
             unsub();
@@ -851,7 +840,17 @@ onBeforeUnmount(async() => {
             await unsub.delete();
           }
     });
+  
+  subCollectorChannels.forEach(async(unsub) => {
+    try
+    {
+      unsub();
+    }catch(e){
+      await unsub.delete();
+    }
+  });
 
+    subCollectorChannels = [];
     subCollector = [];
 
     transmit.close();

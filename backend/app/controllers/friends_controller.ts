@@ -281,12 +281,12 @@ export default class FriendsController {
       .preload('user1')
       .preload('user2')
 
-  
+    console.log("Informing about change of user: ", user.login)
+      
     allFriends.forEach((friend) => {
-
-      transmit.broadcast(`friend-list-change:${friend.user2.id}`,{
-        message: 'Friend list changed',
-      })
+      const friendId = friend.user1.id === user.id ? friend.user2.id : friend.user1.id
+      transmit.broadcast(`friend-list-change:${friendId}`)
+      console.log("Informed user: ", friend.user1.id === user.id ? friend.user2.id : friend.user1.id)
     })
   }
 }

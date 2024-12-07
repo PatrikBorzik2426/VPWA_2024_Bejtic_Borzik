@@ -1146,9 +1146,9 @@ const getFriendRequests = () => {
 
 };
 
-const getFriendsList = () => {
+const getFriendsList = async () => {
 
-  axios.post('http://127.0.0.1:3333/friend/list-friends',{},{
+  await axios.post('http://127.0.0.1:3333/friend/list-friends',{},{
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
       'Content-Type': 'application/json'
@@ -1561,7 +1561,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   }
 
   let activeSubscription = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
-  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
   await activeSubscription.create();
 
   let unsub = activeSubscription.onMessage(async (message: any) => {    
@@ -1695,16 +1694,14 @@ const updateFriendListOnChange = async () => {
   await getMainUser();
 
   let activeSubscription = transmit.subscription(`friend-list-change:${main_user_id.value}`);
-console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
   await activeSubscription.create();
 
-  
-
   let unsub = activeSubscription.onMessage((message: any) => {
+    console.log("Friend list change:",message);
     getFriendsList();
   });
 
-  
+  console.log(activeSubscription.isCreated, "user id:",main_user_id.value, unsub);
 
   subCollector.push(unsub,activeSubscription);
 }
@@ -1773,7 +1770,8 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(async() => {
-  subCollector.forEach(async(unsub,index) => {
+  subCollector.forEach(async(unsub) => {
+    console.log("Unsubscribing:",unsub);
           try
           {
             unsub();
