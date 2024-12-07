@@ -701,6 +701,7 @@ import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
 import { Transmit } from '@adonisjs/transmit-client';
+import { onBeforeUnmount } from 'vue';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -736,8 +737,8 @@ const showTypedMessageData = ref<string | null>(null);
 let allActivateChats  = [];
 let activeChattingSub : any = null;
 let activeChattingOn : boolean = false;
-let unsubscribeFunctionChatting : any = null;
-let unsubscribeFunctionChannels : any = null;
+
+let subCollector : any[] = [];
 
 const $q = useQuasar();
 
@@ -932,16 +933,14 @@ async function loadMessages (messagePullId : number){
     someIsTypingMsg.value = [''];
   }
 
-  if (unsubscribeFunctionChatting!=null){
-    unsubscribeFunctionChatting();
-  }
-
   console.log("Show channels is: ", showChannels.value);
 
   if (showChannels.value){
     await activateSubscriptionChatting(messagePullId,0);
   }else{
-    await activateSubscriptionChatting(friendshipId.value,0.1);
+    if(friendshipId.value !== undefined){
+      await activateSubscriptionChatting(friendshipId.value,0.1);
+    }
   }
 };
 
@@ -1587,6 +1586,7 @@ const getFriendshipId = async (friendId: number) => {
         'Content-Type': 'application/json'
       }
     }).then(response => {
+      console.log("Friendship id:", response.data.friendshipId);
       friendshipId.value = response.data.friendshipId;
       console.log("Friendship value was set to:", friendshipId.value)
     });
@@ -1604,10 +1604,16 @@ const showTypedMessage = (index: number, text: string) => {
 
 const activateSubscriptionChatting =async (channelId : number, addition : number) => {
 
-  activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
+  if(Number.isNaN(channelId+addition)){
+    return;
+  }
+
+  let activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeChattingSub.create();
 
-  unsubscribeFunctionChatting = activeChattingSub.onMessage(async (message: any) => {    
+  console.log("Activating subscription for chat: " + channelId+addition);
+
+  let unsub = activeChattingSub.onMessage(async (message: any) => {    
     await getMainUser();
 
 
@@ -1677,59 +1683,76 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
     console.log("Activating subscription for chat: " + channelId+addition);
 
   });
+
+  subCollector.push(unsub, activeChattingSub)
 }
 
 const updateChannelOnChange = async () => {
 
-  const channelSub = transmit.subscription(`channel-list:${activeServer.id}`);
+  let channelSub = transmit.subscription(`channel-list:${activeServer.id}`);
   await channelSub.create();
 
-  unsubscribeFunctionChannels = channelSub.onMessage((message: any) => {
+  console.log('Subscription updating channel on change on server: ', activeServer.id);
+
+  let unsub = channelSub.onMessage((message: any) => {
     getServerChannels(activeServer.id);
   });
 
   console.log('Updating channel on change on server: ', activeServer.id);
   
+  subCollector.push(unsub, channelSub);
 };
 
 const updateFriendsRequestsOnChange = async () => {
   await getMainUser();
 
-  const friendRequestSub = transmit.subscription(`friend-request-change:${main_user_id.value}`);
+  let friendRequestSub = transmit.subscription(`friend-request-change:${main_user_id.value}`);
   await friendRequestSub.create();
 
-  friendRequestSub.onMessage((message: any) => {
+  console.log('Subscription updating friend requests on change with id: ', main_user_id.value);
+
+  let unsub = friendRequestSub.onMessage((message: any) => {
     getFriendRequests();
   });
 
   console.log('Updating friend requests on change with id: ', main_user_id.value);
+
+  subCollector.push( unsub, friendRequestSub);
   
 };
 
 const updateServerRequestsOnChange = async () => {
   await getMainUser();
 
-  const serverInviteSub = transmit.subscription(`server-request-change:${main_user_id.value}`);
+  let serverInviteSub = transmit.subscription(`server-request-change:${main_user_id.value}`);
   await serverInviteSub.create();
 
-  serverInviteSub.onMessage((message: any) => {
+  console.log('Subscription updating server invites on change with id: ', main_user_id.value);
+
+  let unsub = serverInviteSub.onMessage((message: any) => {
     getServerInvites();
   });
 
   console.log('Updating server invites on change with id: ', main_user_id.value);
+
+  subCollector.push( unsub,serverInviteSub);
 }
 
 const updateFriendListOnChange = async () => {
   await getMainUser();
 
-  const friendListSub = transmit.subscription(`friend-list-change:${main_user_id.value}`);
+  let friendListSub = transmit.subscription(`friend-list-change:${main_user_id.value}`);
   await friendListSub.create();
 
-  friendListSub.onMessage((message: any) => {
+  console.log('Subscription updating friend list on change with id: ', main_user_id.value);
+
+  let unsub = friendListSub.onMessage((message: any) => {
     getFriendsList();
   });
 
   console.log('Updating friend list on change with id: ', main_user_id.value);
+
+  subCollector.push(unsub,friendListSub);
 }
 
 // Watchers
@@ -1750,10 +1773,6 @@ watch(
       }
 
       // console.log('Server ID checked (same value too):', newId);
-    }
-
-    if (unsubscribeFunctionChannels != null){
-      unsubscribeFunctionChannels();
     }
 
     await updateChannelOnChange();
@@ -1801,6 +1820,23 @@ onMounted(async () => {
   await updateFriendsRequestsOnChange();
   await updateServerRequestsOnChange();
   await updateFriendListOnChange();
+});
+
+onBeforeUnmount(async() => {
+  subCollector.forEach(async (unsub,index) => {
+    console.log('Unsubscribing:', unsub);
+    try{
+      if (index % 2 == 0){
+        await unsub();
+      }else{
+        await unsub.delete();
+      }
+    }catch(e){
+      console.log('Error during unsubscribing:', e);
+    }
+    
+});
+  
 });
 
 </script>

@@ -81,6 +81,10 @@ export default class ServersController {
         transmit.broadcast(`server-list:${user.id}`, {
             message:{"ServerId":server.id,"Action":"join"}
         })
+
+        return {
+            message: 'Server created successfully'
+        }
         } catch (error) {
           console.error(error)
           return ctx.response.status(500).json({
@@ -116,7 +120,11 @@ export default class ServersController {
     
                 transmit.broadcast(`server-list:${user.id}`, {
                     message: "Successfully left server"
-                })        
+                })     
+                
+                return {
+                    message: 'Successfully left server'
+                }
             
             } catch (error) {
             console.error('Error leaving server:', error)
@@ -152,9 +160,15 @@ export default class ServersController {
                 .where('id', serverId)
                 .update({ name, privacy })
 
+            transmit.createStream
+
             transmit.broadcast(`server-list:${user.id}`, {
                 message: "Successfully updated the server"
             })   
+
+            return {
+                message: 'Server updated successfully'
+            }
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

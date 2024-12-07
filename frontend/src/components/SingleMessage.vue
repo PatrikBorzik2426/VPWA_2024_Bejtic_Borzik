@@ -57,7 +57,7 @@ const maximumMsgs = ref<number>(0);
 const scrollTop = ref(0);
 const totalChannelsMessages = ref<number>();
 let currentAdditionalMsgs = ref<number>(0);
-
+let subCollector : any[] = [];
 
 let stopListening : any;
 
@@ -133,8 +133,19 @@ const showNotification = async (text: string, currentChannel: string) => {
 };
 
 async function subscribeToMessages() {
-  console.log('Subscribing to messages:', props.friendshipId);
   let broadcast=''
+  
+  console.log('Server ID:', props.serverId, 'Friendship ID:', props.friendshipId);
+
+  if(props.receiverId === undefined || props.receiverId < 0){
+    return;
+  }
+
+  if(props.friendshipId === undefined || props.friendshipId < 0){
+    return;
+  }
+  
+  console.log('Subscribing to messages:', props.friendshipId);
 
   if (props.serverId != -1){
     broadcast = `channel:${props.receiverId}`;
@@ -142,11 +153,12 @@ async function subscribeToMessages() {
     broadcast = `friendship:${props.friendshipId}`;
   }
 
-  const activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
-
+  let activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
   await activeSubscription.create()
+
+  console.log('Subscribed to:', broadcast);
    
-  return activeSubscription.onMessage(async (message:any) => {
+  const unsub = activeSubscription.onMessage(async (message:any) => {
         await getMainUser();
 
         if (main_user_status.value == 'Offline'){
@@ -178,6 +190,8 @@ async function subscribeToMessages() {
           console.log("Problém so scrollom");
         }
       });
+
+  subCollector.push(unsub, activeSubscription);
       
 }
 
@@ -232,23 +246,10 @@ const loadMessages = async (newId : number) =>{
       
       maximumMsgs.value = response.data.totalMessagesCount;
 
-      stopListening = await subscribeToMessages();
+      await subscribeToMessages();
     });
 }
 
-function getChannelMessageCount(receiverId: number) {
-  axios.post('http://172.0.0.1/messages/get-channel-messages-count',{
-    receiverId: receiverId
-  },{
-    headers: {
-      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-      'Content-Type': 'application/json'
-    }
-  }).then(response => {
-    totalChannelsMessages.value = response.data.totalMessagesCount;
-  })
-
-}
 
 const getMainUser = async () => {
   try {
@@ -276,15 +277,18 @@ async function subscribeUpdateUser(){
 
   console.log("Subscribing to user status with login: ", main_user_nickname.value);
 
-  const activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
-
+  let activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
   await activeSubscription.create()
+
+  console.log('Subscribed to:', `updatedUser:${main_user_nickname.value}`);
    
-  return activeSubscription.onMessage(async (message:any) => {
+  const unsub = activeSubscription.onMessage(async (message:any) => {
       if (message.userStatus !== "Offline"){
-        loadMessages(props.receiverId);
+        await loadMessages(props.receiverId);
       }
   });
+
+  subCollector.push(unsub,activeSubscription);
 }
 
 //Event listeners for scrolling
@@ -295,14 +299,30 @@ onMounted(async() => {
     messageList.value.addEventListener('scroll', handleScroll);
   }
 
-  await subscribeUpdateUser();
+  // await subscribeUpdateUser();
 
 });
 
-onBeforeUnmount(() => {
+onBeforeUnmount(async() => {
   if (messageList.value) {
     messageList.value.removeEventListener('scroll', handleScroll);
   }
+
+  subCollector.forEach(async (unsub,index) => {
+    console.log('Unsubscribing:', unsub);
+    try{
+      if (index % 2 == 0){
+        await unsub();
+      }else{
+        await unsub.delete();
+        console.log("Is deleted?", unsub.isDeleted());
+      }
+    }catch(e){
+      console.log('Error during unsubscribing:', e);
+    }
+    
+});
+  
 });
 
 // Watch for changes in `receiverId` to update the messages
@@ -312,7 +332,6 @@ watch(
     console.log(props.receiverId, props.friendshipId, props.serverId);
     loadMessages(newId);
     scrollBottom();
-
   },
   { immediate: true },
 );

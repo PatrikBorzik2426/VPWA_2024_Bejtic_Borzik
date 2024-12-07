@@ -281,7 +281,7 @@ export default class FriendsController {
         }).first()
 
         return{
-          'friend shipId': friend?.id
+          friendshipId: friend?.id
         }
   }
 

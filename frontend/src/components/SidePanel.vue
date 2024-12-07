@@ -373,18 +373,13 @@
 import { ref, computed, watch, onBeforeMount, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { useQuasar } from 'quasar';
-import axios, { all } from 'axios';
+import axios, { Method, all } from 'axios';
 import draggable from 'vuedraggable';
 import { debounce } from 'lodash';
 import { Transmit } from '@adonisjs/transmit-client';
 import callAxios from '../services/commandHandler.ts';
 import { onMounted } from 'vue';
 import { onBeforeUnmount } from 'vue';
-
-
-onBeforeMount(() => {
-  page.value = 'ChatApp';
-});
 
 const router = useRouter();
 const $q = useQuasar();
@@ -426,9 +421,10 @@ const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
 const selectedTab = ref<'create' | 'join'>('create');
 let activeSubscription: any = null;
+let subCollector : any[] = [];
 
 const transmit = new Transmit({
-    baseUrl: 'http://127.0.0.1:3333',
+    baseUrl: 'http://127.0.0.1:3333', 
 });
 
 const Mainuser = reactive<User>({
@@ -752,18 +748,14 @@ const UpdateServerPositions = async () => {
 
 async function CreateSubscribe() {
 
-  console.log("Server list subscription about to form!")
+  await getMainUser();
 
-  const response = await callAxios({},'user/get-main-user');
-
-  console.log('Main User:', response.formattedMainUser);
-
-  const userId = response.formattedMainUser.id
-
-  activeSubscription = transmit.subscription(`server-list:${userId}`);
+  let activeSubscription = transmit.subscription(`server-list:${Mainuser.id}`); // Create a subscription to the channel
   await activeSubscription.create();
+  
+  console.log('Subscribing to server list with user id:', Mainuser.id);
 
-  activeSubscription = activeSubscription.onMessage((message: any) => {
+  const unsub = activeSubscription.onMessage((message: any) => {
     try{
       if (message.serverId === selectedServerId.value ){
         console.log("Action has happened!")
@@ -775,6 +767,8 @@ async function CreateSubscribe() {
 
     getServerList();
   });
+
+  subCollector.push(unsub, activeSubscription);
 }
 
 
@@ -784,15 +778,23 @@ onMounted(async()=>{
   await CreateSubscribe();
 });
 
-// onBeforeMount(async() => {
-//   await getMainUser();
-//   await getServerList();
-// });
-
-onBeforeUnmount(async()=>{
-  if (activeSubscription != null) {
-    await activeSubscription();
-  }
+onBeforeUnmount(async() => {
+  page.value = "Chatapp";
+  subCollector.forEach(async (unsub,index) => {
+    console.log('Unsubscribing:', unsub);
+    try{
+      if (index % 2 == 0){
+        await unsub();
+      }else{
+        await unsub.delete();
+        console.log("Did it delete?", unsub.isDeleted)
+      }
+    }catch(e){
+      console.log('Error during unsubscribing:', e);
+    }
+    
+});
+  
 });
 
 getMainUser();
