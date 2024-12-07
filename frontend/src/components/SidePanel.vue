@@ -422,6 +422,7 @@ let activeSubscription: any = null;
 let subCollector : any[] = [];
 
 const transmit = new Transmit({
+  baseUrl: 'http://127.0.0.1:3333',
     baseUrl: 'http://127.0.0.1:3333', 
 });
 
@@ -734,6 +735,7 @@ const UpdateServerPositions = async () => {
 }
 
 async function CreateSubscribe() {
+  await getMainUser();
 
   await getMainUser();
 
@@ -756,11 +758,8 @@ async function CreateSubscribe() {
   subCollector.push(unsub, activeSubscription);
 }
 
-
-
-
-onMounted(async()=>{
-  await CreateSubscribe();
+onMounted(()=>{
+  CreateSubscribe();
 });
 
 onBeforeUnmount(async() => {
@@ -781,9 +780,6 @@ onBeforeUnmount(async() => {
 });
   
 });
-
-getMainUser();
-getServerList();
 
 </script>
 
