@@ -3,7 +3,7 @@
       <h2 class="text-center"
       style="font-size: clamp(3rem, 7vw, 4.5rem)"> Welcome to <span class=" text-bold text-primary text-no-wrap">Comb-bot</span></h2>
       <q-form
-        @submit.prevent="handleSubmit"
+        @submit.prevent="handleSubmit()"
         greedy
         class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl text-color-white login-register-form" style="width: clamp(20rem, 80%, 32rem)">
       
@@ -39,8 +39,8 @@ const registrationError = ref<boolean>(false)
 
 const requiredRule = (value: string) => !!value || 'This field is required.'
 
-function handleSubmit(){
-  axios.post('http://127.0.0.1:3333/auth/login', {
+async function handleSubmit(){
+  await axios.post('http://127.0.0.1:3333/auth/login', {
     login: login.value,
     password: password.value,
   }, {
@@ -48,7 +48,7 @@ function handleSubmit(){
       'Content-Type': 'application/json',
     }
   })
-  .then(response => {
+  .then(async response => {
     const token = response.data.token;
     const login = response.data.user.login;
 
@@ -56,7 +56,7 @@ function handleSubmit(){
     localStorage.setItem('bearer', token.token);
 
     if (token){
-      router.push('/chatapp');
+      await router.push('/chatapp');
     }else{
       registrationError.value = true;
     }

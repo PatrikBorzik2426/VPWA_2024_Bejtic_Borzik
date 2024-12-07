@@ -564,8 +564,8 @@ function ShowAccount() {
   showaccount.value = !showaccount.value;
 }
 
-function LogOut() {
-  axios.post('http://127.0.0.1:3333/auth/logout', {
+async function LogOut() {
+  await axios.post('http://127.0.0.1:3333/auth/logout', {
   }, {
     headers: {
       'Content-Type': 'application/json',
@@ -739,16 +739,17 @@ async function CreateSubscribe() {
   await getMainUser();
 
   let activeSubscription = transmit.subscription(`server-list:${Mainuser.id}`); // Create a subscription to the channel
-  await activeSubscription.create();
-  
-  
+  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  const output= await activeSubscription.create();
 
   const unsub = activeSubscription.onMessage((message: any) => {
+    console.log("Selected server is active server")
     try{
       if (message.serverId === selectedServerId.value ){
         ShowFriends();
       }
-    }catch{
+    }catch(e){
+      console.log(e);
     }
 
     getServerList();
@@ -757,26 +758,24 @@ async function CreateSubscribe() {
   subCollector.push(unsub, activeSubscription);
 }
 
-onMounted(()=>{
-  CreateSubscribe();
+onMounted(async ()=>{
+  await CreateSubscribe();
 });
 
 onBeforeUnmount(async() => {
   page.value = "Chatapp";
-  subCollector.forEach(async (unsub,index) => {
-    
-    try{
-      if (index % 2 == 0){
-        await unsub();
-      }else{
-        await unsub.delete();
-        
-      }
-    }catch(e){
-      
-    }
-    
-});
+  subCollector.forEach(async(unsub,index) => {
+          try
+          {
+            unsub();
+          }catch(e){
+            await unsub.delete();
+          }
+    });
+
+    subCollector = [];
+
+    transmit.close();
   
 });
 

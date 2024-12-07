@@ -20,8 +20,8 @@ const ServerId = ref<number>(-1);
 const lastUpdate = ref<Date>(new Date());
 const showMobileChat = ref<boolean>(false);
 
-onBeforeMount(() => {
-  axios.post('http://127.0.0.1:3333/auth/check',{
+onBeforeMount(async() => {
+  await axios.post('http://127.0.0.1:3333/auth/check',{
 
   }, {
   headers: {
@@ -29,8 +29,8 @@ onBeforeMount(() => {
     'Content-Type': 'application/json'
   }
   }).then(response => {
-  }).catch(() => {
-    router.push('/login');
+  }).catch(async () => {
+    await router.push('/login');
   });
 });
 

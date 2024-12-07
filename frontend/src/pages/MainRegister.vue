@@ -12,7 +12,7 @@
   </div>
 
   <q-form
-    @submit.prevent="handleSubmit"
+    @submit.prevent="handleSubmit()"
     greedy
     class="q-gutter-lg q-ma-lg flex column flex-center no-margin q-pa-xl login-register-form"
   >
@@ -73,9 +73,9 @@ const passwordRule = (value: string) => {
   return true; 
 };
 
-function handleSubmit() {
+async function handleSubmit() {
 
-  axios.post('http://127.0.0.1:3333/auth/register', {
+  await axios.post('http://127.0.0.1:3333/auth/register', {
     login: login.value,
     password: password.value,
     firstName: firstName.value,
@@ -86,12 +86,12 @@ function handleSubmit() {
       'Content-Type': 'application/json',
     }
   })
-  .then(response => {
+  .then(async response => {
     const token = response.data.token;
     localStorage.setItem('bearer', token.token);
 
     if (token){
-      router.push('/login');
+      await router.push('/login');
     }
 
   })

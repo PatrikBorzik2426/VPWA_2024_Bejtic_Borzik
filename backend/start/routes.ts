@@ -10,7 +10,6 @@
 import router from '@adonisjs/core/services/router'
 import {middleware} from '#start/kernel'
 import transmit from '@adonisjs/transmit/services/main'
-import { HttpContext } from '@adonisjs/core/http'
 
 const AuthController = () => import('#controllers/auth_controller')
 const FriendController = () => import('#controllers/friends_controller')
@@ -22,20 +21,13 @@ const ServerInvitesController = () => import('#controllers/server_invites_contro
 // transmits
 
 // Register WebSocket routes
-transmit.registerRoutes()
-
-transmit.authorize<{ friendshipId: string }>('friendship:friendshipId', async (ctx: HttpContext, { friendshipId }) => {
-    const userId = ctx.auth.user?.id;
-
-    
-
-    if (!userId) {
-      return false;
-    }else{
-        return true;
+transmit.registerRoutes((route) => {
+    // Ensure you are authenticated to register your client
+    if (route.getPattern() === '__transmit/subscribe') {
+        route.middleware(middleware.logRequest())
+        return
     }
-  
-  });
+})
 
 // routes
 

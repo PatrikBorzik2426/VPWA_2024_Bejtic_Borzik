@@ -56,8 +56,7 @@ const maximumMsgs = ref<number>(0);
 const scrollTop = ref(0);
 let currentAdditionalMsgs = ref<number>(0);
 let subCollector : any[] = [];
-
-let stopListening : any;
+let currentSubscription : any;
 
 const props = defineProps<{ 
   receiverId: number, 
@@ -130,17 +129,14 @@ const showNotification = async (text: string, currentChannel: string) => {
 async function subscribeToMessages() {
   let broadcast=''
   
-  
-
-  if(props.receiverId === undefined || props.receiverId < 0){
+  if(props.receiverId === undefined &&  props.friendshipId < 0){
     return;
   }
 
-  if(props.friendshipId === undefined || props.friendshipId < 0){
+  if(props.friendshipId === undefined && props.receiverId < 0){
     return;
   }
-  
-  
+  console.log("Subscribe to MEssages", props.receiverId, props.friendshipId);
 
   if (props.serverId != -1){
     broadcast = `channel:${props.receiverId}`;
@@ -149,21 +145,17 @@ async function subscribeToMessages() {
   }
 
   let activeSubscription = transmit.subscription(broadcast); // Create a subscription to the channel
-  await activeSubscription.create()
-
-  
+  await activeSubscription.create();
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
-        await getMainUser();
+        console.log(message)
 
-        if (main_user_status.value == 'Offline'){
-          return
-        }
-
-          
-        try{
-          await showNotification( message.message.content , message.message.login );
-        }catch(e){
+        if (main_user_status.value !== 'Offline'){         
+          try{
+            await showNotification( message.message.content , message.message.login );
+          }catch(e){
+            console.log(e);
+          }
         }
         
         try{
@@ -174,13 +166,16 @@ async function subscribeToMessages() {
             timestamp: message.message.createdAt
           });
         }catch(e){
+          console.log(e);
         }
         
         try{
           scrollBottom();
-        }catch{
+        }catch(e){
+          console.log('Error during scrolling');
         }
       });
+      
 
   subCollector.push(unsub, activeSubscription);
       
@@ -189,54 +184,50 @@ async function subscribeToMessages() {
 const loadMessages = async (newId : number) =>{
   await getMainUser();
 
+  console.log("Loading Messages");
+
   if (main_user_status.value == 'Offline'){
     wholeMessage.value = [];
     return;
   }
 
-  if (stopListening !== undefined) {
-      stopListening();
+  let endpoint = '';
+
+  if (props.serverId != -1){
+    endpoint = 'http://127.0.0.1:3333/messages/get-server-messages';
+  }else{
+    endpoint = 'http://127.0.0.1:3333/messages/get-personal-messages';
+  }
+  
+  await axios.post(endpoint, {
+    receiverId: newId,
+    additionalMsgs: currentAdditionalMsgs.value
+  }, {
+    headers: {
+      'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+      'Content-Type': 'application/json'
     }
+  }).then(async response => {
+    wholeMessage.value = [];  
 
+    const dataList = response.data.messages
 
-    let endpoint = '';
+    dataList.reverse();
 
-    if (props.serverId != -1){
-      endpoint = 'http://127.0.0.1:3333/messages/get-server-messages';
-    }else{
-      endpoint = 'http://127.0.0.1:3333/messages/get-personal-messages';
-    }
-    
-    await axios.post(endpoint, {
-      receiverId: newId,
-      additionalMsgs: currentAdditionalMsgs.value
-    }, {
-      headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
-        'Content-Type': 'application/json'
-      }
-    }).then(async response => {
-      wholeMessage.value = [];  
+    dataList.forEach((element:any) => {
 
-      const dataList = response.data.messages
-
-      dataList.reverse();
-
-      dataList.forEach((element:any) => {
-
-        wholeMessage.value.push({
-          id: element.messageId,
-          login: element.senderName,
-          content: element.messageContent,
-          timestamp: element.createdAt
-        });
+      wholeMessage.value.push({
+        id: element.messageId,
+        login: element.senderName,
+        content: element.messageContent,
+        timestamp: element.createdAt
       });
-
-      
-      maximumMsgs.value = response.data.totalMessagesCount;
-
-      await subscribeToMessages();
     });
+
+    
+    maximumMsgs.value = response.data.totalMessagesCount;
+
+  });
 }
 
 
@@ -265,9 +256,7 @@ async function subscribeUpdateUser(){
   await getMainUser();
 
   let activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
-  await activeSubscription.create()
-
-  
+  await activeSubscription.create();
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
       if (message.userStatus !== "Offline"){
@@ -285,9 +274,6 @@ onMounted(async() => {
   if (messageList.value) {
     messageList.value.addEventListener('scroll', handleScroll);
   }
-
-  await subscribeUpdateUser();
-
 });
 
 onBeforeUnmount(async() => {
@@ -295,45 +281,58 @@ onBeforeUnmount(async() => {
     messageList.value.removeEventListener('scroll', handleScroll);
   }
 
-  subCollector.forEach(async (unsub,index) => {
-    
-    try{
-      if (index % 2 == 0){
-        await unsub();
-      }else{
-        await unsub.delete();
-        
-      }
-    }catch(e){
-      
-    }
-    
-});
+  subCollector.forEach(async(unsub,index) => {
+          try
+          {
+            unsub();
+          }catch(e){
+            await unsub.delete();
+          }
+    });
+
+    subCollector = [];
+
+    transmit.close();
   
 });
 
 // Watchers
 watch(
   () => props.receiverId,
-  async (newId) => {
+  async (newId) => {    
+    subCollector.forEach(async(unsub,index) => {
+          try
+          {
+            unsub();
+          }catch(e){
+            await unsub.delete();
+          }
+    });
+
+    subCollector = [];
+
+    transmit.close();
+
     if(props.receiverId != -1){
-      loadMessages(newId);
-      scrollBottom();
       
+      await loadMessages(newId);
+      scrollBottom();
+
+      await subscribeToMessages();
     }
       
   },
   { immediate: true },
 );
 
-watch(
-  () => main_user_status.value,
-  (newVal, oldVal) =>{
-    if (oldVal == 'Offline'){
-      loadMessages(props.receiverId);
-    }
-  }
-)
+// watch(
+//   () => main_user_status.value,
+//   (newVal, oldVal) =>{
+//     if (oldVal === 'Offline'){
+//       loadMessages(props.receiverId);
+//     }
+//   }
+// )
 
 watch(
   () => currentAdditionalMsgs.value,

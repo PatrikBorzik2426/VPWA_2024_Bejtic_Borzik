@@ -132,7 +132,7 @@ export const commandHandler = async (messageInput: string, activeServer : Server
         return true;
     }else if (splitMessage[0] === '/kick'){
         try{
-            const body : Dictionary<number | string> = {
+            const body : Dictionary<number | string | boolean> = {
                 serverId: activeServer.id,
                 memberId: splitMessage[1],
                 command: true
@@ -141,6 +141,7 @@ export const commandHandler = async (messageInput: string, activeServer : Server
             callAxios(body, 'server/kick-server-member')
 
         }catch(err){
+            console.error(err);
         }
 
         return true;

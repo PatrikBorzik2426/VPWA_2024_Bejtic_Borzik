@@ -467,7 +467,6 @@ export default class ServersController {
         const user = ctx.auth.user!
         const { serverId, memberId, command } = ctx.request.only(['serverId', 'memberId', 'command'])
 
-
         const server = await Server.findByOrFail('id', serverId)
 
         if (!server) {
@@ -547,11 +546,14 @@ export default class ServersController {
                 }
             }
 
-            transmit.broadcast(`server-list:${memberId}`, {
+            console.log("Kicked user from server: ", userToKick.id, memberId)
+
+            transmit.broadcast(`server-list:${userToKick.id}`, {
                 message: "User kicked from the server successfully",
                 action: "showFriends",
                 serverId: serverId
-            })   
+            })
+
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

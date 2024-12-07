@@ -696,12 +696,11 @@
 <script setup lang="ts">
 import SingleMessage from './SingleMessage.vue';
 import {commandHandler, showMemberListExternal, callAxios} from '../services/commandHandler';
-import { ref, defineProps, watch, reactive, computed, onMounted} from 'vue';
+import { ref, defineProps, watch, reactive, computed, onMounted, onBeforeUnmount} from 'vue';
 import { useQuasar } from 'quasar';
 import axios from 'axios';
 import draggable from "vuedraggable";
 import { Transmit } from '@adonisjs/transmit-client';
-import { onBeforeUnmount } from 'vue';
 
 // Refs and State
 const inputValue = ref<string>('');
@@ -735,7 +734,7 @@ const memberList = ref<ServerMember[]>([]);
 const friendshipId = ref<number>(0);
 const showTypedMessageData = ref<string | null>(null);
 let allActivateChats  = [];
-let activeChattingSub : any = null;
+let activeSubscription : any = null;
 let activeChattingOn : boolean = false;
 
 let subCollector : any[] = [];
@@ -745,6 +744,8 @@ const $q = useQuasar();
 const transmit = new Transmit({
     baseUrl: 'http://127.0.0.1:3333',
 });
+
+
 
 // Props
 const props = defineProps<{
@@ -1557,10 +1558,11 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
     return;
   }
 
-  let activeChattingSub = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
-  await activeChattingSub.create();
+  let activeSubscription = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
+  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
 
-  let unsub = activeChattingSub.onMessage(async (message: any) => {    
+  let unsub = activeSubscription.onMessage(async (message: any) => {    
     await getMainUser();
 
 
@@ -1630,74 +1632,79 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
 
   });
 
-  subCollector.push(unsub, activeChattingSub)
+  subCollector.push(unsub, activeSubscription)
 }
 
 const updateChannelOnChange = async () => {
 
-  let channelSub = transmit.subscription(`channel-list:${activeServer.id}`);
-  await channelSub.create();
+  let activeSubscription = transmit.subscription(`channel-list:${activeServer.id}`);
+console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
 
   
 
-  let unsub = channelSub.onMessage((message: any) => {
+  let unsub = activeSubscription.onMessage((message: any) => {
     getServerChannels(activeServer.id);
   });
 
   
-  subCollector.push(unsub, channelSub);
+  subCollector.push(unsub, activeSubscription);
 };
 
 const updateFriendsRequestsOnChange = async () => {
   await getMainUser();
 
-  let friendRequestSub = transmit.subscription(`friend-request-change:${main_user_id.value}`);
-  await friendRequestSub.create();
+  let activeSubscription = transmit.subscription(`friend-request-change:${main_user_id.value}`);
+console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
+  
 
   
 
-  let unsub = friendRequestSub.onMessage((message: any) => {
+  let unsub = activeSubscription.onMessage((message: any) => {
     getFriendRequests();
   });
 
   
 
-  subCollector.push( unsub, friendRequestSub);
+  subCollector.push( unsub, activeSubscription);
   
 };
 
 const updateServerRequestsOnChange = async () => {
   await getMainUser();
 
-  let serverInviteSub = transmit.subscription(`server-request-change:${main_user_id.value}`);
-  await serverInviteSub.create();
+  let activeSubscription = transmit.subscription(`server-request-change:${main_user_id.value}`);
+console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
 
   
 
-  let unsub = serverInviteSub.onMessage((message: any) => {
+  let unsub = activeSubscription.onMessage((message: any) => {
     getServerInvites();
   });
 
   
 
-  subCollector.push( unsub,serverInviteSub);
+  subCollector.push( unsub,activeSubscription);
 }
 
 const updateFriendListOnChange = async () => {
   await getMainUser();
 
-  let friendListSub = transmit.subscription(`friend-list-change:${main_user_id.value}`);
-  await friendListSub.create();
+  let activeSubscription = transmit.subscription(`friend-list-change:${main_user_id.value}`);
+console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
 
   
 
-  let unsub = friendListSub.onMessage((message: any) => {
+  let unsub = activeSubscription.onMessage((message: any) => {
     getFriendsList();
   });
 
   
 
-  subCollector.push(unsub,friendListSub);
+  subCollector.push(unsub,activeSubscription);
 }
 
 // Watchers
@@ -1764,21 +1771,20 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(async() => {
-  subCollector.forEach(async (unsub,index) => {
-    
-    try{
-      if (index % 2 == 0){
-        await unsub();
-      }else{
-        await unsub.delete();
-      }
-    }catch(e){
-      
-    }
-    
-});
-  
-});
+  subCollector.forEach(async(unsub,index) => {
+          try
+          {
+            unsub();
+          }catch(e){
+            await unsub.delete();
+          }
+    });
+
+    subCollector = [];
+
+    transmit.close();  
+  });
+
 
 </script>
 
