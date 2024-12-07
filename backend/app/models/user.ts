@@ -53,6 +53,28 @@ export default class User extends BaseModel {
   })
   declare servers: ManyToMany<typeof Server>
 
+  @manyToMany(() => Server, {
+    pivotTimestamps: true,
+    pivotTable: 'user_kicks',
+    localKey: 'id',
+    pivotForeignKey: 'kicked_user_id',
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'server_id',
+    pivotColumns: ['kicked_by_user_id'],
+  })
+  declare kickedUsers: ManyToMany<typeof Server>
+
+  @manyToMany(() => Server, {
+    pivotTimestamps: true,
+    pivotTable: 'user_kicks',
+    localKey: 'id',
+    pivotForeignKey: 'kicked_by_user_id',
+    relatedKey: 'id',
+    pivotRelatedForeignKey: 'server_id',
+    pivotColumns: ['kicked_user_id'],
+  })
+  declare kicksGiven: ManyToMany<typeof Server>
+
   @hasMany(() => DirectMessage, {
     foreignKey: 'senderUserId',
   })

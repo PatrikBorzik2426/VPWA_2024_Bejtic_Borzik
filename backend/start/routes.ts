@@ -24,7 +24,7 @@ const ServerInvitesController = () => import('#controllers/server_invites_contro
 transmit.registerRoutes((route) => {
     // Ensure you are authenticated to register your client
     if (route.getPattern() === '__transmit/subscribe') {
-        route.middleware(middleware.logRequest())
+        // route.middleware(middleware.logRequest())
         return
     }
 })

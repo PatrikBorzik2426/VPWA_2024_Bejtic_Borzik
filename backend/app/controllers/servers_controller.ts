@@ -488,10 +488,6 @@ export default class ServersController {
             return ctx.response.status(403).json({ message: 'You are banned from this server' });
         }
 
-        if (userServerPivot.$extras.pivot_role === 'member') {
-            return ctx.response.status(403).json({ message: 'You are not the creator/admin of this server' });
-        }
-
         let userToKick = null
 
         if(typeof memberId === 'number'){
@@ -520,13 +516,35 @@ export default class ServersController {
             .where('role', 'creator')
             .first();
 
-            await server.related('users')
+            const kickedUser = await userToKick.related('kickedUsers')
             .query()
-            .where('user_id', userToKick.id)
-            .update({ kick_counter: userToKickServerPivot.$extras.pivot_kick_counter + 1 })
-            .update({ inServer: false })
+            .where('server_id', serverId)
+            .where('kicked_by_user_id', user.id)
+            .first();
 
-            if (userToKickServerPivot.$extras.pivot_kick_counter >= 3) {
+            if(!kickedUser){
+                await userToKick.related('kickedUsers')
+                .attach({
+                    [serverId]: {
+                        kicked_by_user_id: user.id
+                    }
+                })
+
+                await server.related('users')
+                .query()
+                .where('user_id', userToKick.id)
+                .update({ kick_counter: userToKickServerPivot.$extras.pivot_kick_counter + 1 })
+                .update({ inServer: false })
+            }else{
+                await server.related('users')
+                .query()
+                .where('user_id', userToKick.id)
+                .update({ inServer: false })
+            }
+
+            console.log("command: ", command)
+
+            if (userToKickServerPivot.$extras.pivot_kick_counter + 1 >= 3) {
             
                 await server
                   .related('users')
@@ -534,18 +552,13 @@ export default class ServersController {
                   .where('user_id', userToKick.id)
                   .update({ ban: true });
 
-            }else if (ownerOfServer && command){
-
-                if (userToKick.id === ownerOfServer.id) {
-                    return ctx.response.status(403).json({ message: 'You cannot kick the creator of the server' });
-                }else if (user.id === ownerOfServer.id) {
-            
-                    await server
-                    .related('users')
-                    .query()
-                    .where('user_id', userToKick.id)
-                    .update({ ban: true });
-                }
+            }else if (ownerOfServer && command && (user.id === ownerOfServer.id)){
+                console.log("Banned user from server: ", userToKick.id, memberId)
+                await server
+                 .related('users')
+                 .query()
+                 .where('user_id', userToKick.id)
+                 .update({ ban: true });
             }
 
             console.log("Kicked user from server: ", userToKick.id, memberId)
@@ -553,7 +566,7 @@ export default class ServersController {
             transmit.broadcast(`server-list:${userToKick.id}`, {
                 message: "User kicked from the server successfully",
                 action: "showFriends",
-                serverId: serverId
+                serverId: server.id
             })
 
         } catch (error) {
@@ -629,9 +642,6 @@ export default class ServersController {
             userToBan = await User.findByOrFail('login', memberId);
         }
 
-        if (!userToBan){
-        }
-
         if (!userToBan) {
             return ctx.response.status(404).json({ message: 'User not found' });
         }
@@ -669,7 +679,7 @@ export default class ServersController {
             transmit.broadcast(`server-list:${memberId}`, {
                 message: "User banned from the server successfully",
                 action: "showFriends",
-                serverId: serverId
+                serverId: server.id
             })   
         } catch (error) {
             console.error(error)
@@ -718,6 +728,10 @@ export default class ServersController {
             .query()
             .where('user_id', userToUnban.id)
             .update({ ban: false, kick_counter: 0 })
+
+            await userToUnban.related('kickedUsers')
+            .query()
+            .delete()
 
             return {
                 message: 'User unbanned from server successfully'

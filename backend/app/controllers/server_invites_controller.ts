@@ -62,6 +62,7 @@ export default class ServerInvitesController {
         const isInvited = await ServerInvite.query()
         .where('serverId', server.id)
         .where('invitedUserId', invitedUser.id)
+        .where('serverinvite_status', 'floating')
         .first()
 
         if (isInvited) {
