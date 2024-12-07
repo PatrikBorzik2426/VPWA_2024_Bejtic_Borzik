@@ -11,7 +11,6 @@ export default class ServerInvitesController {
     
         const {serverId, invitedusername} = ctx.request.only(['serverId', 'invitedusername'])
 
-
         if (invitedusername === user.login) {
             return ctx.response.badRequest({ message: 'You cannot invite yourself' })
         }
@@ -24,6 +23,10 @@ export default class ServerInvitesController {
         .query()
         .where('role', 'creator')
         .first()
+
+        if (server.privacy && serverOwner?.id !== user.id) {
+            return ctx.response.badRequest({ message: 'Server is private' })
+        }
 
         const isInvitedBanned = await invitedUser.related('servers')
         .query()
@@ -54,6 +57,15 @@ export default class ServerInvitesController {
 
         if (isInServer) {
             return ctx.response.badRequest({ message: 'User is already in this server' })
+        }
+
+        const isInvited = await ServerInvite.query()
+        .where('serverId', server.id)
+        .where('invitedUserId', invitedUser.id)
+        .first()
+
+        if (isInvited) {
+            return ctx.response.badRequest({ message: 'User is already invited' })
         }
     
         await ServerInvite.create({

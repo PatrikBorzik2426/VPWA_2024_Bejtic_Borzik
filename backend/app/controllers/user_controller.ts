@@ -65,8 +65,10 @@ async updateMainUser(ctx: HttpContext) {
     mainUser.user_status = status
 
     await mainUser.save()
+
+    console.log('User updated:', mainUser.login)
   
-    transmit.broadcast(`updatedUser:${user.login}`, {
+    transmit.broadcast(`updatedUser:${mainUser.login}`, {
       userStatus: status,
     }); 
 }

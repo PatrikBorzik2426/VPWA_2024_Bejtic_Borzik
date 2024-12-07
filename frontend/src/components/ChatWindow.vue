@@ -21,7 +21,7 @@
               </q-item-section>
               <q-item-section>Server Settings</q-item-section>
             </q-item>
-            <q-item clickable @click="showInviteFriend = true">
+            <q-item v-if="!activeServer.private || activeServer.role !== 'member'" clickable @click="showInviteFriend = true">
               <q-item-section avatar>
                 <q-icon name="person_add" color="primary" size="1.3rem"/>
               </q-item-section>
@@ -938,8 +938,8 @@ async function loadMessages (messagePullId : number){
     await activateSubscriptionChatting(messagePullId,0);
   }else{
     if(friendshipId.value !== undefined){
-      await activateSubscriptionChatting(friendshipId.value,0.1);
-    }
+    await activateSubscriptionChatting(friendshipId.value,0.1);
+  }
   }
 };
 
@@ -1566,8 +1566,7 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
   let unsub = activeSubscription.onMessage(async (message: any) => {    
     await getMainUser();
 
-
-    
+    console.log("Message:",message);
 
     if(activeChattingOn && message.message.length > 1){
       if(showTypedMessageData.value === message.login ){
@@ -1577,8 +1576,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
     }else{
 
       activeChattingOn = false;
-
-      
 
       if (main_user_status.value === 'Offline'){
         return;
@@ -1619,8 +1616,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
         }
       });
 
-      
-
       if (someIsTypingMsg.value.length < 1){
         someIsTypingMsg.value = [''];
       }else{
@@ -1628,9 +1623,6 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
       }
       
     }
-
-    
-
   });
 
   subCollector.push(unsub, activeSubscription)

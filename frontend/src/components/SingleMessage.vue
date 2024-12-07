@@ -219,10 +219,13 @@ const getMainUser = async () => {
 async function subscribeUpdateUser(){
   await getMainUser();
 
+  console.log("Subscribing to User: ", main_user_nickname.value);
+
   let activeSubscription = transmit.subscription(`updatedUser:${main_user_nickname.value}`); // Create a subscription to the channel
   await activeSubscription.create();
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
+      console.log("User Status", message.userStatus);
       if (message.userStatus !== "Offline"){
         await loadMessages(props.receiverId);
       }
@@ -238,6 +241,8 @@ onMounted(async() => {
   if (messageList.value) {
     messageList.value.addEventListener('scroll', handleScroll);
   }
+
+  await subscribeUpdateUser();
 });
 
 onBeforeUnmount(async() => {
@@ -281,6 +286,8 @@ watch(
       scrollBottom();
 
       await subscribeToMessages();
+       
+      await subscribeUpdateUser();
     }
       
   },
@@ -291,13 +298,24 @@ watch(
   () => currentAdditionalMsgs.value,
   (newVal) => {
 
-    if (newVal < maximumMsgs.value-2){
+    if (newVal < maximumMsgs.value-5){
       display_loader.value = true;
     }else{
       display_loader.value = false;
     }
+  }
+)
 
+watch(
+  () => main_user_status.value,
+  async (newVal,oldVal) => {
+    if (newVal === undefined){
+      console.log("Undefined");
+    }
 
+    if (oldVal === 'Offline'){
+      await loadMessages(props.receiverId);
+    }
   }
 )
 

@@ -115,10 +115,12 @@ export default class ServersController {
                 .query()
                 .where('server_id', server_id)
                 .update({ inServer: false });
-    
+
                 transmit.broadcast(`server-list:${user.id}`, {
-                    message: "Successfully left server"
-                })     
+                    message: "Successfully deleted server",
+                    action: "showFriends",
+                    serverId: server_id
+                })   
                 
                 return {
                     message: 'Successfully left server'
