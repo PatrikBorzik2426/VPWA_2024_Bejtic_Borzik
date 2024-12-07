@@ -72,11 +72,11 @@ function scrollBottom(){
   }, 300);
 }
 
-function handleScroll() {
+async function handleScroll() {
   if (messageList.value) {
     scrollTop.value = messageList.value.scrollTop;
     if (scrollTop.value === 0 && currentAdditionalMsgs.value+5 < maximumMsgs.value) {
-      addMessages();
+      await addMessages();
     }
   }
 }
@@ -94,37 +94,6 @@ function isMentioned(content: string) {
 
   return temp;
 }
-
-const showNotification = async (text: string, currentChannel: string) => {
-  
-  const visibility = $q.appVisible
-
-
-  if (Notification.permission === "default") {
-    await Notification.requestPermission();
-  }
-
-  if(visibility){
-    return;
-  }
-
-  if(main_user_status.value == 'Do Not Disturb'){
-    return;
-  }
-
-  if(!allnotifications.value && !text.includes('@'+ main_user_nickname.value)){
-    return;
-    
-  }
-    const notification = new Notification('Comb Bot', {
-      body: `${currentChannel}:\t ${text}`,
-    });
-
-    notification.onclick = () => {
-      window.focus();
-    };
-   
-};
 
 async function subscribeToMessages() {
   let broadcast=''
@@ -148,16 +117,7 @@ async function subscribeToMessages() {
   await activeSubscription.create();
    
   const unsub = activeSubscription.onMessage(async (message:any) => {
-        console.log(message)
 
-        if (main_user_status.value !== 'Offline'){         
-          try{
-            await showNotification( message.message.content , message.message.login );
-          }catch(e){
-            console.log(e);
-          }
-        }
-        
         try{
           wholeMessage.value.push({
             id: message.message.id,
@@ -311,8 +271,6 @@ watch(
 
     subCollector = [];
 
-    transmit.close();
-
     if(props.receiverId != -1){
       
       await loadMessages(newId);
@@ -324,15 +282,6 @@ watch(
   },
   { immediate: true },
 );
-
-// watch(
-//   () => main_user_status.value,
-//   (newVal, oldVal) =>{
-//     if (oldVal === 'Offline'){
-//       loadMessages(props.receiverId);
-//     }
-//   }
-// )
 
 watch(
   () => currentAdditionalMsgs.value,

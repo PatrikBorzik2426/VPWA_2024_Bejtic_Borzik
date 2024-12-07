@@ -88,7 +88,6 @@ router.group(()=>{
     router.post('get-server-messages', [MessagesController,'getServerMessages']).use(middleware.auth());
     router.post('add-personal-message', [MessagesController,'addPersonalMessage']).use(middleware.auth());
     router.post('add-server-message', [MessagesController,'addServerMessage']).use(middleware.auth());
-    router.post('get-channel-messages-count', [MessagesController,'getChannelMessageCount']).use(middleware.auth());
     router.post('current-chatting', [MessagesController,'currentChatting']).use(middleware.auth());
 }).prefix('messages');
 

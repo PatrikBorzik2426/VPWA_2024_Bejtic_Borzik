@@ -418,7 +418,7 @@ const selectedServerId = ref<number>(-1);
 const showMobileChat = ref<boolean>(false);
 const privateserver = ref<boolean>(false);
 const selectedTab = ref<'create' | 'join'>('create');
-let activeSubscription: any = null;
+let subCollectorChannels: any[] = [];
 let subCollector : any[] = [];
 
 const transmit = new Transmit({
@@ -545,10 +545,10 @@ function selectServer(serverId: number) {
   page.value = '';
 }
 
-function ShowServers() {
+async function ShowServers() {
   showservers.value = !showservers.value;
   if(showservers.value){
-    getServerList();
+    await getServerList();
   }
 }
 
@@ -638,6 +638,15 @@ const updateMainUser = async () => {
 const getServerList = async () => {
   serverList.value = [];
 
+  subCollectorChannels.forEach(async(unsub,index) => {
+    try
+    {
+      unsub();
+    }catch(e){
+      await unsub.delete();
+    }
+  });
+
   try {
     const response = await axios.post('http://127.0.0.1:3333/server/get-server-list',{},{
       headers: {
@@ -646,7 +655,7 @@ const getServerList = async () => {
       },
     })
 
-    response.data.servers.forEach((server: any) => {
+    response.data.servers.forEach(async (server: any) => {
 
       serverList.value.push({
         id: server.id,
@@ -656,6 +665,8 @@ const getServerList = async () => {
         position: server.position,
       })
 
+      await getServerChannels(server.id);
+
     })
     serverList.value.sort((a, b) => a.position - b.position)
   } catch (error : any) {
@@ -663,6 +674,74 @@ const getServerList = async () => {
   }
 }
 
+const getServerChannels = async (serverId: number) => {
+  try {
+    const response = await axios.post('http://127.0.0.1:3333/server/get-server-channels',{
+      serverId: serverId
+    },{
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('bearer'),
+        'Content-Type': 'application/json',
+      },
+    })
+
+    response.data.serverChannels.forEach(async (channel: any) => {
+
+      await addChannelSubscription(channel.id);
+
+    })
+  } catch (error) {
+    console.error('Error fetching channel list:', error.response?.data || error.message)
+  }
+}
+
+async function addChannelSubscription(channelId: number){
+  await getMainUser();
+
+  let activeSubscription = transmit.subscription(`channel:${channelId}`); // Create a subscription to the channel
+  console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
+  await activeSubscription.create();
+
+  const unsub = activeSubscription.onMessage(async (message: any) => {
+    if(Mainuser.status !== "Offline"){
+      try{
+        await showNotification( message.message.content , message.message.login );
+      }catch(e){
+        console.log(e);
+      }
+    }
+  });
+
+  subCollectorChannels.push(unsub, activeSubscription);
+}
+
+const showNotification = async (text: string, currentChannel: string) => {
+  
+  const visibility = $q.appVisible
+
+  if(visibility){
+    return;
+  }
+
+  if(Mainuser.status == 'Do Not Disturb'){
+    return;
+  }
+
+  if(!Mainuser.allnotifications && !text.includes('@'+ Mainuser.nickname)){
+    return;
+    
+  }
+    console.log('Notification:', text, currentChannel);
+
+    const notification = new Notification('Comb Bot', {
+      body: `${currentChannel}:\t ${text}`,
+    });
+
+    notification.onclick = () => {
+      window.focus();
+    };
+   
+};
 
 const CreateServer = async () => {
   axios.post('http://127.0.0.1:3333/server/create-server',{
@@ -742,7 +821,7 @@ async function CreateSubscribe() {
   console.log(activeSubscription.isCreated, activeSubscription.handlerCount); 
   const output= await activeSubscription.create();
 
-  const unsub = activeSubscription.onMessage((message: any) => {
+  const unsub = activeSubscription.onMessage(async (message: any) => {
     console.log("Selected server is active server")
     try{
       if (message.serverId === selectedServerId.value ){
@@ -752,7 +831,7 @@ async function CreateSubscribe() {
       console.log(e);
     }
 
-    getServerList();
+    await getServerList();
   });
 
   subCollector.push(unsub, activeSubscription);

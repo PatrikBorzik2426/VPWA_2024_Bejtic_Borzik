@@ -872,6 +872,9 @@ const requestNotificationPermission = () => {
   }
 };
 
+requestNotificationPermission();
+
+
 function cloneServer(){
   editingServer.id = activeServer.id;
   editingServer.name = activeServer.name;
@@ -881,7 +884,6 @@ function cloneServer(){
   editingServer.userid = activeServer.userid;
 }
 
-requestNotificationPermission();
 
 const selectFriend = (id: number) => {
   activeServer.id = -1;
@@ -984,7 +986,7 @@ const sendMessage = async () => {
       endpoint = 'messages/add-personal-message'
     }
     
-    callAxios({
+    await callAxios({
       receiverId: receiverId.value,
       content: inputValue.value,
       friendshipId: friendshipId.value
