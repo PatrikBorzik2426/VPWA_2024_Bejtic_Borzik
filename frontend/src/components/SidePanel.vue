@@ -426,7 +426,7 @@ const selectedTab = ref<'create' | 'join'>('create');
 let activeSubscription: any = null;
 
 const transmit = new Transmit({
-    baseUrl: 'http://127.0.0.1:3333',
+  baseUrl: 'http://127.0.0.1:3333',
 });
 
 const Mainuser = reactive<User>({
@@ -738,14 +738,9 @@ const UpdateServerPositions = async () => {
 }
 
 async function CreateSubscribe() {
+  await getMainUser();
 
-
-  const response = await callAxios({},'user/get-main-user');
-
-
-  const userId = response.formattedMainUser.id
-
-  activeSubscription = transmit.subscription(`server-list:${userId}`);
+  activeSubscription = transmit.subscription(`server-list:${Mainuser.id}`);
   await activeSubscription.create();
 
   activeSubscription = activeSubscription.onMessage((message: any) => {
@@ -760,11 +755,8 @@ async function CreateSubscribe() {
   });
 }
 
-
-
-
-onMounted(async()=>{
-  await CreateSubscribe();
+onMounted(()=>{
+  CreateSubscribe();
 });
 
 onBeforeUnmount(async()=>{
@@ -772,9 +764,6 @@ onBeforeUnmount(async()=>{
     await activeSubscription();
   }
 });
-
-getMainUser();
-getServerList();
 
 </script>
 

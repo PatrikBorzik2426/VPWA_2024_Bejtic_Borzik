@@ -80,6 +80,10 @@ export default class ServersController {
         transmit.broadcast(`server-list:${user.id}`, {
             message:{"ServerId":server.id,"Action":"join"}
         })
+
+        return{
+            server: server
+        }
         } catch (error) {
           console.error(error)
           return ctx.response.status(500).json({
@@ -437,6 +441,10 @@ export default class ServersController {
             transmit.broadcast(`server-list:${user.id}`, {
                 message:{"ServerId":server.id,"Action":"join"}
             })
+
+            return {
+                serverId: server.id,
+            }
         } catch (error) {
             console.error(error)
             return ctx.response.status(500).json({

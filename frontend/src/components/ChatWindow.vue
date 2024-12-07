@@ -33,11 +33,11 @@
               </q-item-section>
               <q-item-section>Member List</q-item-section>
             </q-item>
-            <q-item v-if="activeServer.role !== 'creator'" clickable color="red-9" text-color="white" @click="leaveServer()">
+            <q-item v-if="activeServer.role !== 'creator'" clickable :style="{ backgroundColor: `rgba(245, 49, 49, 0.4)`}" text-color="white" @click="leaveServer()">
               <q-item-section avatar >
                 <q-icon name="reply" color="primary" size="1.3rem"/>
               </q-item-section>
-              <q-item-section>Leave Server</q-item-section>
+              <q-item-section color="red">Leave Server</q-item-section>
             </q-item>
           </q-list>
         </q-menu>
@@ -716,7 +716,7 @@ const showAddFriend = ref<boolean>(false);
 const AddedFriend = ref<string>('');
 const someIsTypingMsg = ref<string>('');
 const filteredCommands = ref({});
-const receiverId = ref<number>(0);
+const receiverId = ref<number>(-1);
 const friendChatStatus = ref<boolean>(true);
 const main_user_status = ref<string>('');
 const main_user_id = ref<number>(0);
@@ -1687,11 +1687,11 @@ watch(
     if (newVal !== undefined) {
       showChannels.value = false;
       getFriendsList();
-      currentChannel.value = '';
-      loadMessages(0);
+      if(currentChannel.value != ''){
+        currentChannel.value = '';
+        loadMessages(0);
+      }
     }
-
-    // loadChannel(currentChannel.value);
   },
   {
     immediate: true,

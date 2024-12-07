@@ -48,6 +48,7 @@ interface Member{
 const transmit = new Transmit({
     baseUrl: 'http://127.0.0.1:3333',
   });
+  
 const wholeMessage = ref<Member[]>([]);
 const messageList = ref<HTMLElement | null>(null);
 const additionalMsgs = ref<number>(5);
@@ -280,9 +281,12 @@ onBeforeUnmount(() => {
 watch(
   () => props.receiverId,
   async (newId) => {
-    loadMessages(newId);
-    scrollBottom();
-
+    if(props.receiverId != -1){
+      loadMessages(newId);
+      scrollBottom();
+      console.log('cucko');
+    }
+      
   },
   { immediate: true },
 );
