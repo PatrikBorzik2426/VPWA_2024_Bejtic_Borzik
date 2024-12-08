@@ -458,7 +458,7 @@ watch(
 watch(
   () => showCreateServer.value,
   () => {
-    newServerName.value = `${Mainuser.nickname}'s Server`;
+    newServerName.value = `${Mainuser.nickname}'sServer`;
 
     if (serverList.value.find((server) => server.name === newServerName.value)) {
       let counter = 1;
@@ -467,7 +467,7 @@ watch(
         counter++;
       }
 
-      newServerName.value = `${newServerName.value} ${counter}`;
+      newServerName.value = `${newServerName.value}${counter}`;
     }
   }
 );

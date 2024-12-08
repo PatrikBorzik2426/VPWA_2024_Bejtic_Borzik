@@ -698,7 +698,7 @@ import SingleMessage from './SingleMessage.vue';
 import {commandHandler, showMemberListExternal, callAxios} from '../services/commandHandler';
 import { ref, defineProps, watch, reactive, computed, onMounted, onBeforeUnmount} from 'vue';
 import { useQuasar } from 'quasar';
-import axios from 'axios';
+import axios, { all } from 'axios';
 import draggable from "vuedraggable";
 import { Transmit } from '@adonisjs/transmit-client';
 
@@ -734,7 +734,7 @@ const memberList = ref<ServerMember[]>([]);
 const friendshipId = ref<number>(0);
 const showTypedMessageData = ref<string | null>(null);
 let allActivateChats  = [];
-let activeSubscription : any = null;
+let activeSubscriptionChatting : any = null;
 let activeChattingOn : boolean = false;
 
 let subCollector : any[] = [];
@@ -1560,8 +1560,20 @@ const activateSubscriptionChatting =async (channelId : number, addition : number
     return;
   }
 
-  let activeSubscription = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
+  if(activeSubscriptionChatting !== null){
+    try{
+      await activeSubscriptionChatting.delete();
+      someIsTypingMsg.value = [''];
+      allActivateChats = [];
+    }catch(e){
+      console.log("Error during deleting subscription",e);
+    }
+  }
+
+  const activeSubscription = transmit.subscription(`channel-current-chatting:${channelId+addition}`);
   await activeSubscription.create();
+
+  activeSubscriptionChatting = activeSubscription;
 
   let unsub = activeSubscription.onMessage(async (message: any) => {    
     await getMainUser();
@@ -1732,6 +1744,18 @@ watch(
         loadMessages(0);
       }
     }
+
+    // subCollector.forEach(async(unsub) => {
+    // console.log("Unsubscribing:",unsub);
+    //       try
+    //       {
+    //         unsub();
+    //       }catch(e){
+    //         await unsub.delete();
+    //       }
+    // });
+
+    // subCollector = [];
   },
   {
     immediate: true,

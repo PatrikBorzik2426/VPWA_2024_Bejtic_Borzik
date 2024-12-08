@@ -22,7 +22,6 @@ Vytvorte progresívnu webovú aplikáciu na textovú komunikáciu v štýle IRC 
 ### Fyzický model databázy
 - Hlavné a výrazné zmeny sú pasívne aplikované do našej databázy v rámci softvérového riešenia, ktoré používame - migrácie, autorizačné token-y a samotný AdonisJS. Tie si vytvárajú samostatné tabuľky v rámci našej databázy.
 - Genericky sme využili možnosť automatického doplnenia dodatočných časových informácií o zmenách či vytvorení pre jednoduchšie log-ovanie údajov pri debug-ovaní či iných problémoch.
-- Taktiež sme sa rozhodli spojiť pre funkcionálne účely kick-ban tabuľku a tabuľku udržiavajúcu údaje o používateľoch, ktorí sú pridaný na špecificke servery.
 - Pri používateľoch sme taktiež pridali boolean stĺpec, ktorý hovorí o stave používateľa a jeho preferenciách o získavaní notifikácií, kde pri pravdivej hodnote dostane všetky a v prípade nepravdivej hodnoty obdrží iba notifikácie s označením.
 - Pri serveroch a channel-och sme pridali ďalší atribút s názvom "position", ktorý špecifikuje poradie pri zobrazení jednotlivých channel a serverov. Tento atribút používateľovi umožňuje voľne presúvať a zoraďovať pozíciu serverov a kanálov na serveri.
 ![DB_Diagram](./images-documentation/diagram_db.png)

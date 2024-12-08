@@ -377,12 +377,25 @@ export default class ServersController {
     async joinServer(ctx: HttpContext) {
         const user = ctx.auth.user!
         const servername = ctx.request.input('servername')
+        let privacy = undefined
 
+        try{
+            privacy = ctx.request.input('privacy')
+        }catch{
+            privacy = undefined
+        }
+
+        console.log("Server name: ", servername)
 
         const server = await Server.findBy('name', servername)
 
+        console.log("Server: ", server)
+
         if (!server) {
-            this.createServer(ctx)
+            if (privacy !== undefined){
+                this.createServer(ctx)
+                return;
+            }
             return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
         }else if (server && server.privacy){
             return ctx.response.status(404).json({ message: `Server "${servername}" doesn't exist` });
