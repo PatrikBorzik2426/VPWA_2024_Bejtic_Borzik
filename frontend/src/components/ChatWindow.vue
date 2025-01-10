@@ -155,7 +155,7 @@
                     <q-card-section class=" scroll q-px-none" style="max-height: 25.5rem;">
                       <div v-for="{ role, members } in membersByRole" :key="role" class="q-mx-md">
                         <div class="text-subtitle2 text-grey-6 q-mt-sm">{{ roleDisplayNames[role] }}</div>
-                        <q-item
+                        <q-ite
                           v-for="member in members"
                           :key="member.id"
                           class="q-mt-xs q-px-xs row items-center"
@@ -224,7 +224,7 @@
                             <q-tooltip anchor="bottom middle" self="top middle" class="bg-grey-8 text-caption">
                               Remove Friend
                             </q-tooltip></q-btn>
-                        </q-item>
+                        </q-ite>
                       </div>
                   </q-card-section>
                 </q-list>
